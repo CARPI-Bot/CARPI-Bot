@@ -1,13 +1,21 @@
 # RCOS Spring 2023 Project
 
 
-Something something funny discord bot
-Insert command list here ------
+Something something funny discord bot 
 
-Collaborators:
-Raymond Chen
-Miranda Zheng
-Brian Wang-Chen
-Justin Isaac
-Kai Wang
-Gavin Liu
+Insert command list here 
+------------------------
+
+Collaborators
+-----
+Raymond Chen'26 - 4 credits 
+
+Miranda Zheng'26 - 4 credits 
+
+Brian Wang-Chen'26 - 3 credits
+
+Justin Isaac'26 - 4 credits
+
+Kai Wang'26 - 4 credits
+
+Gavin Liu'26 - 4 credits
