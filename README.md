@@ -1,5 +1,5 @@
-# tsdb
-RCOS Spring 2023 project
+# RCOS Spring 2023 Project
+
 
 Something something funny discord bot
 Insert command list here ------
