@@ -1,7 +1,9 @@
 import platform
+import os
 import discord
 from discord.ext import commands
 from globals import *
+from cogs import calculator
 
 TOKEN = open("TOKEN.txt").read()
 
@@ -12,11 +14,12 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, owner_ids=OWNER_IDS, intents=i
 
 @bot.event
 async def on_ready():
+    await bot.add_cog(calculator.Calculator(bot))
     print(f"Logged in as {bot.user.name}#{bot.user.discriminator}")
     print(f"Python version {platform.python_version()}")
     print(f"Discord.py version {discord.__version__}")
 
-@bot.command(aliases=['purge'])
+@bot.command(aliases=["purge"])
 async def clear(ctx, num:int, *, reason:str = None):
     if num < 1:
         await ctx.send("Enter a number greater than or equal to 1.")
