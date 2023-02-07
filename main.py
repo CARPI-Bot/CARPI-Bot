@@ -15,6 +15,7 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, owner_ids=OWNER_IDS, intents=i
 @bot.event
 async def on_ready():
     await bot.add_cog(calculator.Calculator(bot))
+    await bot.add_cog(gavin.Gavin(bot))
     print(f"Logged in as {bot.user.name}#{bot.user.discriminator}")
     print(f"Python version {platform.python_version()}")
     print(f"Discord.py version {discord.__version__}")
