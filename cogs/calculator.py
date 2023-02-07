@@ -12,4 +12,4 @@ class Calculator(commands.Cog):
 
     @commands.command(aliases=["sub"])
     async def subtract(self, ctx, num1:int, num2:int):
-        await ctx.send(num1 + num2)
+        await ctx.send(num1 - num2)
