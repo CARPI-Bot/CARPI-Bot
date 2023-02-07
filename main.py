@@ -3,7 +3,7 @@ import os
 import discord
 from discord.ext import commands
 from globals import *
-from cogs import calculator, modtools
+from cogs import calculator, gavin, modtools
 
 TOKEN = open("TOKEN.txt").read()
 
