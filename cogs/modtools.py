@@ -8,7 +8,7 @@ class Moderator(commands.Cog):
         self.bot = bot
     
     @commands.command(aliases=["purge"])
-    async def clear(ctx, num:int, *, reason:str = None):
+    async def clear(self, ctx, num:int, *, reason:str = None):
         if num < 1:
             await ctx.send("Enter a number greater than or equal to 1.")
         elif num == 1:
@@ -19,7 +19,7 @@ class Moderator(commands.Cog):
             await ctx.send(f"{num} messages deleted.", delete_after=DEL_DELAY)
 
     @clear.error
-    async def clear_error(ctx, error):
+    async def clear_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter a valid integer.")
         # elif isinstance(error, commands.CheckFailure):
