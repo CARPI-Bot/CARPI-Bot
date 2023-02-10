@@ -8,7 +8,7 @@ class TimedEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(usage = ':) timer <number> <second[s], minute[s], hour[s]> <optional event description>')
+    @commands.command(description = ':) timer <number> <second[s], minute[s], hour[s]> <optional event description>')
     async def timer(self, ctx, *args):
 
         #error checking in case user inputs command wrong 
@@ -32,7 +32,7 @@ class TimedEvents(commands.Cog):
         num = args[0]
 
         #confirming the timer was set 
-        await ctx.send('A timer has been set for {} {} from now ').format(num, unit)
+        await ctx.send('A timer has been set for {} {} from now '.format(num, unit))
 
         #converting to seconds if needed 
         if unit == "hour" or unit == "hours":
@@ -43,7 +43,7 @@ class TimedEvents(commands.Cog):
         await asyncio.sleep(num)
 
         #if there's more than 2 arguments, ping the person with the event name
-        if len(args) < 2:
+        if len(args) > 2:
             event = ''.join(args [2:])
             await ctx.send("Time for {} {}".format(event, ctx.author.mention))
             return
