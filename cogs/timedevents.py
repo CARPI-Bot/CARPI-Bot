@@ -10,17 +10,16 @@ class TimedEvents(commands.Cog):
 
     @commands.command(description = ':) timer <number> <second[s], minute[s], hour[s]> <optional event description>')
     async def timer(self, ctx, *args):
-
         #error checking in case user inputs command wrong 
         if(len(args) < 2):
             await ctx.send('Not enough arguments! Ex. ?timer 360 seconds')
             return
 
+       #list of all units of time
+        units_of_time = [['second', 'seconds'], ['minute', 'minutes'], ['hour', 'hours']]
+
         #setting the unit of time
         unit = ""
-
-        #list of all units of time
-        units_of_time = [['second', 'seconds'], ['minute', 'minutes'], ['hour', 'hours']]
 
         #looping to set the correct unit of time 
         for i in range(3):
