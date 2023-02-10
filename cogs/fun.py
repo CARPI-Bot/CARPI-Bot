@@ -12,4 +12,4 @@ class Fun(commands.Cog):
         await ctx.send("Hello {ctx.author.mention}!")
 
 async def setup(bot):
-    await bot.add_cog(Calculator(bot))
+    await bot.add_cog(Fun(bot))
