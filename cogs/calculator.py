@@ -88,3 +88,6 @@ class Calculator(commands.Cog):
     async def divide_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
+
+async def setup(bot):
+    await bot.add_cog(Calculator(bot))

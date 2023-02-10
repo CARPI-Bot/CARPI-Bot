@@ -30,3 +30,6 @@ class Moderator(commands.Cog):
                 await ctx.send("I don't have the 'Manage Messages' permission.")
         else:
             await ctx.send("Usage: `?clear [number of messages] [optional reason]`")
+
+async def setup(bot):
+    await bot.add_cog(Moderator(bot))
