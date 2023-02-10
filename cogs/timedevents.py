@@ -1,5 +1,6 @@
 import datetime as dt
 from discord.ext import commands
+import asyncio
 from globals import *
 
 class TimedEvents(commands.Cog):
@@ -39,7 +40,7 @@ class TimedEvents(commands.Cog):
         elif unit == "minute" or unit == "minutes":
             num = num * 60
         
-        await ctx.sleep(num)
+        await asyncio.sleep(num)
 
         #if there's more than 2 arguments, ping the person with the event name
         if len(args) < 2:
