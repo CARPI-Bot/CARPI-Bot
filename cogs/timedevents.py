@@ -50,5 +50,5 @@ class TimedEvents(commands.Cog):
         #otherwise just do a normal ping
         await ctx.send("Your timer has finished {}".format(ctx.author.mention))
 
-    async def setup(bot):
-        await bot.add_cog(TimedEvents(bot))
+async def setup(bot):
+    await bot.add_cog(TimedEvents(bot))
