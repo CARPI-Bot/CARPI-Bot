@@ -3,7 +3,7 @@ import os
 import discord
 from discord.ext import commands
 from globals import *
-from cogs import calculator, gavin, modtools
+from cogs import calculator, modtools
 
 TOKEN = open("TOKEN.txt").read()
 
@@ -15,7 +15,6 @@ bot = commands.Bot(command_prefix=COMMAND_PREFIX, owner_ids=OWNER_IDS, intents=i
 @bot.event
 async def on_ready():
     await bot.add_cog(calculator.Calculator(bot))
-    await bot.add_cog(gavin.Gavin(bot))
     await bot.add_cog(modtools.Moderator(bot))
     print(f"Logged in as {bot.user.name}#{bot.user.discriminator}")
     print(f"Python version {platform.python_version()}")
