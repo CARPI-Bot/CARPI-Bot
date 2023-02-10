@@ -8,4 +8,3 @@ karp bot
 karpi bot
 j bot
 L bot
-

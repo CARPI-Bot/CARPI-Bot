@@ -7,7 +7,7 @@ class Calculator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(description="Returns the sum of any number of values.")
+    @commands.command(description="Returns the sum of any number of values.", aliases=["sum"])
     async def add(self, ctx, *nums:Decimal):
         # Checks for at least two arguments
         if len(nums) < 2: 
@@ -26,7 +26,7 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
 
-    @commands.command(description="Returns the difference of any number of values, calculated from left to right.")
+    @commands.command(description="Returns the difference of any number of values, calculated from left to right.", aliases=["sub", "subt"])
     async def subtract(self, ctx, *nums:Decimal):
         # Checks for at least two arguments
         if len(nums) < 2:
@@ -47,7 +47,7 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
 
-    @commands.command(description="Returns the product of any number of values.")
+    @commands.command(description="Returns the product of any number of values.", aliases=["mul", "mult"])
     async def multiply(self, ctx, *nums:Decimal):
         # Checks for at least two arguments
         if len(nums) < 2:
@@ -68,7 +68,7 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
 
-    @commands.command(description="Returns the quotient of any number of values, calculated from left to right.")
+    @commands.command(description="Returns the quotient of any number of values, calculated from left to right.", aliases=["div"])
     async def divide(self, ctx, *nums:Decimal):
         # Checks for at least two arguments
         if len(nums) < 2:
@@ -88,3 +88,6 @@ class Calculator(commands.Cog):
     async def divide_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
+
+async def setup(bot):
+    await bot.add_cog(Calculator(bot))
