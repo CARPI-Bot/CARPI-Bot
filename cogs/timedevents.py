@@ -1,6 +1,6 @@
 import datetime as dt
 from discord.ext import commands
-
+from globals import *
 class TimedEvents(commands.Cog):
 
     def __init__(self, bot):
