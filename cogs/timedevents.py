@@ -33,7 +33,7 @@ class TimedEvents(commands.Cog):
         await ctx.send('A timer has been set for {} {} from now ').format(num, unit)
 
         #converting to seconds if needed 
-        if unit == "hour" or unit == "hour":
+        if unit == "hour" or unit == "hours":
             num = num * 60 * 60
         elif unit == "minute" or unit == "minutes":
             num = num * 60
