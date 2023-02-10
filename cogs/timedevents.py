@@ -1,6 +1,7 @@
 import datetime as dt
 from discord.ext import commands
 from globals import *
+
 class TimedEvents(commands.Cog):
 
     def __init__(self, bot):
@@ -48,3 +49,6 @@ class TimedEvents(commands.Cog):
         
         #otherwise just do a normal ping
         await ctx.send("Your timer has finished {}".format(ctx.author.mention))
+
+    async def setup(bot):
+        await bot.add_cog(TimedEvents(bot))
