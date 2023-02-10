@@ -7,7 +7,7 @@ class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(aliases=["purge"])
+    @commands.command(aliases=["purge"], hidden=True)
     async def clear(self, ctx, num:int, *, reason:str = None):
         if num < 1:
             await ctx.send("Enter a number greater than or equal to 1.")
