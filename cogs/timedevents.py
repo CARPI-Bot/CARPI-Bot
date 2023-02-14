@@ -3,7 +3,6 @@ import datetime as dt
 import discord
 from discord.ext import commands
 from globals import *
-from discord.ext.commands.core import Command, command
 
 class TimedEvents(commands.Cog):
 
@@ -13,7 +12,7 @@ class TimedEvents(commands.Cog):
     @commands.command(description = 'timer <number> <second, minute, hour> <optional event description>')
     async def timer(self, ctx, *args):
         #list of all units of time
-        units_of_time = [["s", "second", "seconds"], ["min", "mins", "minutes"], ["h", "hr", "hrs", "hours"]]
+        units_of_time = [["s", "second", "seconds"], ["min", "mins", "minute,", "minutes"], ["h", "hr", "hrs", "hours"]]
 
         #error checking in case user inputs command wrong 
         if len(args) < 2:
@@ -34,7 +33,7 @@ class TimedEvents(commands.Cog):
         await ctx.send('A timer has been set for {} {} from now '.format(num, unit))
 
         #unit conversion
-        if unit == 'min' or unit == 'mins' or unit == 'minutes':
+        if unit == 'min' or unit == 'mins' or unit == 'minute' or unit == 'minutes':
             num *= 60
         elif unit == 'hr' or unit == 'hrs' or unit == 'hours':
             num *= 3600
@@ -47,7 +46,7 @@ class TimedEvents(commands.Cog):
             await ctx.send("Time for {} {}".format(event, ctx.author.mention))
             return
         #otherwise just do a normal ping
-        await ctx.send("Your timer for {} {} has finished {}".format(args[0], unit, ctx.author.mention))
+        await ctx.send("Your timer for {} {} has finished {}".format(args[0], args[1], ctx.author.mention))
 
 async def setup(bot):
      await bot.add_cog(TimedEvents(bot))
