@@ -11,5 +11,5 @@ class Zesty(commands.cog):
         person = random.randint(0, 9)
         await ctx.send(f"{ctx.guild.members[person].mention} is SUS")
 
-    async def setup(bot):
-        await bot.add_cog(Zesty(bot))
+async def setup(bot):
+    await bot.add_cog(Zesty(bot))
