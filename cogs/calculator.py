@@ -1,5 +1,4 @@
 from discord.ext import commands
-from globals import *
 from decimal import Decimal
 
 class Calculator(commands.Cog):
@@ -89,6 +88,33 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send('Enter at least two valid numbers.')
             await ctx.send("Enter at least two numbers.")
+    
+    @commands.command(description="Returns the exponential result of of any number to the power of any number.", aliases=["exp"])
+    async def power(self, ctx, *nums:Decimal):
+        # Checks for two documents
+        if len(nums) != 2:
+            raise commands.BadArgument()
+        
+        # Raising the first element of the tuple to the second element of the tuple
+        power = nums[0]**nums[1]
+
+        # Displays the result without the decimal if it's equal to the integer value
+        if power == power.to_integral_vlaue:
+            await ctx.send("{:,}".format(int(power)))
+        # otherwise displays the result for the number up to 3 decimal places
+        else:
+            await ctx.send("{:2f}".format(power))
+
+    @power.error
+    async def power_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Enter two valid numbers.")
+    
+    # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.", aliases=["trig"])
+    # async def trig(self, ctx, *args):
+
+
+
 
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
