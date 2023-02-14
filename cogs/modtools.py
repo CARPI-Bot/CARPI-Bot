@@ -1,3 +1,4 @@
+import datetime as dt
 import discord
 from discord.ext import commands
 from globals import *
@@ -30,6 +31,21 @@ class Moderator(commands.Cog):
                 await ctx.send("I don't have the 'Manage Messages' permission.")
         else:
             await ctx.send("Usage: `?clear [number of messages] [optional reason]`")
+
+    @commands.command(hidden=True)
+    async def timeout(self, ctx, member:discord.Member, *time:str):
+        days = 0; hours = 0; minutes = 0; seconds = 0
+        for x in time:
+            if time.lower().endswith("d"):
+                days += int(x[:-1])
+            elif time.lower().endswith("h"):
+                hours += int(x[:-1])
+            elif time.lower().endswith("m"):
+                minutes += int(x[:-1])
+            elif time.lower().endswith("s"):
+                seconds += int(x[:-1])
+        member.timeout(dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds))
+        await ctx.send(f"{member.name} has been timed out for {days}D {hours}H {minutes}M {seconds}S")
 
 async def setup(bot):
     await bot.add_cog(Moderator(bot))
