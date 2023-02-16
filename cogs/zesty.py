@@ -2,9 +2,10 @@ from discord.ext import commands
 from globals import *
 import random
 
-class Zesty(commands.cog):
+class Zesty(commands.Cog):
+
     def __init__(self, bot):
-        bot = self.bot
+        self.bot = bot
     
     @commands.command(description='sus callout')
     async def sus(self, ctx):
