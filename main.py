@@ -1,5 +1,4 @@
 import asyncio
-import platform
 import os
 import discord
 from discord.ext import commands
