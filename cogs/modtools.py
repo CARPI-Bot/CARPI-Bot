@@ -34,19 +34,19 @@ class Moderator(commands.Cog):
         else:
             await ctx.send("Usage: `?clear [number of messages] [optional reason]`")
 
-    @commands.command(description="Puts a user into timeout for a specified amount of time", aliases=["mute", "silence"], hidden=True)
+    @commands.command(description="Puts a user into timeout for a specified amount of time.", aliases=["mute", "silence"], hidden=True)
     async def timeout(self, ctx, member:discord.Member, *time:str):
         
         days = 0; hours = 0; minutes = 0; seconds = 0
-        for x in time:
-            if time.lower().endswith("d"):
-                days += int(x[:-1])
-            elif time.lower().endswith("h"):
-                hours += int(x[:-1])
-            elif time.lower().endswith("m"):
-                minutes += int(x[:-1])
-            elif time.lower().endswith("s"):
-                seconds += int(x[:-1])
+        for element in time:
+            if element.lower().endswith("d"):
+                days += int(element[:-1])
+            elif element.lower().endswith("h"):
+                hours += int(element[:-1])
+            elif element.lower().endswith("m"):
+                minutes += int(element[:-1])
+            elif element.lower().endswith("s"):
+                seconds += int(element[:-1])
             else:
                 raise commands.BadArgument
         
@@ -61,16 +61,33 @@ class Moderator(commands.Cog):
             days += hours // 24
             hours %= 24
 
-        member.timeout(dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds))
+        await member.timeout(dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds))
         await ctx.send(f"{member.name} has been timed out for {days}D {hours}H {minutes}M {seconds}S")
     
     @timeout.error
     async def timeout_error(self, ctx, error):
-        
+
         if isinstance(error, commands.BadArgument):
             await ctx.send(f"Usage: `{COMMAND_PREFIX}timeout <member> <days>d <hours>h <minutes>m <seconds>s`")
         else:
             await ctx.send(str(error))
+
+    @commands.command(description="Removes timeout status from a user if they're currently timed out.", aliases=["untimeout"], hidden=True)
+    async def timein(self, ctx, member:discord.Member):
+        
+        if member.is_timed_out():
+            await member.timeout(dt.timedelta(seconds=0))
+            await ctx.send(f"Removed timeout from {member.name}.")
+        else:
+            await ctx.send(f"{member.name} is not timed out.")
+    
+    @timein.error
+    async def timein_error(self, ctx, error):
+        if isinstance(commands.BadArgument):
+            await ctx.send(f"Usage: `{COMMAND_PREFIX}timein <member>`")
+        else:
+            await ctx.send(str(error))
+
 
 async def setup(bot):
     await bot.add_cog(Moderator(bot))
