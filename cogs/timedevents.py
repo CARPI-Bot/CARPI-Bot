@@ -28,9 +28,9 @@ class TimedEvents(commands.Cog):
 
         #setting the number of time
         num = int(args[0])
-
-        #sending timer confirmation 
-        await ctx.send('A timer has been set for {} {} from now '.format(num, unit))
+         #sending timer confirmation 
+        await ctx.send('A timer has been set for {} {} from now '.format(args[0], args[1]))
+    
 
         #unit conversion
         if unit == 'min' or unit == 'mins' or unit == 'minute' or unit == 'minutes':
