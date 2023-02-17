@@ -137,4 +137,3 @@ class Calculator(commands.Cog):
 
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
-
