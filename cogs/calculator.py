@@ -1,5 +1,6 @@
 from discord.ext import commands
 from decimal import Decimal
+import math
 
 class Calculator(commands.Cog):
 
@@ -92,27 +93,45 @@ class Calculator(commands.Cog):
     @commands.command(description="Returns the exponential result of of any number to the power of any number.", aliases=["exp"])
     async def power(self, ctx, *nums:Decimal):
         # Checks for two documents
-        if len(nums) != 2:
+        if len(nums) < 2:
             raise commands.BadArgument()
         
         # Raising the first element of the tuple to the second element of the tuple
         power = nums[0]**nums[1]
 
         # Displays the result without the decimal if it's equal to the integer value
-        if power == power.to_integral_vlaue:
+        if power == power.to_integral_value:
             await ctx.send("{:,}".format(int(power)))
         # otherwise displays the result for the number up to 3 decimal places
         else:
-            await ctx.send("{:2f}".format(power))
+            await ctx.send("{:,}".format(power))
 
     @power.error
     async def power_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter two valid numbers.")
     
-    # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.", aliases=["trig"])
+    # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.")
     # async def trig(self, ctx, *args):
-
+    #     # Checks for three inputs commands
+    #     if len(args) < 2:
+    #         raise commands.BadArgument()
+    #     result = 0
+    #     # sin function
+    #     if (args[0] == "sin"):
+    #         result = math.sin(args[1])
+        
+    #     # Displays the result without the decimal if it's equal to the integer value
+    #     if result == result.to_integral_value:
+    #         await ctx.send("{:,}".format(int(result)))
+    #     # otherwise displays the result for the number up to 3 decimal places
+    #     else:
+    #         await ctx.send("{:,}".format(result))
+    
+    # @trig.error
+    # async def trig_error(self, ctx, error):
+    #     if isinstance(error, commands.BadArgument):
+    #         await ctx.send("Enter a valid trig argument and a number (in degrees)")
 
 
 
