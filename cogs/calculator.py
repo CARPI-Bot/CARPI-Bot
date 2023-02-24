@@ -90,7 +90,7 @@ class Calculator(commands.Cog):
             await ctx.send('Enter at least two valid numbers.')
             await ctx.send("Enter at least two numbers.")
     
-    @commands.command(description="Returns the exponential result of of any number to the power of any number.", aliases=["exp"])
+    @commands.command(description="Returns the exponential result of any number to the power of any number.", aliases=["exp"])
     async def power(self, ctx, *nums:Decimal):
         # Checks for two documents
         if len(nums) < 2:
@@ -110,6 +110,58 @@ class Calculator(commands.Cog):
     async def power_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter two valid numbers.")
+    
+    @commands.command(description="Returns the square root result of any number or group of numbers.", aliases=["root"])
+    async def sqrt(self, ctx, *nums:Decimal):
+        # Checks for at least on input
+        if len(nums) == 0:
+            raise commands.BadArgument()
+        
+        sqrt = Decimal(math.sqrt(nums[0]))
+
+        if sqrt == sqrt.to_integral_value:
+            await ctx.send("{;,}".format(int(sqrt)))
+            # Otherwise displays the square root with decimals
+        else:
+            await ctx.send("{:,}".format(sqrt))
+
+        # # find the square root of every individual number inputted
+
+        # sqrts = []
+        # for number in nums:
+        #     number_sqrt = Decimal(math.sqrt(number))
+        #     sqrts.append(number_sqrt)
+        
+        # for num in sqrts:
+        #     # Displays the square root without decimas if it's equal to it's integer value
+        #     if num == int(num):
+        #         await ctx.send("2Hello")
+
+        #         await ctx.send("{;,}".format(int(num)))
+        #     # Otherwise displays the square root with decimals
+        #     else:
+        #         await ctx.send("{;,} ".format(num))
+
+    @sqrt.error
+    async def sqrt_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Enter at least one valid number.")  
+
+    @commands.command(description="Returns the modulus of the first number from the second number, calculated from left to right.", aliases=["%", "mod"])
+    async def modulus(self, ctx, *nums:Decimal):
+        # Checks for at least two inputs
+        if len(nums) < 2:
+            raise commands.BadArgument()
+
+        mod= nums[0]
+        for x in range(1, len(nums)):
+            mod %= nums[x]
+        
+        await ctx.send("{:,}".format(mod))
+    
+    @modulus.error
+    async def modulus_error(self, ctx, error):
+        await ctx.send("Please enter at least two numbers for mod.")
     
     # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.")
     # async def trig(self, ctx, *args):
