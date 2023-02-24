@@ -7,7 +7,7 @@ class Avatar(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description="Gets the avatar of any user", aliases=["tst"])
+    @commands.command(description="Gets the avatar of any user")
     async def avatar(self, ctx, *userID:str):
 
         if len(userID) == 0:
