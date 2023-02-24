@@ -145,8 +145,23 @@ class Calculator(commands.Cog):
     @sqrt.error
     async def sqrt_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Enter at least one valid number.")        
+            await ctx.send("Enter at least one valid number.")  
 
+    @commands.command(description="Returns the modulus of the first number from the second number, calculated from left to right.", aliases=["%", "mod"])
+    async def modulus(self, ctx, *nums:Decimal):
+        # Checks for at least two inputs
+        if len(nums) < 2:
+            raise commands.BadArgument()
+
+        mod= nums[0]
+        for x in range(1, len(nums)):
+            mod %= nums[x]
+        
+        await ctx.send("{:,}".format(mod))
+    
+    @modulus.error
+    async def modulus_error(self, ctx, error):
+        await ctx.send("Please enter at least two numbers for mod.")
     
     # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.")
     # async def trig(self, ctx, *args):
