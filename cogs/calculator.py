@@ -117,30 +117,18 @@ class Calculator(commands.Cog):
         if len(nums) == 0:
             raise commands.BadArgument()
         
-        sqrt = Decimal(math.sqrt(nums[0]))
-
-        if sqrt == sqrt.to_integral_value:
-            await ctx.send("{;,}".format(int(sqrt)))
-            # Otherwise displays the square root with decimals
-        else:
-            await ctx.send("{:,}".format(sqrt))
-
-        # # find the square root of every individual number inputted
-
-        # sqrts = []
-        # for number in nums:
-        #     number_sqrt = Decimal(math.sqrt(number))
-        #     sqrts.append(number_sqrt)
+        sqrts = []
+        for number in nums:
+            number_sqrt = Decimal(math.sqrt(number))
+            sqrts.append(number_sqrt)
         
-        # for num in sqrts:
-        #     # Displays the square root without decimas if it's equal to it's integer value
-        #     if num == int(num):
-        #         await ctx.send("2Hello")
-
-        #         await ctx.send("{;,}".format(int(num)))
-        #     # Otherwise displays the square root with decimals
-        #     else:
-        #         await ctx.send("{;,} ".format(num))
+        for num in sqrts:
+            # Displays the square root without decimas if it's equal to it's integer value
+            if num == int(num):
+                await ctx.send("{:,}".format(int(num)))
+            # Otherwise displays the square root with decimals
+            else:
+                await ctx.send("{:,} ".format(num))
 
     @sqrt.error
     async def sqrt_error(self, ctx, error):
