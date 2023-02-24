@@ -18,7 +18,7 @@ class CoinFlip(commands.Cog):
         await ctx.send(embed= embedVar)
     
     @coinflip.error
-    async def add_error(self, ctx, error):
+    async def coinflip_error(self, ctx, error):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
