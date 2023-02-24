@@ -1,52 +1,63 @@
 import asyncio
 import datetime as dt
-import discord
 from discord.ext import commands
 from globals import *
+
+async def sleep(num):
+    try:
+        await asyncio.sleep(num)
+    except asyncio.CancelledError:
+        raise
 
 class TimedEvents(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description = 'timer <number> <second, minute, hour> <optional event description>')
-    async def timer(self, ctx, *args):
-        #list of all units of time
-        units_of_time = [["s", "second", "seconds"], ["min", "mins", "minute,", "minutes"], ["h", "hr", "hrs", "hours"]]
+    @commands.command(description = "timer <number> <second, minute, hour> <optional event description>")
+    async def timer(self, ctx, *time):
 
-        #error checking in case user inputs command wrong 
-        if len(args) < 2:
-            await ctx.send('Not enough arguments! Ex. ?timer 360 seconds')
-            return
+        # if len(time) < 2:
+        #     await ctx.send("Not enough arguments! Ex. ?timer 360 seconds")
+        #     return
 
-        #looping to set the correct unit of time 
-        unit = ""
-        for i in range(3):
-            if args[1] in units_of_time[i]:
-                unit = units_of_time[i][-1]
-                break
+        days = 0; hours = 0; minutes = 0; seconds = 0
+        for element in time:
+            if element.lower().endswith("d"):
+                days += int(element[:-1])
+            elif element.lower().endswith("h"):
+                hours += int(element[:-1])
+            elif element.lower().endswith("m"):
+                minutes += int(element[:-1])
+            elif element.lower().endswith("s"):
+                seconds += int(element[:-1])
+            else:
+                raise commands.BadArgument
 
-        #setting the number of time
-        num = int(args[0])
-
-        #sending timer confirmation 
-        await ctx.send('A timer has been set for {} {} from now '.format(num, unit))
-
+        # Timer confirmation message
+        await ctx.send("A timer has been set for {}D {}H {}M {}S from now.".format(days, hours, minutes, seconds))
+    
         #unit conversion
-        if unit == 'min' or unit == 'mins' or unit == 'minute' or unit == 'minutes':
-            num *= 60
-        elif unit == 'hr' or unit == 'hrs' or unit == 'hours':
-            num *= 3600
+        seconds += days * 86400
+        seconds += hours * 3600
+        seconds += minutes * 60
         
-        await asyncio.sleep(num)
+        # sleep = asyncio.create_task(sleep(seconds))
+        # try:
+        #     await sleep
+        # except asyncio.CancelledError:
+        #     await ctx.send("Timer cancelled.")
+
+        await asyncio.sleep(seconds)
 
         #if there's more than 2 arguments, ping the person with the event name
-        if len(args) > 2:
-            event = ''.join(args [2:])
-            await ctx.send("Time for {} {}".format(event, ctx.author.mention))
-            return
+        # if len(args) > 2:
+        #     event = ''.join(args [2:])
+        #     await ctx.send("Time for {} {}".format(event, ctx.author.mention))
+        #     return
+
         #otherwise just do a normal ping
-        await ctx.send("Your timer for {} {} has finished {}".format(args[0], args[1], ctx.author.mention))
+        await ctx.send(f"Your timer is up.")
 
 async def setup(bot):
      await bot.add_cog(TimedEvents(bot))
