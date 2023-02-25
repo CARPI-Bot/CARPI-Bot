@@ -33,5 +33,22 @@ class Fun(commands.Cog):
     async def secret_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Command usage: [user/users] [message]")
+
+    @commands.command(description='Starts a poll (args in quotes)')
+    async def poll(self, ctx, name, option1, option2):
+        embedVar = discord.Embed(title=f"{name}",
+                    description="", color=0x336EFF)
+        embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
+        embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
+        #embedVar.set_footer(text=f"{ctx.created_at}")
+        await ctx.send(embed=embedVar)
+        await ctx.message.delete()
+    #Error handling not firing
+    @poll.error
+    async def poll_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Put arguments in quotes")
+            await ctx.send("Command usage: [Title] [Option 1] [Option 2]")
+
 async def setup(bot):
     await bot.add_cog(Fun(bot))
