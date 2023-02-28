@@ -90,7 +90,7 @@ class Calculator(commands.Cog):
             await ctx.send('Enter at least two valid numbers.')
             await ctx.send("Enter at least two numbers.")
     
-    @commands.command(description="Returns the exponential result of of any number to the power of any number.", aliases=["exp"])
+    @commands.command(description="Returns the exponential result of any number to the power of any number.", aliases=["exp"])
     async def power(self, ctx, *nums:Decimal):
         # Checks for two documents
         if len(nums) < 2:
@@ -111,29 +111,67 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter two valid numbers.")
     
-    # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.")
-    # async def trig(self, ctx, *args):
-    #     # Checks for three inputs commands
-    #     if len(args) < 2:
-    #         raise commands.BadArgument()
-    #     result = 0
-    #     # sin function
-    #     if (args[0] == "sin"):
-    #         result = math.sin(args[1])
+    @commands.command(description="Returns the square root result of any number or group of numbers.", aliases=["root"])
+    async def sqrt(self, ctx, *nums:Decimal):
+        # Checks for at least on input
+        if len(nums) == 0:
+            raise commands.BadArgument()
         
-    #     # Displays the result without the decimal if it's equal to the integer value
-    #     if result == result.to_integral_value:
-    #         await ctx.send("{:,}".format(int(result)))
-    #     # otherwise displays the result for the number up to 3 decimal places
-    #     else:
-    #         await ctx.send("{:,}".format(result))
+        sqrts = []
+        for number in nums:
+            number_sqrt = Decimal(math.sqrt(number))
+            sqrts.append(number_sqrt)
+        
+        for num in sqrts:
+            # Displays the square root without decimas if it's equal to it's integer value
+            if num == int(num):
+                await ctx.send("{:,}".format(int(num)))
+            # Otherwise displays the square root with decimals
+            else:
+                await ctx.send("{:,} ".format(num))
+
+    @sqrt.error
+    async def sqrt_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Enter at least one valid number.")  
+
+    @commands.command(description="Returns the modulus of the first number from the second number, calculated from left to right.", aliases=["%", "mod"])
+    async def modulus(self, ctx, *nums:Decimal):
+        # Checks for at least two inputs
+        if len(nums) < 2:
+            raise commands.BadArgument()
+
+        mod= nums[0]
+        for x in range(1, len(nums)):
+            mod %= nums[x]
+        
+        await ctx.send("{:,}".format(mod))
     
-    # @trig.error
-    # async def trig_error(self, ctx, error):
-    #     if isinstance(error, commands.BadArgument):
-    #         await ctx.send("Enter a valid trig argument and a number (in degrees)")
+    @modulus.error
+    async def modulus_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Please enter at least two numbers for mod.")
+    
+    @commands.command(description= "Returns the resulting inverse of each number inputted.", aliases=["1/", "inv"])
+    async def inverse(seld, ctx, *nums:Decimal):
+        if len(nums) == 0:
+            raise commands.BadArgument()
 
-
+        inverses = []
+        for number in nums:
+            inv = (1/number)
+            inverses.append(inv)
+        
+        for num in inverses:
+            if num == int(num):
+                await ctx.send("{:,}".format(int(num)))
+            else:
+                await ctx.send("{:,}".format(num))
+    
+    @inverse.error
+    async def inverse_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Please enter at least two numbers for this input")
 
 async def setup(bot):
     await bot.add_cog(Calculator(bot))

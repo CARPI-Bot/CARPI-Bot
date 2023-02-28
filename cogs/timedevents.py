@@ -14,7 +14,7 @@ class TimedEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description = "timer <number> <second, minute, hour> <optional event description>")
+    @commands.command(description = "timer <number><s, m, h> <optional event description>")
     async def timer(self, ctx, *time):
 
         # if len(time) < 2:
@@ -33,6 +33,17 @@ class TimedEvents(commands.Cog):
                 seconds += int(element[:-1])
             else:
                 raise commands.BadArgument
+        
+        # Fixes any overflowing time components
+        if seconds >= 60:
+            minutes += seconds // 60
+            seconds %= 60
+        if minutes >= 60:
+            hours += minutes // 60
+            minutes %= 60
+        if hours >= 24:
+            days += hours // 24
+            hours %= 24
 
         # Timer confirmation message
         await ctx.send("A timer has been set for {}D {}H {}M {}S from now.".format(days, hours, minutes, seconds))
@@ -57,7 +68,7 @@ class TimedEvents(commands.Cog):
         #     return
 
         #otherwise just do a normal ping
-        await ctx.send(f"Your timer is up.")
+        await ctx.send(f"Your timer is up, {ctx.author.mention}")
 
 async def setup(bot):
      await bot.add_cog(TimedEvents(bot))

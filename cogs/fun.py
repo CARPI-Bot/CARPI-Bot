@@ -59,5 +59,36 @@ class Fun(commands.Cog):
             WL = "suck"
         await ctx.send(f"You {WL}!")
         
+
+    @commands.command(description='Starts a poll (args in quotes)')
+    async def poll(self, ctx, name, option1, option2):
+        embedVar = discord.Embed(title=f"{name}",
+                    description="", color=0x336EFF)
+        embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
+        embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
+        #embedVar.set_footer(text=f"{ctx.created_at}")
+        await ctx.send(embed=embedVar)
+        await ctx.message.delete()
+    #Error handling not firing
+    @poll.error
+    async def poll_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Put arguments in quotes")
+            await ctx.send("Command usage: [Title] [Option 1] [Option 2]")
+    
+    @commands.command(description= "rolls a dice and sends the result")
+    async def diceroll(self, ctx, n=6):
+        """Sends the result of a single n-sided dice roll."""
+
+        if type(n) != int:
+            await ctx.send("Please give an interger!")
+            return
+
+        # Initializes a list of values from 1 to 6 and randomly sends a single value
+        outcomes = [i + 1 for i in range(n)]
+        result = random.choice(outcomes)
+
+        await ctx.send("You rolled a {:d}.".format(result))
+
 async def setup(bot):
     await bot.add_cog(Fun(bot))
