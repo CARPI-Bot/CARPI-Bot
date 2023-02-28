@@ -49,6 +49,20 @@ class Fun(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Put arguments in quotes")
             await ctx.send("Command usage: [Title] [Option 1] [Option 2]")
+    
+    @commands.command(description= "rolls a dice and sends the result")
+    async def diceroll(self, ctx, n=6):
+        """Sends the result of a single n-sided dice roll."""
+
+        if type(n) != int:
+            await ctx.send("Please give an interger!")
+            return
+
+        # Initializes a list of values from 1 to 6 and randomly sends a single value
+        outcomes = [i + 1 for i in range(n)]
+        result = random.choice(outcomes)
+
+        await ctx.send("You rolled a {:d}.".format(result))
 
 async def setup(bot):
     await bot.add_cog(Fun(bot))

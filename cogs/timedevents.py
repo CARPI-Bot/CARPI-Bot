@@ -14,7 +14,7 @@ class TimedEvents(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description = "timer <number> <second, minute, hour> <optional event description>")
+    @commands.command(description = "timer <number><s, m, h> <optional event description>")
     async def timer(self, ctx, *time):
 
         # if len(time) < 2:
