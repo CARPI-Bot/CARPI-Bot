@@ -156,13 +156,10 @@ class Calculator(commands.Cog):
     async def inverse(seld, ctx, *nums:Decimal):
         if len(nums) == 0:
             raise commands.BadArgument()
-        
+
         inverses = []
         for number in nums:
-            await ctx.send("hhh")
-            inv = 1/nums[number]
-            await ctx.send("hhh")
-
+            inv = (1/number)
             inverses.append(inv)
         
         for num in inverses:
@@ -175,29 +172,6 @@ class Calculator(commands.Cog):
     async def inverse_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Please enter at least two numbers for this input")
-    # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.")
-    # async def trig(self, ctx, *args):
-    #     # Checks for three inputs commands
-    #     if len(args) < 2:
-    #         raise commands.BadArgument()
-    #     result = 0
-    #     # sin function
-    #     if (args[0] == "sin"):
-    #         result = math.sin(args[1])
-        
-    #     # Displays the result without the decimal if it's equal to the integer value
-    #     if result == result.to_integral_value:
-    #         await ctx.send("{:,}".format(int(result)))
-    #     # otherwise displays the result for the number up to 3 decimal places
-    #     else:
-    #         await ctx.send("{:,}".format(result))
-    
-    # @trig.error
-    # async def trig_error(self, ctx, error):
-    #     if isinstance(error, commands.BadArgument):
-    #         await ctx.send("Enter a valid trig argument and a number (in degrees)")
-
-
 
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
