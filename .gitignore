@@ -1,3 +1,4 @@
 .DS_Store
 TOKEN.txt
 *.pyc
+globals.py
