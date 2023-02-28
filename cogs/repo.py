@@ -9,7 +9,7 @@ class Repo(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description="Returns a meddage that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
+    @commands.command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
     async def repo(self, ctx):
         embedVar = discord.Embed(title="Click Here to Redirect to the {} Repository".format(ctx.guild.get_member(1067560443444478034).name), url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
         embedVar.set_footer(text='\u200bRepository link requested by ' + str(ctx.author.nick))
