@@ -1,6 +1,6 @@
+import discord
 from discord.ext import commands
 from globals import *
-from decimal import Decimal
 
 class Avatar(commands.Cog):
 
@@ -8,20 +8,19 @@ class Avatar(commands.Cog):
         self.bot = bot
 
     @commands.command(description="Gets the avatar of any user")
-    async def avatar(self, ctx, *userID:str):
-
-        if len(userID) == 0:
-            await ctx.send(str(ctx.author.display_avatar) )
-        elif len(userID[0]) == 21:
-            await ctx.send(str(ctx.guild.get_member(int( userID[0][2:len(userID) - 2] ) ).display_avatar ) )
+    async def avatar(self, ctx, member:discord.Member=None):
+        if (member == None):
+            await ctx.send(ctx.author.display_avatar)
         else:
-            await ctx.send('Invalid command sent.')
+            await ctx.send(member.display_avatar)
     
     @avatar.error
     async def avatar_error(self, ctx, error):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
+        if isinstance(error, commands.MemberNotFound):
+            await ctx.send("Invalid member.")
 
 async def setup(bot):
     await bot.add_cog(Avatar(bot))
