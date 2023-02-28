@@ -33,6 +33,32 @@ class Fun(commands.Cog):
     async def secret_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Command usage: [user/users] [message]")
+    
+    @commands.command(description = "Play rock paper scissors against a bot")
+    async def rps(self, ctx, msg):
+        listy = ["rock", "paper", "scissors"]
+        msg = msg.lower()
+        WL = "are cute"
+        botarg = random.choice(listy) 
+        await ctx.send(botarg)
+        if(msg == botarg):
+            WL = "Tied"
+        elif(msg == "rock" and botarg == "paper"):
+            WL = "Lose"
+        elif(msg == "paper" and botarg == "rock"):
+            WL = "Win"
+        elif(msg == "scissors" and botarg == "paper"):
+            WL = "Win"
+        elif(msg == "scissors" and botarg == "rock"):
+            WL = "Lose"
+        elif(msg == "paper" and botarg == "scissors"):
+            WL = "Lose"
+        elif(msg == "rock" and botarg == "scissors"):
+            WL = "Win"
+        else:
+            WL = "suck"
+        await ctx.send(f"You {WL}!")
+        
 
     @commands.command(description='Starts a poll (args in quotes)')
     async def poll(self, ctx, name, option1, option2):

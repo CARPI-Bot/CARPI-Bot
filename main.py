@@ -17,7 +17,7 @@ async def loadCogs():
 @bot.event
 async def on_ready():
     print("=================================")
-    print(f">> Logged in as {bot.user.name}#{bot.user.discriminator} <<")
+    print(f">>  Logged in as {bot.user.name}#{bot.user.discriminator} <<")
     print(f">>  Discord.py version {discord.__version__}  <<")
     print("=================================\n")
     print(f"Currently deployed in {len(bot.guilds)} guild(s):")
