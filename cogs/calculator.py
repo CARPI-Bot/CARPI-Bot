@@ -149,8 +149,32 @@ class Calculator(commands.Cog):
     
     @modulus.error
     async def modulus_error(self, ctx, error):
-        await ctx.send("Please enter at least two numbers for mod.")
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Please enter at least two numbers for mod.")
     
+    @commands.command(description= "Returns the resulting inverse of each number inputted.", aliases=["1/", "inv"])
+    async def inverse(seld, ctx, *nums:Decimal):
+        if len(nums) == 0:
+            raise commands.BadArgument()
+        
+        inverses = []
+        for number in nums:
+            await ctx.send("hhh")
+            inv = 1/nums[number]
+            await ctx.send("hhh")
+
+            inverses.append(inv)
+        
+        for num in inverses:
+            if num == int(num):
+                await ctx.send("{:,}".format(int(num)))
+            else:
+                await ctx.send("{:,}".format(num))
+    
+    @inverse.error
+    async def inverse_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Please enter at least two numbers for this input")
     # @commands.command(description="Returns the resulting trigonomic value for any basic trig operation, calculated in terms of degrees.")
     # async def trig(self, ctx, *args):
     #     # Checks for three inputs commands
