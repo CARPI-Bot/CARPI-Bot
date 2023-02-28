@@ -23,12 +23,13 @@ class Fun(commands.Cog):
         for x in members:
             if not x.dm_channel == None:
                 await x.dm_channel.send(f"Secret message: {msg}")
-                await ctx.send("Message sent!")
+                await ctx.send(f"Message sent to {x.name}")
             else:
                 await x.create_dm()
                 await x.dm_channel.send(f"Secret message: {msg}")
-                await ctx.send("Message sent!")
+                await ctx.send(f"Message sent to {x.name}")
         await ctx.message.delete()
+
     #Error handling not firing
     @secret.error
     async def secret_error(self, ctx, error):
@@ -67,8 +68,10 @@ class Fun(commands.Cog):
                     description="", color=0x336EFF)
         embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
         embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
-        embedVar= datetime.datetime.utcnow()
-        await ctx.send(embed=embedVar)
+        embedVar.timestamp = datetime.datetime.utcnow()
+        msg = await ctx.send(embed=embedVar)
+        await msg.add_reaction("one")
+        await msg.add_reaction("two")
         await ctx.message.delete()
     #Error handling not firing
     @poll.error
