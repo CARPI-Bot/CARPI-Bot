@@ -2,6 +2,7 @@ from discord.ext import commands
 from globals import *
 import random
 import discord
+import datetime
 
 class Fun(commands.Cog):
     def __init__(self, bot):
@@ -35,12 +36,12 @@ class Fun(commands.Cog):
             await ctx.send("Command usage: [user/users] [message]")
 
     @commands.command(description='Starts a poll (args in quotes)')
-    async def poll(self, ctx, name, option1, option2):
+    async def poll(self, ctx, name, option1, option2):  
         embedVar = discord.Embed(title=f"{name}",
                     description="", color=0x336EFF)
         embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
         embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
-        #embedVar.set_footer(text=f"{ctx.created_at}")
+        embedVar= datetime.datetime.utcnow()
         await ctx.send(embed=embedVar)
         await ctx.message.delete()
     #Error handling not firing
