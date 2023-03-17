@@ -70,9 +70,18 @@ class Fun(commands.Cog):
         embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
         embedVar.timestamp = datetime.datetime.utcnow()
         msg = await ctx.send(embed=embedVar)
-        await msg.add_reaction("one")
-        await msg.add_reaction("two")
+        await msg.add_reaction("1️⃣")
+        await msg.add_reaction("2️⃣")
         await ctx.message.delete()
+
+    @bot.event
+    async def on_reaction_add(reaction, user):
+        message = reaction.message # our embed
+        channel = discord.utils.get(message.guild.channels, name="welcome") #our channel
+        if message.channel.id == channel.id: # checking if it's the same channel
+            if message.author == bot.user: #checking if it's sent by the bot
+                if reaction.emoji.name == "1️⃣": #checking the emoji
+                    # enter code here, user is person that reacted
     #Error handling not firing
     @poll.error
     async def poll_error(self, ctx, error):
