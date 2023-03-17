@@ -16,11 +16,6 @@ class TimedEvents(commands.Cog):
 
     @commands.command(description = "timer <number><s, m, h> <optional event description>")
     async def timer(self, ctx, *time):
-
-        # if len(time) < 2:
-        #     await ctx.send("Not enough arguments! Ex. ?timer 360 seconds")
-        #     return
-
         days = 0; hours = 0; minutes = 0; seconds = 0
         for element in time:
             if element.lower().endswith("d"):
@@ -34,7 +29,7 @@ class TimedEvents(commands.Cog):
             else:
                 raise commands.BadArgument
         
-        # Fixes any overflowing time components
+        #Unit Conversion
         if seconds >= 60:
             minutes += seconds // 60
             seconds %= 60
@@ -52,22 +47,9 @@ class TimedEvents(commands.Cog):
         seconds += days * 86400
         seconds += hours * 3600
         seconds += minutes * 60
-        
-        # sleep = asyncio.create_task(sleep(seconds))
-        # try:
-        #     await sleep
-        # except asyncio.CancelledError:
-        #     await ctx.send("Timer cancelled.")
-
         await asyncio.sleep(seconds)
 
-        #if there's more than 2 arguments, ping the person with the event name
-        # if len(args) > 2:
-        #     event = ''.join(args [2:])
-        #     await ctx.send("Time for {} {}".format(event, ctx.author.mention))
-        #     return
-
-        #otherwise just do a normal ping
+        #timer notification
         await ctx.send(f"Your timer is up, {ctx.author.mention}")
 
 async def setup(bot):
