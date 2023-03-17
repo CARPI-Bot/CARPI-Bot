@@ -37,6 +37,8 @@ class Invite(commands.Cog):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
+        else:
+            await ctx.send(str(error))
 
 async def setup(bot):
     await bot.add_cog(Invite(bot))

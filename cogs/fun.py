@@ -91,7 +91,7 @@ class Fun(commands.Cog):
     
     @commands.command(description= "rolls a dice and sends the result")
     async def diceroll(self, ctx, n=6):
-        """Sends the result of a single n-sided dice roll."""
+        # Sends the result of a single n-sided dice roll.
 
         if type(n) != int:
             await ctx.send("Please give an interger!")
