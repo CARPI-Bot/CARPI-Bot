@@ -2,6 +2,7 @@ from discord.ext import commands
 from globals import *
 import random
 import datetime
+import discord
 
 class Zesty(commands.Cog):
 
@@ -16,7 +17,7 @@ class Zesty(commands.Cog):
         await ctx.send(f"{ctx.guild.members[person].mention} get timed out for 1 min")
     
     @commands.command(description='secret message someone')
-    async def callout(self, ctx, members: commands.Greedy[discord.member], *, msg='personal callout'):
+    async def callout(self, ctx, members: commands.Greedy[discord.Member], *, msg='personal callout'):
         for x in members:
             if not x.dm_channel == None:
                 await x.dm_channel.send(f"Secret message: {msg}")
