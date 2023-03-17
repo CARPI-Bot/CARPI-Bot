@@ -13,11 +13,9 @@ class Invite(commands.Cog):
     async def invite(self, ctx, *args:str):
         # embedVar = discord.Embed(title="Click Here to Redirect to the {} Repository".format(ctx.guild.get_member(1067560443444478034).name), url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
 
-        await ctx.send(ctx.author.voice)
-
         if len(args) == 0:
             embedVar = discord.Embed(title="Click Here To Add {} To a Server".format(ctx.guild.get_member(1067560443444478034).name), url='https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot', color=0x0099FF, timestamp=datetime.datetime.now())
-            embedVar.set_footer(text='\u200bRepository link requested by ' + str(ctx.author.nick))
+            embedVar.set_footer(text='\u200bBot invite link requested by ' + str(ctx.author.nick))
             await ctx.send(embed= embedVar)
 
         elif len(args) == 1:
@@ -33,12 +31,14 @@ class Invite(commands.Cog):
                 await ctx.send(await ctx.channel.create_invite(max_age = 300) )
     
     @invite.error
-    async def invite_error(self, ctx, error):
+    async def invite_error(self, ctx, *args:str, error):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
-        else:
-            await ctx.send(str(error))
+        elif len(args) == 1 and args[0] == 'vc' and ctx.author.voice == None:
+            embedVar = discord.Embed(title="Voice Channel Invite Failed", color=0xC80000, timestamp=datetime.datetime.now())
+            embedVar.set_footer(text='\u200bVoice chat invite requested by ' + str(ctx.author.nick))
+            await ctx.send(embed= embedVar)
 
 async def setup(bot):
     await bot.add_cog(Invite(bot))
