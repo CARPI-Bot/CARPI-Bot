@@ -15,12 +15,15 @@ class Miscellaneous(commands.Cog):
         embedVar.set_footer(text='\u200bPing checked by ' + str(ctx.author.nick))
         await ctx.send(embed= embedVar)
     
-    @ping.error
-    async def ping_error(self, ctx, error):
+    @avatar.error
+    async def avatar_error(self, ctx, error):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
+        if isinstance(error, commands.MemberNotFound):
+            await ctx.send("Invalid member.")
 
+    ### COINFLIP ###
     @commands.command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         # Calls a random float between 0 and 0.99 inclusive. Returns heads if 0 - 0.48 and tails if 0.49 - 0.99
@@ -34,6 +37,21 @@ class Miscellaneous(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
 
+    ### PING ###
+    @commands.command(description="Gets the latentcy of the server")
+    async def ping(self, ctx):
+        # Retrieves the server latency in MS.
+        embedVar = discord.Embed(title="Pong!", description="Your message was recieved in {}ms.".format(str(round(self.bot.latency * 1000) ) ), color=0x00C500, timestamp=datetime.datetime.now())
+        embedVar.set_footer(text='\u200bPing checked by ' + str(ctx.author.nick))
+        await ctx.send(embed= embedVar)
+    
+    @ping.error
+    async def ping_error(self, ctx, error):
+        # Should never run. If this runs then bruh
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Something went wrong.")
+
+    ### REPO ###
     @commands.command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
     async def repo(self, ctx):
         embedVar = discord.Embed(title="Click Here to Redirect to the {} Repository".format(ctx.guild.get_member(1067560443444478034).name), url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
@@ -46,21 +64,7 @@ class Miscellaneous(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
 
-    @commands.command(description="Gets the avatar of any user")
-    async def avatar(self, ctx, member:discord.Member=None):
-        if (member == None):
-            await ctx.send(ctx.author.display_avatar)
-        else:
-            await ctx.send(member.display_avatar)
-    
-    @avatar.error
-    async def avatar_error(self, ctx, error):
-        # Should never run. If this runs then bruh
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Something went wrong.")
-        if isinstance(error, commands.MemberNotFound):
-            await ctx.send("Invalid member.")
-    
+    ### SUS ###
     @commands.command(description='sus callout')
     async def sus(self, ctx):
         person = random.randint(0, 9)

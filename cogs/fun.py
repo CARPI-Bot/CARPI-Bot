@@ -69,9 +69,10 @@ class Fun(commands.Cog):
         embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
         embedVar.timestamp = datetime.datetime.utcnow()
         msg = await ctx.send(embed=embedVar)
-        await msg.add_reaction("one")
-        await msg.add_reaction("two")
+        await msg.add_reaction("1️⃣")
+        await msg.add_reaction("2️⃣")
         await ctx.message.delete()
+
     
     #Error handling not firing
     @poll.error
