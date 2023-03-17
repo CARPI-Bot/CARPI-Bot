@@ -8,7 +8,7 @@ class Miscellaneous(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description="Gets the latentcy of the server")
+    @commands.command(description="Gets the latency of the server")
     async def ping(self, ctx):
         # Retrieves the server latency in MS.
         embedVar = discord.Embed(title="Pong!", description="Your message was recieved in {}ms.".format(str(round(self.bot.latency * 1000) ) ), color=0x00C500, timestamp=datetime.datetime.now())
