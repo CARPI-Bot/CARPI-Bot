@@ -29,7 +29,7 @@ class TimedEvents(commands.Cog):
             else:
                 raise commands.BadArgument
         
-        #Unit Conversion
+        # Unit Conversion
         if seconds >= 60:
             minutes += seconds // 60
             seconds %= 60
@@ -43,13 +43,13 @@ class TimedEvents(commands.Cog):
         # Timer confirmation message
         await ctx.send("A timer has been set for {}D {}H {}M {}S from now.".format(days, hours, minutes, seconds))
     
-        #unit conversion
+        # Unit conversion
         seconds += days * 86400
         seconds += hours * 3600
         seconds += minutes * 60
         await asyncio.sleep(seconds)
 
-        #timer notification
+        # Timer notification
         await ctx.send(f"Your timer is up, {ctx.author.mention}")
 
 async def setup(bot):
