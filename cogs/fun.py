@@ -96,7 +96,7 @@ class Fun(commands.Cog):
 
     @commands.command(description = "nroll <number of dice> <number of sides on a die>")
     async def nroll(self, ctx, *args):
-        "Sends the result of multiple n-sided dice rolls."
+        # Sends the result of multiple n-sided dice rolls.
         if len(args) > 2:
             await ctx.send("Proper command: -nroll <number of dice> <number of sides on each dice>")
             return

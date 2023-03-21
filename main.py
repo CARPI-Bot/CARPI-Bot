@@ -4,7 +4,7 @@ import discord
 from discord.ext import commands
 from globals import *
 
-TOKEN = open("TOKEN.txt").read()
+TOKEN = open("TOKEN.txt").read().strip()
 
 intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, owner_ids=OWNER_IDS, intents=intents)
@@ -23,7 +23,7 @@ async def on_ready():
     print(f"Currently deployed in {len(bot.guilds)} guild(s):")
     for guild in bot.guilds:
         print(" - " + guild.name)
-    print("=================================")
+    print("\n=================================")
 
 async def main():
     await loadCogs()

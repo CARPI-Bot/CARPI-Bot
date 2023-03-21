@@ -14,15 +14,15 @@ class Invite(commands.Cog):
         # embedVar = discord.Embed(title="Click Here to Redirect to the {} Repository".format(ctx.guild.get_member(1067560443444478034).name), url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
 
         if len(args) == 0:
-            embedVar = discord.Embed(title="Click Here To Add {} To a Server".format(ctx.guild.get_member(1067560443444478034).name), url='https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot', color=0x0099FF, timestamp=datetime.datetime.now())
-            embedVar.set_footer(text='\u200bBot invite link requested by ' + str(ctx.author.nick))
+            embedVar = discord.Embed(title=f"Click Here To Add {ctx.guild.get_member(1067560443444478034).name} To a Server", url='https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot', color=0x0099FF, timestamp=datetime.datetime.now())
+            embedVar.set_footer(text=f"\u200bBot invite link requested by {ctx.author.nick}")
             await ctx.send(embed= embedVar)
 
         elif len(args) == 1:
             if args[0] == 'vc':
                 if ctx.author.voice == None:
                     embedVar = discord.Embed(title="Voice Channel Invite Failed", description="You must be in a voice channel to get a valid invite link.", color=0xC80000, timestamp=datetime.datetime.now())
-                    embedVar.set_footer(text='\u200bVoice chat invite requested by ' + str(ctx.author.nick))
+                    embedVar.set_footer(text=f"\u200bVoice chat invite requested by {ctx.author.nick}")
                     await ctx.send(embed= embedVar)
                 else:
                     await ctx.send(await ctx.author.voice.channel.create_invite(max_age = 300) )
@@ -37,7 +37,7 @@ class Invite(commands.Cog):
             await ctx.send("Something went wrong.")
         elif len(args) == 1 and args[0] == 'vc' and ctx.author.voice == None:
             embedVar = discord.Embed(title="Voice Channel Invite Failed", color=0xC80000, timestamp=datetime.datetime.now())
-            embedVar.set_footer(text='\u200bVoice chat invite requested by ' + str(ctx.author.nick))
+            embedVar.set_footer(text=f"\u200bVoice chat invite requested by {ctx.author.nick}")
             await ctx.send(embed= embedVar)
 
 async def setup(bot):
