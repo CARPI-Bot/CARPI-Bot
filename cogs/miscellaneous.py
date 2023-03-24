@@ -79,5 +79,14 @@ class Miscellaneous(commands.Cog):
                 await ctx.send("Message sent!")
         await ctx.message.delete()
 
+    ### get the role
+    @commands.command(description="returns all roles and the members who have it")
+    async def getRole(self, ctx, members: commands.Greedy[discord.Member]):
+        for i in members:
+            await ctx.send(f"User: {i}")
+            await ctx.send(i.top_role)
+        
+    
+
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
