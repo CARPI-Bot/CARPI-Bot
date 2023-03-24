@@ -1,6 +1,12 @@
 from discord.ext import commands
 from decimal import Decimal
 import math
+import discord
+
+class MyView(discord.ui.View):
+    @discord.ui.button(label = "Button 1", row=0, style=discord.ButtonStyle.primary)
+    async def button_call(self, button, interaction):
+        await interaction.response.send_message("number")
 
 class Calculator(commands.Cog):
 
