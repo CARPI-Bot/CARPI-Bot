@@ -3,18 +3,13 @@ from decimal import Decimal
 import math
 import discord
 
-class MyView(discord.ui.View):
-    @discord.ui.button(label = "Button 1", row=0, style=discord.ButtonStyle.primary)
-    async def button_call(self, button, interaction):
-        await interaction.response.send_message("number")
-
 class Calculator(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
     
-    @commands.command(description="Returns the sum of any number of values.", aliases=["sum"])
-    async def add(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the sum of any number of values.", aliases=["sum"])
+    async def add(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for at least two arguments
         if len(nums) < 2: 
             raise commands.BadArgument()
@@ -32,8 +27,8 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
 
-    @commands.command(description="Returns the difference of any number of values, calculated from left to right.", aliases=["sub", "subt"])
-    async def subtract(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the difference of any number of values, calculated from left to right.", aliases=["sub", "subt"])
+    async def subtract(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for at least two arguments
         if len(nums) < 2:
             raise commands.BadArgument()
@@ -53,8 +48,8 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
 
-    @commands.command(description="Returns the product of any number of values.", aliases=["mul", "mult"])
-    async def multiply(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the product of any number of values.", aliases=["mul", "mult"])
+    async def multiply(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for at least two arguments
         if len(nums) < 2:
             raise commands.BadArgument()
@@ -74,8 +69,8 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least two numbers.")
 
-    @commands.command(description="Returns the quotient of any number of values, calculated from left to right.", aliases=["div"])
-    async def divide(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the quotient of any number of values, calculated from left to right.", aliases=["div"])
+    async def divide(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for at least two arguments
         if len(nums) < 2:
             raise commands.BadArgument()
@@ -96,8 +91,8 @@ class Calculator(commands.Cog):
             await ctx.send('Enter at least two valid numbers.')
             await ctx.send("Enter at least two numbers.")
     
-    @commands.command(description="Returns the exponential result of any number to the power of any number.", aliases=["exp"])
-    async def power(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the exponential result of any number to the power of any number.", aliases=["exp"])
+    async def power(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for two documents
         if len(nums) < 2:
             raise commands.BadArgument()
@@ -117,8 +112,8 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter two valid numbers.")
     
-    @commands.command(description="Returns the square root result of any number or group of numbers.", aliases=["root"])
-    async def sqrt(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the square root result of any number or group of numbers.", aliases=["root"])
+    async def sqrt(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for at least on input
         if len(nums) == 0:
             raise commands.BadArgument()
@@ -141,8 +136,8 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter at least one valid number.")  
 
-    @commands.command(description="Returns the modulus of the first number from the second number, calculated from left to right.", aliases=["%", "mod"])
-    async def modulus(self, ctx, *nums:Decimal):
+    @commands.hybrid_command(description="Returns the modulus of the first number from the second number, calculated from left to right.", aliases=["%", "mod"])
+    async def modulus(self, ctx, nums: commands.Greedy[Decimal]):
         # Checks for at least two inputs
         if len(nums) < 2:
             raise commands.BadArgument()
@@ -158,8 +153,8 @@ class Calculator(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Please enter at least two numbers for mod.")
     
-    @commands.command(description= "Returns the resulting inverse of each number inputted.", aliases=["1/", "inv"])
-    async def inverse(seld, ctx, *nums:Decimal):
+    @commands.hybrid_command(description= "Returns the resulting inverse of each number inputted.", aliases=["1/", "inv"])
+    async def inverse(seld, ctx, nums: commands.Greedy[Decimal]):
         if len(nums) == 0:
             raise commands.BadArgument()
 
