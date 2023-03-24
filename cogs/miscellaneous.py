@@ -65,12 +65,6 @@ class Miscellaneous(commands.Cog):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
             await ctx.send("Something went wrong.")
-
-    ### SUS ###
-    @commands.command(description="Sus callout")
-    async def sus(self, ctx):
-        person = random.randint(0, 9)
-        await ctx.send(f"{ctx.guild.members[person].mention} is SUS")
     
     ### SECRET MESSAGE ###
     @commands.command(description="Secretly message someone")

@@ -7,8 +7,19 @@ class Moderator(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
+
+    @commands.command(description="Kills instances", aliases=["shutdown"], hidden=True)
+    async def kill(self, ctx):
+        # Terminates client
+        await self.bot.close()
     
-    @commands.command(description="Deletes the last x number of messages in the channel", aliases=["purge"], hidden=True)
+    @kill.error
+    async def shut_error(self, ctx, error):
+        # Should never run. If this runs then bruh
+        await ctx.send("Something went wrong.")
+    
+    @commands.command(description="Deletes the last x number of messages in the channel",
+                      aliases=["purge"], hidden=True)
     async def clear(self, ctx, num:int, *, reason:str = None):
 
         if num < 1:
@@ -34,21 +45,17 @@ class Moderator(commands.Cog):
         else:
             await ctx.send("Usage: `?clear [number of messages] [optional reason]`")
 
-    @commands.command(description="Puts a user into timeout for a specified amount of time.", aliases=["mute", "silence"], hidden=True)
+    @commands.command(description="Puts a user into timeout for a specified amount of time.",
+                      aliases=["mute", "silence"], hidden=True)
     async def timeout(self, ctx, member:discord.Member, *time:str):
         
         days = 0; hours = 0; minutes = 0; seconds = 0
         for element in time:
-            if element.lower().endswith("d"):
-                days += int(element[:-1])
-            elif element.lower().endswith("h"):
-                hours += int(element[:-1])
-            elif element.lower().endswith("m"):
-                minutes += int(element[:-1])
-            elif element.lower().endswith("s"):
-                seconds += int(element[:-1])
-            else:
-                raise commands.BadArgument
+            if element.lower().endswith("d"): days += int(element[:-1])
+            elif element.lower().endswith("h"): hours += int(element[:-1])
+            elif element.lower().endswith("m"): minutes += int(element[:-1])
+            elif element.lower().endswith("s"): seconds += int(element[:-1])
+            else: raise commands.BadArgument
         
         # Fixes any overflowing time components
         if seconds >= 60:
@@ -72,7 +79,8 @@ class Moderator(commands.Cog):
         else:
             await ctx.send(str(error))
 
-    @commands.command(description="Removes timeout status from a user if they're currently timed out.", aliases=["untimeout"], hidden=True)
+    @commands.command(description="Removes timeout status from a user if they're currently timed out.",
+                      aliases=["untimeout"], hidden=True)
     async def timein(self, ctx, member:discord.Member):
         
         if member.is_timed_out():

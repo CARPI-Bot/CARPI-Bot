@@ -63,8 +63,8 @@ class Fun(commands.Cog):
     
     @commands.command(description='Starts a poll (args in quotes)')
     async def poll(self, ctx, name, option1, option2):  
-        embedVar = discord.Embed(title=f"{name}",
-                    description="", color=0x336EFF)
+        embedVar = discord.Embed(title="Poll",
+                    description=f"{name}", color=0x336EFF)
         embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
         embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
         embedVar.timestamp = datetime.datetime.utcnow()
@@ -96,7 +96,7 @@ class Fun(commands.Cog):
 
     @commands.command(description = "nroll <number of dice> <number of sides on a die>")
     async def nroll(self, ctx, *args):
-        "Sends the result of multiple n-sided dice rolls."
+        # Sends the result of multiple n-sided dice rolls.
         if len(args) > 2:
             await ctx.send("Proper command: -nroll <number of dice> <number of sides on each dice>")
             return
