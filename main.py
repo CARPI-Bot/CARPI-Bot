@@ -16,15 +16,16 @@ async def loadCogs(bot:commands.Bot):
 
 @bot.event
 async def on_ready():
-    await bot.tree.sync()
-    print("=================================")
-    print(f">>  Logged in as {bot.user.name}#{bot.user.discriminator} <<")
-    print(f">>  Discord.py version {discord.__version__}  <<")
-    print("=================================\n")
+    num_synced = len(await bot.tree.sync())
+    print("==================================")
+    print(">>" + f"Logged in as {bot.user.name}#{bot.user.discriminator}".center(30) + "<<")
+    print(">>" + f"Discord.py version {discord.__version__}".center(30) + "<<")
+    print(f"{num_synced} command(s) synced!".center(34))
+    print("==================================\n")
     print(f"Currently deployed in {len(bot.guilds)} guild(s):")
     for guild in bot.guilds:
         print(" - " + guild.name)
-    print("\n=================================")
+    print("\n==================================")
 
 async def main():
     await loadCogs(bot)
