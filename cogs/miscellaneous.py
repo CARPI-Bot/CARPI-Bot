@@ -86,10 +86,22 @@ class Miscellaneous(commands.Cog):
             await ctx.send(f"User: {i}")
             await ctx.send(f"roles: {i.top_role}")
 
+    ## CUURENTLY WORK IN PROGRESS
     ### blackjack game
     @commands.command(description = "blackjack game")
-    async def blackJack(self, ctx, msg:int):
+    async def blackJack(self, ctx, msg:bool):
         nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-        
+        currentnum = random.choice(nums)
+        statement = msg
+        await ctx.send(currentnum)
+        while (currentnum <= 21 and statement == True):
+            currentnum += random.choice(nums)
+            await ctx.send(currentnum)
+
+    @blackJack.error
+    async def blackJack(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("incorrrect input value, must be a bool")
+
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
