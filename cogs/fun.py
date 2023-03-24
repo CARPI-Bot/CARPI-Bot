@@ -63,8 +63,8 @@ class Fun(commands.Cog):
     
     @commands.command(description='Starts a poll (args in quotes)')
     async def poll(self, ctx, name, option1, option2):  
-        embedVar = discord.Embed(title=f"{name}",
-                    description="", color=0x336EFF)
+        embedVar = discord.Embed(title="Poll",
+                    description=f"{name}", color=0x336EFF)
         embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
         embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
         embedVar.timestamp = datetime.datetime.utcnow()
