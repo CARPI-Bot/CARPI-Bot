@@ -9,7 +9,7 @@ class Miscellaneous(commands.Cog):
         self.bot = bot
 
     ### PING ###
-    @commands.hybrid_command(description="Gets the latency of the server")
+    @commands.command(description="Gets the latency of the server")
     async def ping(self, ctx):
         # Retrieves the server latency in milliseconds
         embedVar = discord.Embed(title="Pong!", description=f"Your message was recieved in {round(self.bot.latency * 1000)}ms.", color=0x00C500, timestamp=datetime.datetime.now())
@@ -23,7 +23,7 @@ class Miscellaneous(commands.Cog):
             await ctx.send("Something went wrong.")
     
     ### AVATAR ###
-    @commands.hybrid_command(description="Gets the avatar of any user")
+    @commands.command(description="Gets the avatar of any user")
     async def avatar(self, ctx, member:discord.Member=None):
         if (member == None):
             await ctx.send(ctx.author.display_avatar)
@@ -39,7 +39,7 @@ class Miscellaneous(commands.Cog):
             await ctx.send("Invalid member.")
 
     ### COINFLIP ###
-    @commands.hybrid_command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
+    @commands.command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         # Calls a random float between 0 and 0.99 inclusive. Returns heads if 0 - 0.48 and tails if 0.49 - 0.99
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
@@ -54,7 +54,7 @@ class Miscellaneous(commands.Cog):
             await ctx.send("Something went wrong.")
 
     ### REPO ###
-    @commands.hybrid_command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
+    @commands.command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
     async def repo(self, ctx):
         embedVar = discord.Embed(title=f"Click Here to Redirect to the {ctx.guild.get_member(1067560443444478034).name} Repository", url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
         embedVar.set_footer(text=f"\u200bRepository link requested by {ctx.author.nick}")
@@ -67,7 +67,7 @@ class Miscellaneous(commands.Cog):
             await ctx.send("Something went wrong.")
     
     ### SECRET MESSAGE ###
-    @commands.hybrid_command(description="Secretly message someone")
+    @commands.command(description="Secretly message someone")
     async def secretmessage(self, ctx, members: commands.Greedy[discord.Member], *, msg="Hey!"):
         for x in members:
             if not x.dm_channel == None:
@@ -80,13 +80,16 @@ class Miscellaneous(commands.Cog):
         await ctx.message.delete()
 
     ### get the role
-    @commands.command(description="returns all roles and the members who have it")
+    @commands.command(description="gets the roles the specific users have")
     async def getRole(self, ctx, members: commands.Greedy[discord.Member]):
         for i in members:
             await ctx.send(f"User: {i}")
-            await ctx.send(i.top_role)
-        
-    
+            await ctx.send(f"roles: {i.top_role}")
 
+    ### blackjack game
+    @commands.command(description = "blackjack game")
+    async def blackJack(self, ctx, msg:int):
+        nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
