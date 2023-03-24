@@ -61,19 +61,30 @@ class Fun(commands.Cog):
             WL = "suck"
         await ctx.send(f"You {WL}!")
     
-    @commands.command(description='Starts a poll (args in quotes)')
-    async def poll(self, ctx, name, option1, option2):  
-        embedVar = discord.Embed(title="Poll",
-                    description=f"{name}", color=0x336EFF)
-        embedVar.add_field(name="Option 1", value=f"{option1}", inline=False)
-        embedVar.add_field(name="Option 2", value=f"{option2}", inline=False)
-        embedVar.timestamp = datetime.datetime.utcnow()
-        msg = await ctx.send(embed=embedVar)
-        await msg.add_reaction("1️⃣")
-        await msg.add_reaction("2️⃣")
-        await ctx.message.delete()
+    @commands.command(description = 'poll "<question>" <choice 1> <choice 2> ... <choice 10>')
+    async def poll(self, ctx, question: str, *choices):
+        emojis = ["1️⃣", "2⃣", "3⃣", "4⃣", "5⃣",
+                   "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
+        if len(choices) > 10:
+            await ctx.send("You can may have 10 options!.")
+            return
 
-    
+        embed = discord.Embed(
+            title = "Poll",
+            description = question,
+            colour = ctx.author.colour,
+            timestamp = datetime.datetime.utcnow()
+        )
+
+        options = "\n\n".join(["{}\t{}".format(emojis[i], choice) for i, choice in enumerate(choices)])
+
+        embed.add_field(name = "Options: \n", value = options, inline = False)
+        embed.set_footer(text="React to this message to vote!")
+
+        msg = await ctx.send(embed=embed)
+        for reaction in emojis[:len(choices)]:
+            await msg.add_reaction(reaction)
+
     #Error handling not firing
     @poll.error
     async def poll_error(self, ctx, error):
