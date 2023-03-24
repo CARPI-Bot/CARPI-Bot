@@ -12,8 +12,10 @@ class NumGame(commands.Cog):
 
     @commands.command(description="Plays a game of 'pick number between [X] and [Y]'.", aliases=["n"])
     async def numgame(self, ctx, *args:str):
-
-        await ctx.send(NUMGAME_INTEGER)
+        global NUMGAME_TARGET
+        global NUMGAME_UPPERBOUND
+        global NUMGAME_LOWERBOUND
+        global NUMGAME_GUESSCOUNT
 
         if len(args) == 0:
             embedVar = discord.Embed(title="Command Usage", description="'{}numgame new <X> <Y>' creates a new game with X and Y as range boundaries\n'{}numgame <guess>' is used to take a guess.".format(COMMAND_PREFIX, COMMAND_PREFIX),  color=0xC80000, timestamp=datetime.datetime.now())
@@ -21,30 +23,43 @@ class NumGame(commands.Cog):
             await ctx.send(embed= embedVar)
         elif len(args) == 1:
             if args[0].isdigit():
-                if int(args[0]) > NUMGAME_INTEGER:
+                NUMGAME_GUESSCOUNT += 1
+                if NUMGAME_TARGET == -1:
+                    embedVar = discord.Embed(title="Game Not Started", description="You haven't started a number game yet.\nTry '{}numgame new <X> <Y>' creates a new game with X and Y as range boundaries".format(COMMAND_PREFIX),  color=0xEFEF00, timestamp=datetime.datetime.now())
+                    embedVar.set_footer(text='\u200bNumGame Command Sent by ' + str(ctx.author.nick))
+                    await ctx.send(embed= embedVar)
+                elif int(args[0]) > NUMGAME_TARGET:
                     embedVar = discord.Embed(title="Too **High**", description="You entered {}, but that's a bit too high. Try lower...".format(args[0]),  color=0xEFEF00, timestamp=datetime.datetime.now())
                     embedVar.set_footer(text='\u200bNumGame Round Played by ' + str(ctx.author.nick))
                     await ctx.send(embed= embedVar)
-                elif int(args[0]) < NUMGAME_INTEGER:
+                elif int(args[0]) < NUMGAME_TARGET:
                     embedVar = discord.Embed(title="Too **Low**", description="You entered {}, but that's a bit too low. Try higher...".format(args[0]),  color=0xEFEF00, timestamp=datetime.datetime.now())
                     embedVar.set_footer(text='\u200bNumGame Round Played by ' + str(ctx.author.nick))
                     await ctx.send(embed= embedVar)
                 else:
-                    embedVar = discord.Embed(title="Number Guessed!", description="You got it! The number was {} -- well done!\nA new number between 0 and 100 has been generated if you would like to keep going".format(args[0]),  color=0x00C500, timestamp=datetime.datetime.now())
+                    embedVar = discord.Embed(title="Number Guessed!", description="You got it! The number was {} and you got it in {} guesses -- well done!\nA new number between {} and {} has been generated if you would like to try again.".format(args[0], NUMGAME_GUESSCOUNT, NUMGAME_LOWERBOUND, NUMGAME_UPPERBOUND),  color=0x00C500, timestamp=datetime.datetime.now())
                     embedVar.set_footer(text='\u200bNumber guessed by ' + str(ctx.author.nick))
                     await ctx.send(embed= embedVar)
-                    NUMGAME_INTEGER = random.randInt(1, 100)
+                    NUMGAME_TARGET = random.randint(NUMGAME_LOWERBOUND + 1, NUMGAME_UPPERBOUND)
+                    NUMGAME_GUESSCOUNT = 0
+            else:
+                embedVar = discord.Embed(title="Invalid Command", description="Looks like you tried using the numgame command.\nTry '{}numgame' for command options.".format(COMMAND_PREFIX),  color=0xC80000, timestamp=datetime.datetime.now())
+                embedVar.set_footer(text='\u200bNumGame Command Used by ' + str(ctx.author.nick))
+                await ctx.send(embed= embedVar)
         elif len(args) == 3:
-            if args[1].lower() == 'new' and args[2].isdigit() and args[3].isdigit():
-                if int(args[2]) >= int(args[3]) or int(args[2]) != abs(int(args[2])) or int(args[3]) != abs(int(args[2])):
-                    embedVar = discord.Embed(title="Invalid NumGame Parameters", description="Something wasn't inputted correctly. Make sure the first number is smaller than the second, and that neither number is negative.".format(args[0]),  color=0xC80000, timestamp=datetime.datetime.now())
+            if args[0].lower() == 'new' and args[1].isdigit() and args[2].isdigit():
+                if int(args[1]) >= int(args[2]) or int(args[1]) != abs(int(args[1])) or int(args[2]) != abs(int(args[2])):
+                    embedVar = discord.Embed(title="Invalid NumGame Parameters", description="Something wasn't inputted correctly. Make sure the first number is smaller than the second, and that neither number is negative.",  color=0xC80000, timestamp=datetime.datetime.now())
                     embedVar.set_footer(text='\u200bFailed NumGame Reset by ' + str(ctx.author.nick))
                     await ctx.send(embed= embedVar)
                 else:
-                    embedVar = discord.Embed(title="Game Reset!", description="A new number has been chosen between {} and {}.\nGood luck!".format(args[2], args[3]),  color=0x00C500, timestamp=datetime.datetime.now())
+                    embedVar = discord.Embed(title="Game Reset!", description="A new number has been chosen between {} and {}.\nGood luck!".format(args[1], args[2]),  color=0x00C500, timestamp=datetime.datetime.now())
                     embedVar.set_footer(text='\u200bNumGame Reset by ' + str(ctx.author.nick))
                     await ctx.send(embed= embedVar)
-                    NUMGAME_INTEGER = random.randInt(int(args[2]) + 1, args[3])
+                    NUMGAME_TARGET = random.randint(int(args[1]) + 1, int(args[2]) )
+                    NUMGAME_LOWERBOUND = int(args[1])
+                    NUMGAME_UPPERBOUND = int(args[2])
+                    NUMGAME_GUESSCOUNT = 0
             else:
                 pass
     @numgame.error
