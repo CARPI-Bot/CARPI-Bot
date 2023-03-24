@@ -8,20 +8,19 @@ class Moderator(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-    @commands.command(description="Kills instances", aliases=["shutdown"], hidden=True)
+    @commands.hybrid_command(description="Kills instances", aliases=["shutdown"], hidden=True)
     async def kill(self, ctx):
         # Terminates client
         await self.bot.close()
     
     @kill.error
-    async def shut_error(self, ctx, error):
+    async def kill_error(self, ctx, error):
         # Should never run. If this runs then bruh
         await ctx.send("Something went wrong.")
     
-    @commands.command(description="Deletes the last x number of messages in the channel",
-                      aliases=["purge"], hidden=True)
+    @commands.hybrid_command(description="Deletes the last x number of messages in the channel",
+                             aliases=["purge"], hidden=True)
     async def clear(self, ctx, num:int, *, reason:str = None):
-
         if num < 1:
             await ctx.send("Enter a number greater than or equal to 1.")
         elif num == 1:
@@ -33,7 +32,6 @@ class Moderator(commands.Cog):
 
     @clear.error
     async def clear_error(self, ctx, error):
-
         if isinstance(error, commands.BadArgument):
             await ctx.send("Enter a valid integer.")
         # elif isinstance(error, commands.CheckFailure):
@@ -43,13 +41,13 @@ class Moderator(commands.Cog):
             if isinstance(error, (discord.errors.HTTPException, discord.HTTPException)):
                 await ctx.send("I don't have the 'Manage Messages' permission.")
         else:
-            await ctx.send("Usage: `?clear [number of messages] [optional reason]`")
+            await ctx.send(f"Usage: `{COMMAND_PREFIX}clear [number of messages] [optional reason]`")
 
-    @commands.command(description="Puts a user into timeout for a specified amount of time.",
-                      aliases=["mute", "silence"], hidden=True)
-    async def timeout(self, ctx, member:discord.Member, *time:str):
-        
+    @commands.hybrid_command(description="Puts a user into timeout for a specified amount of time.",
+                             aliases=["mute", "silence"], hidden=True)
+    async def timeout(self, ctx, member:discord.Member, *, time:str):
         days = 0; hours = 0; minutes = 0; seconds = 0
+        time = time.strip().split()
         for element in time:
             if element.lower().endswith("d"): days += int(element[:-1])
             elif element.lower().endswith("h"): hours += int(element[:-1])
@@ -73,16 +71,14 @@ class Moderator(commands.Cog):
     
     @timeout.error
     async def timeout_error(self, ctx, error):
-
         if isinstance(error, commands.BadArgument):
             await ctx.send(f"Usage: `{COMMAND_PREFIX}timeout <member> <days>d <hours>h <minutes>m <seconds>s`")
         else:
             await ctx.send(str(error))
 
-    @commands.command(description="Removes timeout status from a user if they're currently timed out.",
-                      aliases=["untimeout"], hidden=True)
+    @commands.hybrid_command(description="Removes timeout status from a user if they're currently timed out.",
+                             aliases=["untimeout"], hidden=True)
     async def timein(self, ctx, member:discord.Member):
-        
         if member.is_timed_out():
             await member.timeout(dt.timedelta(seconds=0))
             await ctx.send(f"Removed timeout from {member.name}.")
