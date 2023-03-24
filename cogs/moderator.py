@@ -1,6 +1,7 @@
 import datetime as dt
 import discord
 from discord.ext import commands
+import datetime
 from globals import *
 
 class Moderator(commands.Cog):
@@ -42,6 +43,42 @@ class Moderator(commands.Cog):
                 await ctx.send("I don't have the 'Manage Messages' permission.")
         else:
             await ctx.send(f"Usage: `{COMMAND_PREFIX}clear [number of messages] [optional reason]`")
+
+    @commands.hybrid_command(description="Assigns or revokes role to/from a user",
+                      hidden=True)
+    async def role(self, ctx, *, args:str):
+        arguments = args.split(' ')
+
+        await ctx.send("ARGS DEBUG: " + arguments)
+        await ctx.send("ROLES DEBUG: " + ctx.guild.roles)
+
+
+        if len(arguments) >= 2 and len(arguments) <= 3:
+            if arguments[0] == 'add' or arguments[0] == 'remove':
+                if len(arguments) == 2:
+                    return
+                else:
+                    # args len 3
+                    return
+
+        embedVar = discord.Embed(title="Invalid Command Use", description="'{}role add <role name>' adds a role to your user account\n'{}role add <role name> <tag>' adds a role to a tagged user's account\n'{}role remove <role name>' removes a role from your user account\n'{}role remove <role name> <tag>' removes a role from a tagged user's account".format(COMMAND_PREFIX, COMMAND_PREFIX, COMMAND_PREFIX, COMMAND_PREFIX),  color=0xC80000, timestamp=datetime.datetime.now())
+        embedVar.set_footer(text='\u200bRole command use attempted by ' + str(ctx.author.nick))
+        await ctx.send(embed= embedVar)
+
+    @role.error
+    async def role_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Something went wrong...")
+        elif isinstance(error, commands.CommandInvokeError):
+            error = error.original
+            if isinstance(error, (discord.errors.HTTPException, discord.HTTPException)):
+                embedVar = discord.Embed(title="Command Unavailable", description="I don't have permission to manage roles.\nIf you think this' an issue, ping an admin.",  color=0xC80000, timestamp=datetime.datetime.now())
+                embedVar.set_footer(text='\u200bRole command use attempted by ' + str(ctx.author.nick))
+                await ctx.send(embed= embedVar)
+        else:
+            embedVar = discord.Embed(title="Invalid Command Use", description="'{}role add <role name>' adds a role to your user account\n'{}role add <role name> <tag>' adds a role to a tagged user's account\n'{}role remove <role name>' removes a role from your user account\n'{}role remove <role name> <tag>' removes a role from a tagged user's account".format(COMMAND_PREFIX, COMMAND_PREFIX, COMMAND_PREFIX, COMMAND_PREFIX),  color=0xC80000, timestamp=datetime.datetime.now())
+            embedVar.set_footer(text='\u200bRole command use attempted by ' + str(ctx.author.nick))
+            await ctx.send(embed= embedVar)
 
     @commands.hybrid_command(description="Puts a user into timeout for a specified amount of time.",
                              aliases=["mute", "silence"], hidden=True)
