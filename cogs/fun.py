@@ -62,11 +62,11 @@ class Fun(commands.Cog):
         await ctx.send(f"You {WL}!")
     
     @commands.command(description = 'poll "<question>" <choice 1> <choice 2> ... <choice 10>')
-    async def poll(self, ctx, question: str, *choices):
+    async def poll(self, ctx, question, *choices):
         emojis = ["1️⃣", "2⃣", "3⃣", "4⃣", "5⃣",
                    "6⃣", "7⃣", "8⃣", "9⃣", "🔟"]
         if len(choices) > 10:
-            await ctx.send("You can may have 10 options!.")
+            await ctx.send("You can only have 10 options!")
             return
 
         embed = discord.Embed(
