@@ -3,10 +3,6 @@ import discord
 from discord.ext import commands
 from globals import *
 
-# For use in error handlers
-ERROR_TITLE = "Something went wrong."
-NO_PERM_MSG = "You don't have permissions to do that."
-
 class Moderator(commands.Cog):
 
     def __init__(self, bot):
