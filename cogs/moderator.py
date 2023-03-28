@@ -75,6 +75,7 @@ class Moderator(commands.Cog):
                              aliases=["mute", "silence"], hidden=True)
     @commands.check_any(commands.has_permissions(moderate_members=True), commands.is_owner())
     async def timeout(self, ctx, member:discord.Member, *, time:str):
+
         time = time.strip().split()
         days = 0; hours = 0; minutes = 0; seconds = 0
 
@@ -96,6 +97,22 @@ class Moderator(commands.Cog):
             days += hours // 24
             hours %= 24
 
+        error_desc = None
+        # Checks that the user is not already timed out
+        if member.is_timed_out():
+            error_desc = "This user is already timed out."
+        # Maximum possible timeout is 28 days (2,419,200 seconds)
+        elif days * 86400 + hours * 3600 + minutes * 60 + seconds > 2419200:
+            error_desc = "The maximum possible timeout duration is 28 days."
+        # Outputs an error if either of the above conditions are true
+        if error_desc != None:
+            embed_var = discord.Embed(title=ERROR_TITLE,
+                                      description=error_desc,
+                                      color=0xC80000)
+            await ctx.send(embed=embed_var)
+            return
+        
+        # Executes timeout
         await member.timeout(dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds))
         embed_var = discord.Embed(title=f"{member.name} has been timed out.",
                                   description=f"Duration: {days}D {hours}H {minutes}M {seconds}S",
