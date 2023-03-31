@@ -8,16 +8,19 @@ class Fun(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    ### HELLO ###
     @commands.command(description='Pings sender', aliases=["hi","hey"])
     async def hello(self, ctx):
         await ctx.send(f"Hello {ctx.author.mention}!")
 
+    ### STINKY ###
     @commands.command(description='Pings random member and calls them stinky')
     async def stinky(self, ctx):
         #Get random position of memberlist
         stinky = random.choice(ctx.guild.members)
         await ctx.send(f"{stinky.mention} is stinky!")
 
+    ### SECRET MESSAGE ###
     @commands.command(description='Sends an anonymous message to intended user through bot')
     async def secret(self, ctx, members: commands.Greedy[discord.Member], *, msg='so secret'):
         for x in members:
@@ -36,6 +39,7 @@ class Fun(commands.Cog):
         if isinstance(error, commands.BadArgument):
             await ctx.send("Command usage: [user/users] [message]")
     
+    ### ROCK PAPER SCISSORS ### 
     @commands.command(description = "Play rock paper scissors against a bot")
     async def rps(self, ctx, msg):
         listy = ["rock", "paper", "scissors"]
@@ -61,6 +65,7 @@ class Fun(commands.Cog):
             WL = "suck"
         await ctx.send(f"You {WL}!")
     
+    ### POLL ###
     @commands.command(description = 'poll "<question>" <choice 1> <choice 2> ... <choice 10>')
     async def poll(self, ctx, question, *choices):
         emojis = ["1️⃣", "2⃣", "3⃣", "4⃣", "5⃣",
@@ -92,6 +97,7 @@ class Fun(commands.Cog):
             await ctx.send("Put arguments in quotes")
             await ctx.send("Command usage: [Title] [Option 1] [Option 2]")
     
+    ### ROLL ONE DICE ### 
     @commands.command(description= "rolls a dice and sends the result")
     async def roll(self, ctx, n=6):
         # Sends the result of a single n-sided dice roll.
@@ -105,6 +111,7 @@ class Fun(commands.Cog):
 
         await ctx.send("You rolled a {:d}.".format(result))
 
+    ### NROLL(ROLL MULTIPLE DICE) ###
     @commands.command(description = "nroll <number of dice> <number of sides on a die>")
     async def nroll(self, ctx, *args):
         # Sends the result of multiple n-sided dice rolls.

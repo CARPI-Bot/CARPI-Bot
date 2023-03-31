@@ -13,7 +13,8 @@ class TimedEvents(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
-
+    
+    ### TIMER ### 
     @commands.command(description = "timer <number><s, m, h> <optional event description>")
     async def timer(self, ctx, *time):
         days = 0; hours = 0; minutes = 0; seconds = 0
