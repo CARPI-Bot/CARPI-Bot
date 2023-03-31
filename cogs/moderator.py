@@ -1,7 +1,6 @@
 import datetime as dt
 import discord
 from discord.ext import commands
-from discord.utils import get
 from globals import *
 
 class Moderator(commands.Cog):
@@ -50,7 +49,7 @@ class Moderator(commands.Cog):
             embed_title = f"{num} messages deleted."
             await ctx.channel.purge(limit=num+1)
 
-        embed_var = discord.Embed(title=embed_title, color=0xC80000)
+        embed_var = discord.Embed(title=embed_title, color=0x00FF00)
         await ctx.send(embed=embed_var, delete_after=DEL_DELAY)
 
     @clear.error
@@ -75,7 +74,11 @@ class Moderator(commands.Cog):
     @commands.hybrid_command(description="Times out a user for a specified amount of time.",
                              aliases=["mute", "silence"], hidden=True)
     @commands.check_any(commands.has_permissions(moderate_members=True), commands.is_owner())
-    async def timeout(self, ctx, member:discord.Member, *, time:str):
+    async def timeout(self, ctx, member:discord.Member, *, time:str=""):
+
+        # Guards against an empty argument
+        if len(time) == 0:
+            raise commands.BadArgument
 
         time = time.strip().split()
         days = 0; hours = 0; minutes = 0; seconds = 0
@@ -125,7 +128,7 @@ class Moderator(commands.Cog):
         embed_desc = None
         if isinstance(error, commands.CheckFailure):
             embed_desc = NO_PERM_MSG
-        elif isinstance(error, commands.BadArgument):
+        elif isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
             embed_desc = f"Usage: `{COMMAND_PREFIX}timeout <member> <days>d <hours>h <minutes>m <seconds>s`"
 
         if embed_desc != None:
@@ -148,7 +151,7 @@ class Moderator(commands.Cog):
         else:
             embed_title = f"{member.name} is not timed out."
         
-        embed_var = discord.Embed(title=embed_title, color=0xC80000)
+        embed_var = discord.Embed(title=embed_title, color=0x00FF00)
         await ctx.send(embed=embed_var)
     
     @timein.error
