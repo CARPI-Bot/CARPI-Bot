@@ -1,6 +1,7 @@
 import datetime as dt
 import discord
 from discord.ext import commands
+from discord.utils import get
 from globals import *
 
 class Moderator(commands.Cog):
@@ -144,45 +145,42 @@ class Moderator(commands.Cog):
             await sendDefaultError(ctx)
 
     ### ROLE ###
-    # @commands.hybrid_command(description="Assigns or revokes role to/from a user", hidden=True)
-    # @commands.check_any(commands.has_permissions(manage_roles=True), commands.is_owner())
-    # async def role(self, ctx, *, roles:str):
-    #     roles = roles.split()
-    #     await ctx.send("ARGS DEBUG: " + roles)
-    #     await ctx.send("ROLES DEBUG: " + ctx.guild.roles)
+    @commands.hybrid_command(description="Assigns or revokes role to/from a user", hidden=True)
+    @commands.check_any(commands.has_permissions(manage_roles=True), commands.is_owner())
+    async def role(self, ctx, action:str, roles:commands.Greedy[discord.Role], tag:commands.Greedy[discord.Member] = None):
+        if action == 'add' or action == 'remove':
+            if tag != None:
+                ctx.author.add_roles(get(ctx.author.guild.roles, ctx.author.server.roles, name=roles[0]) )
+                return
+            else:
+                ctx.author.add_roles(get(ctx.author.guild.roles, ctx.author.server.roles, name=roles[0]) )
+                return
 
-    #     if len(roles) >= 2 and len(roles) <= 3:
-    #         if roles[0] == 'add' or roles[0] == 'remove':
-    #             if len(roles) == 2:
-    #                 return
-    #             else:
-    #                 # args len 3
-    #                 return
+        embed_var = discord.Embed(title=f"Invalid Command Use",
+                                  description=f"`{COMMAND_PREFIX}role add <role name>` adds a role to your user account\n \
+                                             `{COMMAND_PREFIX}role add <role name> <tag>` adds a role to a tagged user's account\n \
+                                             `{COMMAND_PREFIX}role remove <role name>` removes a role from your user account\n \
+                                             `{COMMAND_PREFIX}role remove <role name> <tag>` removes a role from a tagged user's account",
+                                  color=0xC80000, timestamp=dt.datetime.now())
+        embed_var.set_footer(text=f"\u200bRole command use attempted by {ctx.author.nick}")
+        await ctx.send(embed=embed_var)
 
-    #     embed_var = discord.Embed(title=f"Invalid Command Use",
-    #                               description="`{COMMAND_PREFIX}role add <role name>` adds a role to your user account\n \
-    #                                          `{COMMAND_PREFIX}role add <role name> <tag>` adds a role to a tagged user's account\n \
-    #                                          `{COMMAND_PREFIX}role remove <role name>` removes a role from your user account\n \
-    #                                          `{COMMAND_PREFIX}role remove <role name> <tag>` removes a role from a tagged user's account",
-    #                               color=0xC80000, timestamp=datetime.datetime.now())
-    #     embed_var.set_footer(text=f"\u200bRole command use attempted by {ctx.author.nick}")
-    #     await ctx.send(embed=embed_var)
-
-    # @role.error
-    # async def role_error(self, ctx, error):
-    #     if isinstance(error, commands.BadArgument):
-    #         await ctx.send("Something went wrong...")
-    #     elif isinstance(error, commands.CommandInvokeError):
-    #         error = error.original
-    #         if isinstance(error, (discord.errors.HTTPException, discord.HTTPException)):
-    #             embed_var = discord.Embed(title="Command Unavailable",
-    #                                     description="I don't have the 'Manage Roles'.\n \
-    #                                                  If you think this is an issue, ping an admin.",
-    #                                     color=0xC80000, timestamp=datetime.datetime.now())
-    #             embed_var.set_footer(text=f"\u200bRole command use attempted by {ctx.author.nick}")
-    #             await ctx.send(embed=embed_var)
-    #     else:
-    #         await sendDefaultError(ctx)
+    @role.error
+    async def role_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            await ctx.send("Something went wrong...")
+        elif isinstance(error, commands.CommandInvokeError):
+            error = error.original
+            if isinstance(error, (discord.errors.HTTPException, discord.HTTPException)):
+                embed_var = discord.Embed(title="Command Unavailable",
+                                        description="I don't have the 'Manage Roles'.\n \
+                                                     If you think this is an issue, ping an admin.",
+                                        color=0xC80000, timestamp=dt.datetime.now())
+                embed_var.set_footer(text=f"\u200bRole command use attempted by {ctx.author.nick}")
+                await ctx.send(embed=embed_var)
+        else:
+            # await sendDefaultError(ctx)
+            await ctx.send
 
 async def setup(bot):
     await bot.add_cog(Moderator(bot))
