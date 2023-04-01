@@ -1,8 +1,6 @@
 from discord.ext import commands
 from globals import *
-import random
 import discord
-import datetime
 
 class AcademicCalendar(commands.Cog):
     def __init__(self, bot):
