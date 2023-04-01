@@ -124,15 +124,30 @@ class Miscellaneous(commands.Cog):
     ## CUURENTLY WORK IN PROGRESS
     ### blackjack game
     @commands.command(description = "blackjack game")
-    async def blackJack(self, ctx, msg:bool):
+    async def blackJack(self, ctx, msg):
         nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
+        botNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
         currentnum = random.choice(nums)
+        numBot = random.choice(botNums)
         statement = msg
-        await ctx.send(currentnum)
-        while (currentnum <= 21 and statement == True):
-            currentnum += random.choice(nums)
+        if (statement == "hit"):
+            if (currentnum > 21):
+                await ctx.send(currentnum)
+                await ctx.send("YOU LOSE!")
+            else:
+                await ctx.send(currentnum)
+                currentnum += random.choice(nums)
+                await ctx.send(currentnum)
+        
+        if (statement == "fold"):
             await ctx.send(currentnum)
-
+            if (currentnum > numBot):
+                await ctx.send("Congrats you won |bot: ", numBot, " you: ", currentnum, "|")
+            elif (currentnum < numBot):
+                await ctx.send("You lose |bot: ", numBot, " you: ", currentnum, "|")
+            else:
+                await ctx.send("tied |bot: ", numBot, " you: ", currentnum, "|")
+                    
     @blackJack.error
     async def blackJack(self, ctx, error):
         if isinstance(error, commands.BadArgument):
