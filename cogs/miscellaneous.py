@@ -13,15 +13,19 @@ class Miscellaneous(commands.Cog):
     @commands.command(description="Gets the latency of the server")
     async def ping(self, ctx):
         # Retrieves the server latency in milliseconds
-        embedVar = discord.Embed(title="Pong!", description=f"Your message was recieved in {round(self.bot.latency * 1000)}ms.", color=0x00C500, timestamp=datetime.datetime.now())
-        embedVar.set_footer(text=f"\u200bPing checked by {ctx.author.nick}")
+        embedVar = discord.Embed(title="Pong!",
+                                 description=f"Your message was recieved in {round(self.bot.latency * 1000)}ms.",
+                                 color=0x00C500,
+                                 timestamp=datetime.datetime.now())
+        if ctx.author.nick != None: invoker_name = ctx.author.nick
+        else: invoker_name = ctx.author.name
+        embedVar.set_footer(text=f"\u200bPing checked by {invoker_name}")
         await ctx.send(embed=embedVar)
     
     @ping.error
-    async def ping_error(self, ctx, error):
+    async def ping_error(self, ctx):
         # Should never run. If this runs then bruh
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Something went wrong.")
+        await sendDefaultError(ctx)
     
     ### AVATAR ###
     @commands.command(description="Gets the avatar of any user")
@@ -34,38 +38,45 @@ class Miscellaneous(commands.Cog):
     @avatar.error
     async def avatar_error(self, ctx, error):
         # Should never run. If this runs then bruh
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Something went wrong.")
         if isinstance(error, commands.MemberNotFound):
-            await ctx.send("Invalid member.")
+            embed_var = discord.Embed(title=ERROR_TITLE,
+                                      description="Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?",
+                                      color=0xC80000)
+            await ctx.send(embed=embed_var)
+        else:
+            await sendDefaultError(ctx)
 
     ### COINFLIP ###
     @commands.command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         # Calls a random float between 0 and 0.99 inclusive. Returns heads if 0 - 0.48 and tails if 0.49 - 0.99
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
-        embedVar = discord.Embed(title="Coin Flip Result", description=f"{result}", color=0x00C500, timestamp=datetime.datetime.now())
-        embedVar.set_footer(text=f"\u200bCoin flipped by {ctx.author.nick}")
+        embedVar = discord.Embed(title="Coin Flip Result",
+                                 description=result,
+                                 color=0x00C500,
+                                 timestamp=datetime.datetime.now())
+        embedVar.set_footer(text=f"\u200bCoin flipped by {ctx.author.name}#{ctx.author.discriminator}")
         await ctx.send(embed=embedVar)
     
     @coinflip.error
-    async def coinflip_error(self, ctx, error):
+    async def coinflip_error(self, ctx):
         # Should never run. If this runs then bruh
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Something went wrong.")
+        await sendDefaultError(ctx)
 
     ### REPO ###
     @commands.command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
     async def repo(self, ctx):
-        embedVar = discord.Embed(title=f"Click Here to Redirect to the {ctx.guild.get_member(1067560443444478034).name} Repository", url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
-        embedVar.set_footer(text=f"\u200bRepository link requested by {ctx.author.nick}")
+        embedVar = discord.Embed(title=f"Click Here to Redirect to the {ctx.guild.get_member(1067560443444478034).name} Repository",
+                                 url='https://github.com/Zen1124/tsdb',
+                                 color=0x0099FF,
+                                 timestamp=datetime.datetime.now())
+        embedVar.set_footer(text=f"\u200bRepository link requested by {ctx.author.name}#{ctx.author.discriminator}")
         await ctx.send(embed=embedVar)
     
     @repo.error
-    async def repo_error(self, ctx, error):
+    async def repo_error(self, ctx):
         # Should never run. If this runs then bruh
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Something went wrong.")
+        await sendDefaultError(ctx)
     
     @commands.hybrid_command(description="Sends a link that can be used to invite CARPI to a server, or invite a user to a channel.")
     async def invite(self, ctx, *, args:str=""):
