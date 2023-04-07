@@ -86,4 +86,3 @@ class AcadCal(commands.Cog):
             print()
 
         return dates
-            
