@@ -75,7 +75,10 @@ class Moderator(commands.Cog):
     @commands.hybrid_command(description="Time out a user for a specified amount of time",
                              aliases=["mute", "silence"], hidden=True)
     @commands.check_any(commands.has_permissions(moderate_members=True), commands.is_owner())
-    async def timeout(self, ctx, member:discord.Member, *, time:str=""):
+    async def timeout(self, ctx, member:discord.Member, *, time:str):
+
+        time = time.strip().split()
+        days = 0; hours = 0; minutes = 0; seconds = 0
 
         # Guards against an empty argument
         if len(time) == 0:
