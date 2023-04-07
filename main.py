@@ -1,8 +1,8 @@
 import asyncio
-import os
 import discord
 from discord.ext import commands
 from globals import *
+import os
 
 TOKEN = open("TOKEN.txt").read().strip()
 
@@ -10,9 +10,9 @@ intents = discord.Intents.all()
 bot = commands.Bot(command_prefix=COMMAND_PREFIX, owner_ids=OWNER_IDS, intents=intents)
 
 async def loadCogs(bot:commands.Bot):
-    for fileName in os.listdir('./cogs'):
-        if fileName.endswith('.py'):
-            await bot.load_extension(f"cogs.{fileName[:-3]}")
+    for file_name in os.listdir('./cogs'):
+        if file_name.endswith('.py'):
+            await bot.load_extension(f"cogs.{file_name[:-3]}")
 
 @bot.event
 async def on_ready():
