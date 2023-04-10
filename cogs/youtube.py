@@ -8,7 +8,7 @@ class Youtube(commands.Cog):
         self.bot = bot
 
     ### YOUTUBE SEARCHER ### 
-    @bot.command()
+    @commands.command()
     async def youtube(ctx, *, search):
         await ctx.send('Testing!')
 
