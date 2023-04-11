@@ -15,7 +15,7 @@ class Moderator(commands.Cog):
     async def shutdown(self, ctx):
         # Creates a response embed
         embed_var = discord.Embed(title="Shutting down...",
-                                  color=0xC80000)
+                                  color=0xC80000, timestamp=dt.datetime.now())
         if ctx.author.nick != None:
             invoker_name = ctx.author.nick
         else:
@@ -38,18 +38,17 @@ class Moderator(commands.Cog):
     ### CLEAR ###
     @commands.command(description="Deletes the last x number of messages in the channel",
                       aliases=["purge"], hidden=True)
-    @commands.check_any(commands.has_permissions(manage_messages=True, read_message_history=True), \
-                        commands.is_owner())
+    @commands.check_any(commands.has_permissions(manage_messages=True), commands.is_owner())
     async def clear(self, ctx, num:int):
         # Creates a response embed and clears messages
         if num < 1:
             embed_title = "Enter a number greater than or equal to 1."
         elif num == 1:
-            await ctx.channel.purge(limit=num+1)
             embed_title = "Message deleted."
+            await ctx.channel.purge(limit=num+1)
         else:
-            num_deleted = await ctx.channel.purge(limit=num+1)
-            embed_title = f"{len(num_deleted)} messages deleted."
+            embed_title = f"{num} messages deleted."
+            await ctx.channel.purge(limit=num+1)
         embed_var = discord.Embed(title=embed_title, color=0x00FF00)
         # Sends the embed, which automatically deletes itself after a delay
         await ctx.send(embed=embed_var, delete_after=DEL_DELAY)
@@ -76,10 +75,7 @@ class Moderator(commands.Cog):
     @commands.hybrid_command(description="Time out a user for a specified amount of time",
                              aliases=["mute", "silence"], hidden=True)
     @commands.check_any(commands.has_permissions(moderate_members=True), commands.is_owner())
-    async def timeout(self, ctx, member:discord.Member, *, time:str):
-
-        time = time.strip().split()
-        days = 0; hours = 0; minutes = 0; seconds = 0
+    async def timeout(self, ctx, member:discord.Member, *, time:str=""):
 
         # Guards against an empty argument
         if len(time) == 0:

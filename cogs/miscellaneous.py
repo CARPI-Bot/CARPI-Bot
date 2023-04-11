@@ -28,7 +28,7 @@ class Miscellaneous(commands.Cog):
         await sendDefaultError(ctx)
     
     ### AVATAR ###
-    @commands.hybrid_command(description="Gets the avatar of any user")
+    @commands.command(description="Gets the avatar of any user")
     async def avatar(self, ctx, member:discord.Member=None):
         if (member == None):
             await ctx.send(ctx.author.display_avatar)
@@ -47,7 +47,7 @@ class Miscellaneous(commands.Cog):
             await sendDefaultError(ctx)
 
     ### COINFLIP ###
-    @commands.hybrid_command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
+    @commands.command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         # Calls a random float between 0 and 0.99 inclusive. Returns heads if 0 - 0.48 and tails if 0.49 - 0.99
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
@@ -64,7 +64,7 @@ class Miscellaneous(commands.Cog):
         await sendDefaultError(ctx)
 
     ### REPO ###
-    @commands.hybrid_command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
+    @commands.command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
     async def repo(self, ctx):
         embedVar = discord.Embed(title=f"Click Here to Redirect to the {ctx.guild.get_member(1067560443444478034).name} Repository",
                                  url='https://github.com/Zen1124/tsdb',
