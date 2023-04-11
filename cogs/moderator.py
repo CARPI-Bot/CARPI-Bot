@@ -36,7 +36,7 @@ class Moderator(commands.Cog):
             await sendDefaultError(ctx)
     
     ### CLEAR ###
-    @commands.command(description="Deletes the last x number of messages in the channel",
+    @commands.hybrid_command(description="Deletes the last x number of messages in the channel",
                       aliases=["purge"], hidden=True)
     @commands.check_any(commands.has_permissions(manage_messages=True), commands.is_owner())
     async def clear(self, ctx, num:int):
@@ -47,8 +47,8 @@ class Moderator(commands.Cog):
             embed_title = "Message deleted."
             await ctx.channel.purge(limit=num+1)
         else:
-            embed_title = f"{num} messages deleted."
-            await ctx.channel.purge(limit=num+1)
+            deleted_content = await ctx.channel.purge(limit=num+1)
+            embed_title = f"{len(deleted_content)} messages deleted."
         embed_var = discord.Embed(title=embed_title, color=0x00FF00)
         # Sends the embed, which automatically deletes itself after a delay
         await ctx.send(embed=embed_var, delete_after=DEL_DELAY)
@@ -148,7 +148,6 @@ class Moderator(commands.Cog):
             await sendDefaultError(ctx)
 
     ### TIMEIN ###
-    # To do: Output remaining timeout duration with confirmation
     @commands.hybrid_command(description="Remove timeout from a user",
                              aliases=["untimeout"], hidden=True)
     @commands.check_any(commands.has_permissions(moderate_members=True), commands.is_owner())
