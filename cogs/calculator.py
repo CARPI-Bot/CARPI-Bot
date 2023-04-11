@@ -58,7 +58,8 @@ class Calculator(commands.Cog):
         await requireTwoArgumentsError(ctx, error)
 
     ### SUBTRACT ###
-    @commands.hybrid_command(description="Calculate the difference of any number of values, from left to right.",
+    @commands.hybrid_command(description="Calculate the difference of any number of values, \
+                                          from left to right.",
                              aliases=["sub", "subt", "minus"])
     async def subtract(self, ctx, nums:commands.Greedy[Decimal]):
         # Checks for at least two arguments
@@ -102,7 +103,8 @@ class Calculator(commands.Cog):
         await requireTwoArgumentsError(ctx, error)
 
     ### DIVIDE ###
-    @commands.hybrid_command(description="Calculate the quotient of any number of values, from left to right.",
+    @commands.hybrid_command(description="Calculate the quotient of any number of values, \
+                                          from left to right.",
                              aliases=["div"])
     async def divide(self, ctx, nums:commands.Greedy[Decimal]):
         # Checks for at least two arguments
@@ -124,7 +126,8 @@ class Calculator(commands.Cog):
         await requireTwoArgumentsError(ctx, error)
     
     ### POWER ###
-    @commands.hybrid_command(description="Returns the exponential result of any number to the power of any number.",
+    @commands.hybrid_command(description="Returns the exponential result of any number to \
+                                          the power of any number.",
                              aliases=["exp", "exponent"])
     async def power(self, ctx, nums:commands.Greedy[Decimal]):
         # Checks for at least two arguments
@@ -146,7 +149,8 @@ class Calculator(commands.Cog):
         await requireTwoArgumentsError(ctx, error)
     
     ### MODULUS ###
-    @commands.hybrid_command(description="Calculate the remainder of any number of values, from left to right.",
+    @commands.hybrid_command(description="Calculate the remainder of any number of values, \
+                                          from left to right.",
                              aliases=["mod", "remainder"])
     async def modulus(self, ctx, nums:commands.Greedy[Decimal]):
         # Checks for at least two inputs

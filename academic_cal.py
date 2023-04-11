@@ -89,4 +89,5 @@ if (datetime.now() == day):
 #         self.events = dates
 #         return self.events
 
-#     def today_events(self):
+        
+            
