@@ -19,25 +19,6 @@ class Fun(commands.Cog):
         #Get random position of memberlist
         stinky = random.choice(ctx.guild.members)
         await ctx.send(f"{stinky.mention} is stinky!")
-
-    ### SECRET MESSAGE ###
-    @commands.command(description='Sends an anonymous message to intended user through bot')
-    async def secret(self, ctx, members: commands.Greedy[discord.Member], *, msg='so secret'):
-        for x in members:
-            if not x.dm_channel == None:
-                await x.dm_channel.send(f"Secret message: {msg}")
-                await ctx.send(f"Message sent to {x.name}")
-            else:
-                await x.create_dm()
-                await x.dm_channel.send(f"Secret message: {msg}")
-                await ctx.send(f"Message sent to {x.name}")
-        await ctx.message.delete()
-
-    #Error handling not firing
-    @secret.error
-    async def secret_error(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("Command usage: [user/users] [message]")
     
     ### ROCK PAPER SCISSORS ### 
     @commands.command(description = "Play rock paper scissors against a bot")
