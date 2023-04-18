@@ -28,16 +28,18 @@ class Moderator(commands.Cog):
     @shutdown.error
     async def shutdown_error(self, ctx, error):
         if isinstance(error, commands.CheckFailure):
-            embed_var = discord.Embed(title=ERROR_TITLE,
-                                      description=NO_PERM_MSG,
-                                      color=0xC80000)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=NO_PERM_MSG,
+                color=0xC80000
+            )
             await ctx.send(embed=embed_var)
         else:
             await sendDefaultError(ctx)
     
     ### CLEAR ###
     @commands.hybrid_command(description="Deletes the last x number of messages in the channel",
-                      aliases=["purge"], hidden=True)
+                             aliases=["purge"], hidden=True)
     @commands.check_any(commands.has_permissions(manage_messages=True), commands.is_owner())
     async def clear(self, ctx, num:int):
         # Creates a response embed and clears messages
@@ -64,9 +66,11 @@ class Moderator(commands.Cog):
             embed_desc = "Enter a valid integer."
 
         if embed_desc != None:
-            embed_var = discord.Embed(title=ERROR_TITLE,
-                                      description=embed_desc,
-                                      color=0xC80000)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=embed_desc,
+                color=0xC80000
+            )
             await ctx.send(embed=embed_var)
         else:
             await sendDefaultError(ctx)
@@ -115,17 +119,21 @@ class Moderator(commands.Cog):
             error_desc = "The maximum possible timeout duration is 28 days."
         # Outputs an error if either of the above conditions are true
         if error_desc != None:
-            embed_var = discord.Embed(title=ERROR_TITLE,
-                                      description=error_desc,
-                                      color=0xC80000)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=error_desc,
+                color=0xC80000
+            )
             await ctx.send(embed=embed_var)
             return
         
         # Executes timeout
         await member.timeout(dt.timedelta(days=days, hours=hours, minutes=minutes, seconds=seconds))
-        embed_var = discord.Embed(title=f"{member.name} has been timed out.",
-                                  description=f"Duration: {days}D {hours}H {minutes}M {seconds}S",
-                                  color=0xC80000)
+        embed_var = discord.Embed(
+            title=f"{member.name} has been timed out.",
+            description=f"Duration: {days}D {hours}H {minutes}M {seconds}S",
+            color=0xC80000
+        )
         await ctx.send(embed=embed_var)
     
     @timeout.error
@@ -140,9 +148,11 @@ class Moderator(commands.Cog):
                            At least one time argument is required."
 
         if embed_desc != None:
-            embed_var = discord.Embed(title=ERROR_TITLE,
-                                      description=embed_desc,
-                                      color=0xC80000)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=embed_desc,
+                color=0xC80000
+            )
             await ctx.send(embed=embed_var)
         else:
             await sendDefaultError(ctx)
@@ -166,9 +176,11 @@ class Moderator(commands.Cog):
                 days += hours // 24
                 hours %= 24
             await member.timeout(dt.timedelta(seconds=0))
-            embed_var = discord.Embed(title=f"Removed timeout from {member.name}.",
-                                      description=f"Remaining duration: {days}D {hours}H {minutes}M {seconds}S",
-                                      color=0x00FF00)
+            embed_var = discord.Embed(
+                title=f"Removed timeout from {member.name}.",
+                description=f"Remaining duration: {days}D {hours}H {minutes}M {seconds}S",
+                color=0x00FF00
+            )
         else:
             embed_var = discord.Embed(title=f"{member.name} is not timed out.", color=0x00FF00)
         await ctx.send(embed=embed_var)
@@ -184,9 +196,11 @@ class Moderator(commands.Cog):
             embed_desc = "Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?"
 
         if embed_desc != None:
-            embed_var = discord.Embed(title=ERROR_TITLE,
-                                      description=embed_desc,
-                                      color=0xC80000)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=embed_desc,
+                color=0xC80000
+            )
             await ctx.send(embed=embed_var)
         else:
             await ctx.send(str(error))
