@@ -10,13 +10,15 @@ class Miscellaneous(commands.Cog):
         self.bot = bot
 
     ### PING ###
-    @commands.command(description="Gets the latency of the server")
+    @commands.hybrid_command(description="Gets the latency of the server")
     async def ping(self, ctx):
         # Retrieves the server latency in milliseconds
-        embedVar = discord.Embed(title="Pong!",
-                                 description=f"Your message was recieved in {round(self.bot.latency * 1000)}ms.",
-                                 color=0x00C500,
-                                 timestamp=datetime.datetime.now())
+        embedVar = discord.Embed(
+            title="Pong!",
+            description=f"Your message was recieved in {round(self.bot.latency * 1000)}ms.",
+            color=0x00C500,
+            timestamp=datetime.datetime.now()
+        )
         if ctx.author.nick != None: invoker_name = ctx.author.nick
         else: invoker_name = ctx.author.name
         embedVar.set_footer(text=f"\u200bPing checked by {invoker_name}")
@@ -24,11 +26,10 @@ class Miscellaneous(commands.Cog):
     
     @ping.error
     async def ping_error(self, ctx):
-        # Should never run. If this runs then bruh
         await sendDefaultError(ctx)
     
     ### AVATAR ###
-    @commands.command(description="Gets the avatar of any user")
+    @commands.hybrid_command(description="Gets the avatar of any user")
     async def avatar(self, ctx, member:discord.Member=None):
         if (member == None):
             await ctx.send(ctx.author.display_avatar)
@@ -39,23 +40,28 @@ class Miscellaneous(commands.Cog):
     async def avatar_error(self, ctx, error):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.MemberNotFound):
-            embed_var = discord.Embed(title=ERROR_TITLE,
-                                      description="Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?",
-                                      color=0xC80000)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description="Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?",
+                color=0xC80000
+            )
             await ctx.send(embed=embed_var)
         else:
             await sendDefaultError(ctx)
 
     ### COINFLIP ###
-    @commands.command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
+    @commands.hybrid_command(description="Flips a coin. Can either be heads or tails.", aliases=["flip", "coin"])
     async def coinflip(self, ctx):
         # Calls a random float between 0 and 0.99 inclusive. Returns heads if 0 - 0.48 and tails if 0.49 - 0.99
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
-        embedVar = discord.Embed(title="Coin Flip Result",
-                                 description=result,
-                                 color=0x00C500,
-                                 timestamp=datetime.datetime.now())
-        embedVar.set_footer(text=f"\u200bCoin flipped by {ctx.author.name}#{ctx.author.discriminator}")
+        embedVar = discord.Embed(
+            title=result,
+            color=0x00C500,
+            timestamp=datetime.datetime.now()
+        )
+        if ctx.author.nick != None: invoker_name = ctx.author.nick
+        else: invoker_name = ctx.author.name
+        embedVar.set_footer(text=f"\u200bCoin flipped by {invoker_name}")
         await ctx.send(embed=embedVar)
     
     @coinflip.error
@@ -64,13 +70,17 @@ class Miscellaneous(commands.Cog):
         await sendDefaultError(ctx)
 
     ### REPO ###
-    @commands.command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
+    @commands.hybrid_command(description="Returns a message that can be interacted with (clicked on) bringing a user to our GitHub Repo.")
     async def repo(self, ctx):
-        embedVar = discord.Embed(title=f"Click Here to Redirect to the {ctx.guild.get_member(1067560443444478034).name} Repository",
-                                 url='https://github.com/Zen1124/tsdb',
-                                 color=0x0099FF,
-                                 timestamp=datetime.datetime.now())
-        embedVar.set_footer(text=f"\u200bRepository link requested by {ctx.author.name}#{ctx.author.discriminator}")
+        embedVar = discord.Embed(
+            title=f"Click Here to Redirect to the {ctx.guild.get_member(1067560443444478034).name} Repository",
+            url='https://github.com/Zen1124/tsdb',
+            color=0x0099FF,
+            timestamp=datetime.datetime.now()
+        )
+        if ctx.author.nick != None: invoker_name = ctx.author.nick
+        else: invoker_name = ctx.author.name
+        embedVar.set_footer(text=f"\u200bRepository link requested by {invoker_name}")
         await ctx.send(embed=embedVar)
     
     @repo.error
@@ -78,39 +88,54 @@ class Miscellaneous(commands.Cog):
         # Should never run. If this runs then bruh
         await sendDefaultError(ctx)
     
+    ### INVITE ###
     @commands.hybrid_command(description="Sends a link that can be used to invite CARPI to a server, or invite a user to a channel.")
     async def invite(self, ctx, *, args:str=""):
-        # embedVar = discord.Embed(title="Click Here to Redirect to the {} Repository".format(ctx.guild.get_member(1067560443444478034).name), url='https://github.com/Zen1124/tsdb', color=0x0099FF, timestamp=datetime.datetime.now())
 
-        if len(args) == 0:
-            embedVar = discord.Embed(title=f"Click Here To Add {ctx.guild.get_member(1067560443444478034).name} To a Server", url='https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot', color=0x0099FF, timestamp=datetime.datetime.now())
-            embedVar.set_footer(text=f"\u200bBot invite link requested by {ctx.author.nick}")
+        if ctx.author.nick != None: invoker_name = ctx.author.nick
+        else: invoker_name = ctx.author.name
+
+        if len(args) < 0 or len(args) > 1:
+            raise commands.BadArgument
+        elif len(args) == 0:
+            embedVar = discord.Embed(
+                title=f"Click Here To Add {ctx.guild.get_member(1067560443444478034).name} To a Server",
+                url="https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot",
+                color=0x0099FF,
+                timestamp=datetime.datetime.now()
+            )
+            embedVar.set_footer(text=f"\u200bBot invite link requested by {invoker_name}")
             await ctx.send(embed= embedVar)
-
-        elif len(args) == 1:
-            if args[0] == 'vc':
+        else:
+            if args[0] != "vc" and args[0] != "here":
+                raise commands.BadArgument
+            elif args[0] == "vc":
                 if ctx.author.voice == None:
-                    embedVar = discord.Embed(title="Voice Channel Invite Failed", description="You must be in a voice channel to get a valid invite link.", color=0xC80000, timestamp=datetime.datetime.now())
-                    embedVar.set_footer(text=f"\u200bVoice chat invite requested by {ctx.author.nick}")
+                    embedVar = discord.Embed(
+                        title="Voice Channel Invite Failed",
+                        description="You must be in a voice channel to get a valid invite link.",
+                        color=0xC80000,
+                        timestamp=datetime.datetime.now()
+                    )
+                    embedVar.set_footer(text=f"\u200bVoice chat invite requested by {invoker_name}")
                     await ctx.send(embed= embedVar)
                 else:
                     await ctx.send(await ctx.author.voice.channel.create_invite(max_age = 300) )
-            
-            elif args[0] == 'here':
+            else:
                 await ctx.send(await ctx.channel.create_invite(max_age = 300) )
-        
-        else:
-            await ctx.send(f"Usage: `{COMMAND_PREFIX}invite [optional \"vc\"]`")
     
     @invite.error
-    async def invite_error(self, ctx, *args:str, error):
+    async def invite_error(self, ctx, error):
         # Should never run. If this runs then bruh
         if isinstance(error, commands.BadArgument):
-            await ctx.send("Something went wrong.")
-        elif len(args) == 1 and args[0] == 'vc' and ctx.author.voice == None:
-            embedVar = discord.Embed(title="Voice Channel Invite Failed", color=0xC80000, timestamp=datetime.datetime.now())
-            embedVar.set_footer(text=f"\u200bVoice chat invite requested by {ctx.author.nick}")
-            await ctx.send(embed= embedVar)
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=f"Usage: `{COMMAND_PREFIX}invite [optional \"vc\"]`",
+                color=0xC80000
+            )
+            await ctx.send(embed=embed_var)
+        else:
+            sendDefaultError(ctx)
     
     ### SECRET MESSAGE ###
     @commands.command(description="Secretly message someone")
