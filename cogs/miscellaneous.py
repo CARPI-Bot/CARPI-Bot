@@ -142,6 +142,7 @@ class Miscellaneous(commands.Cog):
         numBot = random.choice(botNums)
         statement = msg
         if (statement == "hit"):
+            currentnum += random.choice(nums)
             if (currentnum > 21):
                 await ctx.send(currentnum)
                 await ctx.send("YOU LOSE!")
@@ -160,9 +161,8 @@ class Miscellaneous(commands.Cog):
                 await ctx.send("tied |bot: ", numBot, " you: ", currentnum, "|")
                     
     @blackJack.error
-    async def blackJack(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("incorrrect input value, must be a bool")
+    async def blackJack_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):0            await ctx.send("incorrrect input value, must be a bool")
 
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
