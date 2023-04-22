@@ -13,6 +13,9 @@ async def loadCogs(bot:commands.Bot):
     for file_name in os.listdir('./cogs'):
         if file_name.endswith('.py'):
             await bot.load_extension(f"cogs.{file_name[:-3]}")
+    for file_name in os.listdir('./cogs/calendar'):
+        if file_name.endswith('.py'):
+            await bot.load_extension(f"cogs.{file_name[:-3]}")
 
 @bot.event
 async def on_ready():
