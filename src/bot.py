@@ -3,11 +3,11 @@ import discord
 from discord.ext import commands
 from globals import *
 
-async def load_extensions(path:str, bot:commands.Bot):
+async def load_cogs(path:str, bot:commands.Bot):
     for file_name in os.listdir(path):
         new_path = os.path.join(path, file_name)
         if os.path.isdir(new_path):
-            await load_extensions(os.path.join(new_path), bot)
+            await load_cogs(new_path, bot)
         else:
             if file_name.endswith(".py"):
                 try: await bot.load_extension(f"cogs.{file_name[:-3]}")
@@ -20,7 +20,7 @@ class Bot(commands.Bot):
         self.token = open("TOKEN.txt").read().strip()
 
     async def setup_hook(self):
-        await load_extensions("./cogs", self)
+        await load_cogs("./cogs", self)
     
     async def on_ready(self):
         num_synced = len(await self.tree.sync())
