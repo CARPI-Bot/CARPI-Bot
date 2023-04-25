@@ -153,28 +153,31 @@ class Miscellaneous(commands.Cog):
     ### get the role
     @commands.command(description="gets the roles the specific users have")
     async def getRole(self, ctx, members: commands.Greedy[discord.Member]):
-        for i in members:
-            await ctx.send(f"User: {i}")
-            await ctx.send(f"roles: {i.top_role}")
+        for x in members:
+            await ctx.send(x.roles)
+    
+    ## get all the memebers in the server with a certain role
+    @commands.command(description="gets all the members in the server with a certain role")
+    async def getMembers(self, ctx, role: discord.Role):
+        await ctx.send(role.members)
 
-    ## CUURENTLY WORK IN PROGRESS
     ### blackjack game
     @commands.command(description = "blackjack game")
     async def blackJack(self, ctx, msg):
-        nums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13]
-        botNums = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]
-        currentnum = random.choice(nums)
-        numBot = random.choice(botNums)
+        numBot = random.randint(1, 11)
+        currentnum = 0
         statement = msg
-        if (statement == "hit"):
-            if (currentnum > 21):
+        while (statement != "fold"):
+            if (statement == "hit"):
+                currentnum += random.randint(1, 11)
                 await ctx.send(currentnum)
-                await ctx.send("YOU LOSE!")
+                statement = msg
+            elif (statement == "stay"):
+                await ctx.send(currentnum)
+                statement = msg
             else:
-                await ctx.send(currentnum)
-                currentnum += random.choice(nums)
-                await ctx.send(currentnum)
-        
+                await ctx.send("incorrect input")
+                statement = msg
         if (statement == "fold"):
             await ctx.send(currentnum)
             if (currentnum > numBot):
@@ -185,9 +188,11 @@ class Miscellaneous(commands.Cog):
                 await ctx.send("tied |bot: ", numBot, " you: ", currentnum, "|")
                     
     @blackJack.error
-    async def blackJack(self, ctx, error):
-        if isinstance(error, commands.BadArgument):
-            await ctx.send("incorrrect input value, must be a bool")
+    async def blackJack_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):  
+            await ctx.send("Incorrect input")
+        else:
+            await ctx.send("Incorrect input")
 
 async def setup(bot):
     await bot.add_cog(Miscellaneous(bot))
