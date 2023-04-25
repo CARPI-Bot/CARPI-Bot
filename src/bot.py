@@ -10,7 +10,8 @@ async def load_cogs(path:str, bot:commands.Bot):
             await load_cogs(new_path, bot)
         else:
             if file_name.endswith(".py"):
-                try: await bot.load_extension(f"cogs.{file_name[:-3]}")
+                cog = new_path[2:-3].replace("\\", ".")
+                try: await bot.load_extension(cog)
                 except: pass
 
 class Bot(commands.Bot):
