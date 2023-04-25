@@ -1,5 +1,5 @@
 import asyncio
-# from globals import *
+from globals import *
 from time import sleep
 from datetime import date, datetime
 
@@ -13,20 +13,6 @@ from calendar.academic_cal import events_from_webpage
 
 schedule = BackgroundScheduler()
 
-async def send_to_channel(channel_id: int, event: str):
-
-    print("txt")
-
-# async def read_dates(dates: list):
-#     channel_id = 123456
-
-#     for date in dates:
-#         schedule.add_job(send_to_channel, 'date', run_date = date['date'],
-#                         kwargs={ "channel_id" : channel_id, "event" : date['event']})
-#         schedule.start()
-
-#     return
-
 class AcadCal(commands.Cog) :
     def __init__(self, bot):
         self.bot = bot
@@ -35,16 +21,15 @@ class AcadCal(commands.Cog) :
     async def send_to_channel(channel_id: int, event: str) -> None:
         print("txt")
 
-    async def read_dates(dates: list):
+    async def read_dates(self, dates: list):
         channel_id = 123456
 
         for date in dates:
-            schedule.add_job(send_to_channel, 'date', run_date = date['date'],
+            schedule.add_job(self.send_to_channel, 'date', run_date = date['date'],
                             kwargs={ "channel_id" : channel_id, "event" : date['event']})
             schedule.start()
 
         return
 
-
-    async def setup(bot):
-     await bot.add_cog(AcadCal(bot))
+async def setup(bot):
+    await bot.add_cog(AcadCal(bot))
