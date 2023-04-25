@@ -33,6 +33,3 @@ class Bot(commands.Bot):
         for guild in self.guilds:
             print(" - " + guild.name)
         print("\n==================================")
-    
-    async def get_token(self):
-        return self.token
