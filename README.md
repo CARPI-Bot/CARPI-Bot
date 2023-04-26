@@ -5,6 +5,11 @@
 
 <h3>Rensselaer’s Academic Discord Bot!</h3>
 ------------------------
+In order to use a Discord bot created with the Discord.py library, you will need to meet the following requirements:
+
+Discord Account: You must have a valid Discord account to be able to interact with the bot. If you don't have one, you can create one for free.
+
+Discord Server Access: The bot must be added to a Discord server in order to function. The server owner or someone with administrative privileges will need to add the bot to the server by generating an invite link or by giving the bot specific permissions through the Discord Developer Portal.
 
 <h3>Commands List</h3>
 <h4>CALCULATOR<h4>
