@@ -12,9 +12,12 @@ async def load_cogs(path:str, bot:commands.Bot):
         else:
             if file_name.endswith(".py"):
                 cog = new_path[2:-3].replace("\\", ".")
-                bot.loaded_cogs.append(cog)
                 try: await bot.load_extension(cog)
-                except: pass
+                except commands.NoEntryPointError:
+                    print(f"\n{cog} has no 'setup' function, ignoring file.")
+                except Exception as err:
+                    print(f"\n{err}")
+                else: bot.loaded_cogs.append(cog)
 
 class Bot(commands.Bot):
 
@@ -28,7 +31,7 @@ class Bot(commands.Bot):
     
     async def on_ready(self):
         num_synced = len(await self.tree.sync())
-        print("==================================")
+        print("\n==================================")
         print(">>" + f"Logged in as {self.user.name}#{self.user.discriminator}".center(30) + "<<")
         print(">>" + f"Discord.py version {discord.__version__}".center(30) + "<<")
         print(f"{num_synced} command(s) synced!".center(34))
