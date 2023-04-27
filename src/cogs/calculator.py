@@ -246,7 +246,7 @@ class Calculator(commands.Cog):
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
-    ###QUADRATIC
+    ###QUADRATIC###
     @commands.hybrid_command(description="Solves a quadratic equation of the form ax^2 + bx + c = 0.")
     async def quadratic(self, ctx, a: float, b: float, c: float):
         """Solves a quadratic equation of the form ax^2 + bx + c = 0."""
@@ -273,7 +273,31 @@ class Calculator(commands.Cog):
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
+    ###FACTORIAL###
+    @commands.hybrid_command(description="Calculates the factorial of a positive integer.", aliases=["!"])
+    async def factorial(self, ctx, n: int):
+        if n < 0:
+            embedVar = discord.Embed(title=ERROR_TITLE,
+                                    description="The input must be a positive integer.",
+                                    color=0xC80000)
+            await ctx.send(embed=embedVar)
+        elif n == 0:
+            await ctx.send("0! = 1")
+        else:
+            result = 1
+            for i in range(1, n+1):
+                result *= i
+            await ctx.send(f"{n}! = {result}")
 
+    @factorial.error
+    async def factorial_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            embedVar = discord.Embed(title=ERROR_TITLE,
+                                    description="Enter a positive integer.",
+                                    color=0xC80000)
+            await ctx.send(embed=embedVar)
+        else:
+            await sendDefaultError(ctx)
 
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
