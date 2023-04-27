@@ -320,5 +320,29 @@ class Calculator(commands.Cog):
             else:
                 await sendDefaultError(ctx)
 
+    ###LEAST COMMON MULTIPLE###
+    @commands.hybrid_command(description="Calculates the least common multiple of two or more positive integers.", aliases=["lcm"])
+    async def least_common_multiple(self, ctx, nums: commands.Greedy[int]):
+        if len(nums) < 2:
+            embedVar = discord.Embed(title=ERROR_TITLE,
+                                    description="Enter at least two positive integers, each separated by a space.",
+                                    color=0xC80000)
+            await ctx.send(embed=embedVar)
+        else:
+            lcm = nums[0]
+            for i in range(1, len(nums)):
+                lcm = lcm * nums[i] // math.gcd(lcm, nums[i])
+            await ctx.send(f"The least common multiple of {', '.join(map(str, nums))} is {lcm}.")
+
+    @least_common_multiple.error
+    async def least_common_multiple_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            embedVar = discord.Embed(title=ERROR_TITLE,
+                                    description="Enter at least two positive integers, each separated by a space.",
+                                    color=0xC80000)
+            await ctx.send(embed=embedVar)
+        else:
+            await sendDefaultError(ctx)
+
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
