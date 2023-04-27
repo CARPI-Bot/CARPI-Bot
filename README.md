@@ -6,7 +6,7 @@ RCOS Spring 2023 Project
 
 ## Quick Start
 
-In order to use this bot created with the discord.py library, do the following:
+In order to use this bot, do the following:
 
 **1. Create a Discord Account** \
 You must have a Discord account to be able to interact with the bot. If you don't have one, [create one for free here](https://discord.com/ "Click to redirect!").
