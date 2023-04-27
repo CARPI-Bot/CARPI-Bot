@@ -1,70 +1,85 @@
-# RCOS Spring 2023 Project
+# CARPI Bot
 
-<h3>A Discord.py Sandbox.</h3>
-# CARPI Bot (RCOS 2023 Spring Project)
+### Rensselaer Polytechnic Institute's Academic Discord Bot!
 
-<h3>Rensselaer’s Academic Discord Bot!</h3>
-------------------------
-In order to use a Discord bot created with the Discord.py library, you will need to meet the following requirements:
+RCOS Spring 2023 Project
 
-Discord Account: You must have a valid Discord account to be able to interact with the bot. If you don't have one, you can create one for free.
+## Quick Start
 
-Discord Server Access: The bot must be added to a Discord server in order to function. The server owner or someone with administrative privileges will need to add the bot to the server by generating an invite link or by giving the bot specific permissions through the Discord Developer Portal.
+In order to use this bot created with the discord.py library, do the following:
 
-<h3>Commands List</h3>
-<h4>CALCULATOR<h4>
-<ol>
-  <li>Add</li>
-  <li>Divide</li>
-  <li>Inverse</li>
-  <li>Modulus</li>
-  <li>Multiply</li>
-  <li>Power</li>
-  <li>Sqrt</li>
-  <li>Subtract</li>
-</ol>  
-  
-<h4>FUN<h4>
-<ol>
-  <li>Hello</li>
-  <li>Nroll</li>
-  <li>Poll</li>
-  <li>Roll</li>
-  <li>RPS</li>
-  <li>Secret</li>
-  <li>Stinky</li>
-</ol>  
-  
-<h4>MISCELLANEOUS<h4>
-<ol>
-  <li>Avatar</li>
-  <li>Coinflip</li>
-  <li>GetRole</li>
-  <li>Invite</li>
-  <li>Ping</li>
-  <li>Repo</li>
-  <li>SecretMessage</li>
-</ol>    
+**1. Create a Discord Account** \
+You must have a Discord account to be able to interact with the bot. If you don't have one, [create one for free here](https://discord.com/ "Click to redirect!").
 
-<h4>NUMBER GAME<h4>
-<ol>
-  <li>NumGame</li>
-</ol>   
-  
-<h4>TIMED EVENTS<h4>
-<ol>
-  <li>Timer</li>
-</ol>   
-  
-<h4>YOUTUBE(WIP)<h4>
-<ol>
-  <li>Youtube</li>
-</ol> 
-  
-------------------------
+**2. Add CARPI Bot to a Discord Server** \
+Anyone in the desired server with administrative privileges can add the bot using this [invite link](https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot "Click to invite CARPI Bot to a server!"). Note that they must check the "Administrator" box during the process.
 
-Collaborators
------
+**3. Start Using Commands** \
+Once CARPI Bot has been added to a server, you're free to use any of the commands listed below! Simply invoke one by using `+command_name`.
+
+## Commands
+#### CALCULATOR
+```
+add
+subtract
+multiply
+divide
+power
+modulus
+sqrt
+inverse
+```
+#### FUN
+```
+hello
+nroll
+poll
+roll
+rps
+secret
+stinky
+```
+#### MISCELLANEOUS
+```
+avatar
+coinflip
+invite
+ping
+repo
+``` 
+#### NUMBER GAME
+```
+numgame
+```
+#### TIMED EVENTS
+```
+timer
+```  
+#### YOUTUBE
+```
+youtube_search
+```
+
+## Dependencies
+**discord.py (2.0+)**
+> `pip install discord.py` \
+> [Documentation & Getting Started](https://discordpy.readthedocs.io/en/latest/index.html "Click to redirect!")
+
+**APScheduler**
+> `pip install APScheduler` \
+> [Documentation & Getting Started](https://apscheduler.readthedocs.io/en/master/ "Click to redirect!")
+
+**Beautiful Soup**
+> `pip install beautifulsoup4` \
+> [Documentation & Getting Started](https://beautiful-soup-4.readthedocs.io/en/latest "Click to redirect!")
+
+**googlesearch**
+> `pip install googlesearch-python` \
+> [Documentation & Getting Started](https://python-googlesearch.readthedocs.io/en/latest "Click to redirect!")
+
+
+## Contributors
+
 Raymond Chen    '26  -  4 credits 
 
 Miranda Zheng   '26  -  4 credits
