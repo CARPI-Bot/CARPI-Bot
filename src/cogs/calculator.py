@@ -246,6 +246,34 @@ class Calculator(commands.Cog):
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
+    ###QUADRATIC
+    @commands.hybrid_command(description="Solves a quadratic equation of the form ax^2 + bx + c = 0.")
+    async def quadratic(self, ctx, a: float, b: float, c: float):
+        """Solves a quadratic equation of the form ax^2 + bx + c = 0."""
+        discriminant = b**2 - 4*a*c
+        if discriminant > 0:
+            x1 = (-b + math.sqrt(discriminant)) / (2*a)
+            x2 = (-b - math.sqrt(discriminant)) / (2*a)
+            message = f"The solutions are x1 = {x1} and x2 = {x2}"
+        elif discriminant == 0:
+            x = -b / (2*a)
+            message = f"The solution is x = {x}"
+        else:
+            real_part = -b / (2*a)
+            imag_part = math.sqrt(abs(discriminant)) / (2*a)
+            message = f"The solutions are x1 = {real_part} + {imag_part}i and x2 = {real_part} - {imag_part}i"
+        await ctx.send(message)
+        
+    @quadratic.error
+    async def quadratic_error(self, ctx, error):
+        if isinstance(error, commands.BadArgument):
+            embedVar = discord.Embed(title=ERROR_TITLE,
+                                    description="Enter three numbers: a, b, and c separated by spaces.",
+                                    color=0xC80000)
+            await ctx.send(embed=embedVar)
+        else:
+            await sendDefaultError(ctx)
+
 
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
