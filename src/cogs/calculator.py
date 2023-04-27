@@ -299,5 +299,26 @@ class Calculator(commands.Cog):
         else:
             await sendDefaultError(ctx)
 
+    ###GREATEST_COMMON_DIVISOR###
+    @commands.hybrid_command(description="Calculates the greatest common divisor of two or more positive integers.", aliases=["gcd"])
+    async def greatest_common_divisor(self, ctx, nums: commands.Greedy[int]):
+        if len(nums) < 2:
+            embedVar = discord.Embed(title=ERROR_TITLE,
+                                    description="Enter at least two positive integers, each separated by a space.",
+                                    color=0xC80000)
+            await ctx.send(embed=embedVar)
+        else:
+            gcd = math.gcd(*nums)
+            await ctx.send(f"The greatest common divisor of {', '.join(map(str, nums))} is {gcd}.")
+    @greatest_common_divisor.error
+    async def greatest_common_divisor_error(self, ctx, error):
+            if isinstance(error, commands.BadArgument):
+                embedVar = discord.Embed(title=ERROR_TITLE,
+                                        description="Enter at least two positive integers, each separated by a space.",
+                                        color=0xC80000)
+                await ctx.send(embed=embedVar)
+            else:
+                await sendDefaultError(ctx)
+
 async def setup(bot):
     await bot.add_cog(Calculator(bot))
