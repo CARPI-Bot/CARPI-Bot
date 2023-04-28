@@ -67,15 +67,23 @@ youtube_search
 
 **APScheduler**
 > `pip install APScheduler` \
-> [Documentation & Getting Started](https://apscheduler.readthedocs.io/en/master/ "Click to redirect!")
+> [Documentation](https://apscheduler.readthedocs.io/en/master/ "Click to redirect!")
 
 **Beautiful Soup**
 > `pip install beautifulsoup4` \
-> [Documentation & Getting Started](https://beautiful-soup-4.readthedocs.io/en/latest "Click to redirect!")
+> [Documentation](https://beautiful-soup-4.readthedocs.io/en/latest "Click to redirect!")
+
+**html5lib**
+> `pip install html5lib` \
+> [Documentation](https://html5lib.readthedocs.io/en/latest/html5lib.html "Click to redirect!")
+
+**requests**
+> `pip install requests` \
+> [Documentation](https://requests.readthedocs.io/en/latest "Click to redirect!")
 
 **googlesearch**
 > `pip install googlesearch-python` \
-> [Documentation & Getting Started](https://python-googlesearch.readthedocs.io/en/latest "Click to redirect!")
+> [Documentation](https://python-googlesearch.readthedocs.io/en/latest "Click to redirect!")
 
 
 ## Contributors
