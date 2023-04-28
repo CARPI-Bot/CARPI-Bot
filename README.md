@@ -73,10 +73,6 @@ youtube_search
 > `pip install beautifulsoup4` \
 > [Documentation](https://beautiful-soup-4.readthedocs.io/en/latest "Click to redirect!")
 
-**html5lib**
-> `pip install html5lib` \
-> [Documentation](https://html5lib.readthedocs.io/en/latest/html5lib.html "Click to redirect!")
-
 **requests**
 > `pip install requests` \
 > [Documentation](https://requests.readthedocs.io/en/latest "Click to redirect!")
