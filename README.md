@@ -15,7 +15,7 @@ You must have a Discord account to be able to interact with the bot. If you don'
 Anyone in the desired server with administrative privileges can add the bot using this [invite link](https://discord.com/api/oauth2/authorize?client_id=1067560443444478034&permissions=8&scope=bot "Click to invite CARPI Bot to a server!"). Note that they must check the "Administrator" box during the process.
 
 **3. Start Using Commands** \
-Once CARPI Bot has been added to a server, you're free to use any of the commands listed below! Simply invoke one by using `+command_name`.
+Once CARPI Bot has been added to a server, you're free to use any of the commands listed below! Type `+help` into a text channel for more info.
 
 ## Commands
 #### CALCULATOR
@@ -61,6 +61,9 @@ youtube_search
 ```
 
 ## Dependencies
+**Python (3.6+)**
+> [Download Python](https://www.python.org "Click to redirect!")
+
 **discord.py (2.0+)**
 > `pip install discord.py` \
 > [Documentation & Getting Started](https://discordpy.readthedocs.io/en/latest/index.html "Click to redirect!")
