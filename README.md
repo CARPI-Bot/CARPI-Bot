@@ -95,6 +95,8 @@ Kai Wang        '26  -  4 credits
 
 Gavin Liu       '26  -  4 credits
 
+Justin Isaac    '26  -  4 credits
+
 Brian Wang-Chen '25  -  3 credits
 
 Alex Montes     '23  -  1 credit
