@@ -3,3 +3,5 @@ TOKEN.txt
 *.pyc
 globals.py
 cogs/buttonwork.py
+academic_cal.py
+calendar_main.py
