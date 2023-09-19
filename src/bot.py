@@ -23,11 +23,11 @@ class Bot(commands.Bot):
 
     def __init__(self, prefix:str, intents:discord.Intents):
         super().__init__(command_prefix=prefix, intents=intents)
-        self.token = open("TOKEN.txt").read().strip()
+        self.token = open("..\TOKEN.txt").read().strip()
         self.loaded_cogs = []
 
     async def setup_hook(self):
-        await load_cogs(".\src\cogs", self)
+        await load_cogs(".\cogs", self)
     
     async def on_ready(self):
         num_synced = len(await self.tree.sync())

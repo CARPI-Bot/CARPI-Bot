@@ -1,5 +1,5 @@
 import asyncio
-from src.bot import Bot
+from bot import Bot
 from globals import *
 
 async def main():
