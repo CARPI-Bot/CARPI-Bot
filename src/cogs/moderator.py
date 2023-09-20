@@ -14,12 +14,11 @@ class Moderator(commands.Cog):
     @commands.check(commands.is_owner())
     async def shutdown(self, ctx):
         # Creates a response embed
-        embed_var = discord.Embed(title="Shutting down...",
-                                  color=0xC80000, timestamp=dt.datetime.now())
-        if ctx.author.nick != None:
-            invoker_name = ctx.author.nick
-        else:
-            invoker_name = ctx.author.name
+        embed_var = discord.Embed(
+            title="Shutting down...",
+            color=0xC80000, timestamp=dt.datetime.now()
+        )
+        invoker_name = ctx.author.nick if ctx.author.nick != None else ctx.author.name
         embed_var.set_footer(text=f"\u200bCommand initiated by {invoker_name}")
         # Sends the embed and closes the bot
         await ctx.send(embed=embed_var)

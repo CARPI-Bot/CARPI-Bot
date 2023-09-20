@@ -5,6 +5,7 @@ import discord
 import datetime
 
 class Fun(commands.Cog):
+    
     def __init__(self, bot):
         self.bot = bot
 
