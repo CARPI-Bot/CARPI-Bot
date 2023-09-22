@@ -13,25 +13,29 @@ async def displayAnswer(ctx:commands.Context, answer:Decimal, equation:str, colo
     else:
         display_answer = "{:,}".format(answer)
     # Creates and sends a response embed
-    embedVar = discord.Embed(title=display_answer,
-                                description=equation,
-                                color=color)
+    embedVar = discord.Embed(
+        title=display_answer,
+        description=equation,
+        color=color
+    )
     await ctx.send(embed=embedVar)
 
 # Error handler for functions that only fault if less than two arguments are provided
 async def requireTwoArgumentsError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
     # If less than two arguments are passed in
     if isinstance(error, commands.BadArgument):
-        embedVar = discord.Embed(title=ERROR_TITLE,
-                                 description="Enter at least two numbers, each separated by a space.",
-                                 color=color)
+        embedVar = discord.Embed(
+            title=ERROR_TITLE,
+            description="Enter at least two numbers, each separated by a space.",
+            color=color
+        )
         await ctx.send(embed=embedVar)
     # Sends the default error defined in globals.py
     else:
         await sendDefaultError(ctx)
 
 class Calculator(commands.Cog):
-
+    
     def __init__(self, bot):
         self.bot = bot
     
@@ -192,17 +196,21 @@ class Calculator(commands.Cog):
             else:
                 display_roots += format_template.format(roots[i])
         # Creates and sends a response embed
-        embedVar = discord.Embed(title=display_roots,
-                                    description=inputs,
-                                    color=0x00C500)
+        embedVar = discord.Embed(
+            title=display_roots,
+            description=inputs,
+            color=0x00C500
+        )
         await ctx.send(embed=embedVar)
 
     @sqrt.error
     async def sqrt_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter at least one number, each separated by a space.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter at least one number, each separated by a space.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
@@ -232,17 +240,21 @@ class Calculator(commands.Cog):
             else:
                 display_inverses += format_template.format(inverses[i])
         # Creates and sends a response embed
-        embedVar = discord.Embed(title=display_inverses,
-                                    description=inputs,
-                                    color=0x00C500)
+        embedVar = discord.Embed(
+            title=display_inverses,
+            description=inputs,
+            color=0x00C500
+        )
         await ctx.send(embed=embedVar)
     
     @inverse.error
     async def inverse_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter at least one number, each separated by a space.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter at least one number, each separated by a space.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
@@ -267,9 +279,11 @@ class Calculator(commands.Cog):
     @quadratic.error
     async def quadratic_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter three numbers: a, b, and c separated by spaces.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter three numbers: a, b, and c separated by spaces.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
@@ -277,9 +291,11 @@ class Calculator(commands.Cog):
     @commands.hybrid_command(description="Calculates the factorial of a positive integer.", aliases=["!"])
     async def factorial(self, ctx, n: int):
         if n < 0:
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="The input must be a positive integer.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="The input must be a positive integer.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         elif n == 0:
             await ctx.send("0! = 1")
@@ -292,9 +308,11 @@ class Calculator(commands.Cog):
     @factorial.error
     async def factorial_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter a positive integer.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter a positive integer.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
@@ -303,9 +321,11 @@ class Calculator(commands.Cog):
     @commands.hybrid_command(description="Calculates the greatest common divisor of two or more positive integers.", aliases=["gcd"])
     async def greatest_common_divisor(self, ctx, nums: commands.Greedy[int]):
         if len(nums) < 2:
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter at least two positive integers, each separated by a space.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter at least two positive integers, each separated by a space.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             gcd = math.gcd(*nums)
@@ -313,9 +333,11 @@ class Calculator(commands.Cog):
     @greatest_common_divisor.error
     async def greatest_common_divisor_error(self, ctx, error):
             if isinstance(error, commands.BadArgument):
-                embedVar = discord.Embed(title=ERROR_TITLE,
-                                        description="Enter at least two positive integers, each separated by a space.",
-                                        color=0xC80000)
+                embedVar = discord.Embed(
+                    title=ERROR_TITLE,
+                    description="Enter at least two positive integers, each separated by a space.",
+                    color=0xC80000
+                )
                 await ctx.send(embed=embedVar)
             else:
                 await sendDefaultError(ctx)
@@ -324,9 +346,11 @@ class Calculator(commands.Cog):
     @commands.hybrid_command(description="Calculates the least common multiple of two or more positive integers.", aliases=["lcm"])
     async def least_common_multiple(self, ctx, nums: commands.Greedy[int]):
         if len(nums) < 2:
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter at least two positive integers, each separated by a space.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter at least two positive integers, each separated by a space.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             lcm = nums[0]
@@ -337,9 +361,11 @@ class Calculator(commands.Cog):
     @least_common_multiple.error
     async def least_common_multiple_error(self, ctx, error):
         if isinstance(error, commands.BadArgument):
-            embedVar = discord.Embed(title=ERROR_TITLE,
-                                    description="Enter at least two positive integers, each separated by a space.",
-                                    color=0xC80000)
+            embedVar = discord.Embed(
+                title=ERROR_TITLE,
+                description="Enter at least two positive integers, each separated by a space.",
+                color=0xC80000
+            )
             await ctx.send(embed=embedVar)
         else:
             await sendDefaultError(ctx)
