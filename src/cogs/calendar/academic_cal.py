@@ -1,54 +1,45 @@
 import requests
 from bs4 import BeautifulSoup
-
-
-from datetime import datetime, timedelta, timezone
-
-
-
-
+from datetime import date, datetime, timedelta, timezone
 from time import sleep
-from datetime import date, datetime
 
-
-from apscheduler.schedulers.background import BackgroundScheduler
-from apscheduler.schedulers.background import BlockingScheduler
-
-from apscheduler import events
-from apscheduler.events import EVENT_JOB_ERROR, EVENT_JOB_MISSED, JobExecutionEvent
-from apscheduler.triggers.date import DateTrigger
-
+from table2ascii import table2ascii, PresetStyle
+import calendar
 
 def events_from_webpage() :
+    '''
+    This funtion is the main webscrapping function of the academic calendar. It when running, it is 
+    directed to RPI's calendar page, parses through the page source of the website and organizes all 
+    the data into a dictionary for easier access. It will return a dictionary of all the events
+    listed on the calander for that particular schoolyear.
+
+    Something that could be improved about this function would be to make it update and webscrape
+    the website automatically instead of needing to manually run the funtion every school year.
+    '''
+
+    ## accessing the website
     URL = "https://info.rpi.edu/registrar/academic-calendar"
     header = {
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/39.0.2171.95 Safari/537.36',
     }
 
-
     ## getting the HTML content from the webpage
     r = requests.get(URL, headers = header)
     soup = BeautifulSoup(r.content, 'html5lib')
 
-
     ## finding the div container storing all the calender dates
     academicCal = soup.find('div', attrs = {'id' : "academicCalendar"})
 
-
-    ## storing calendar dates into a list of dictionaries
+    ## storing calendar dates into a list of dictionaries with keys for the
+    ## month, day, event name, and a url of to more details about the event.
     dates = []
-    months = {'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5, 'June': 6,
-            'July': 7, 'August': 8, 'September': 9, 'October': 10, 'November': 11, 'December': 12}
-
 
     for month in academicCal.find_all('table'):
         rows = month.find_all('tr')  
         month = rows[0].text  
 
-
         for d in range(len(rows)-2):
             day = rows[d+1].find_all('td')[0].text
-
 
             date = {}
             date['month'] = month
@@ -62,12 +53,7 @@ def events_from_webpage() :
         print(day['date'], day['event'], sep="\n")
         print()
 
-
     return dates
-
-def send_to_channel(channel_id: int, event: str) -> None:
-    print("txt")
-
 
 def convert_d(date):
 ## this function returns the given date into the following format for easier reading for the datetime function:
@@ -99,9 +85,19 @@ def convert_d(date):
 if __name__ == "__main__" :
     channel_id = 1099112664724152490
     dates = events_from_webpage()
-    schedule = BlockingScheduler(timezone = "America/New_York")
 
+    month = datetime.now().month
 
-    schedule.add_job(send_to_channel, 'date', run_date = "2023-4-25 20:40:00",
-                     kwargs={ "channel_id" : channel_id, "event" : "hhh"})
-    schedule.start()
+    cal = calendar.Calendar(calendar.SUNDAY)
+    print(cal.monthdayscalendar(2023, 9))
+
+    currMonth = cal.monthdayscalendar(2023,9)
+
+    thin = table2ascii(
+        header=["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
+        body= currMonth,
+        style=PresetStyle.thin_compact_rounded,
+    )
+
+    print(thin)
+
