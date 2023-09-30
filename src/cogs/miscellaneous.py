@@ -194,16 +194,15 @@ class Miscellaneous(commands.Cog):
         else:
             await ctx.send("Incorrect input")
 
-    @commands.hybrid_command(description='Returns a google drive of free textbooks')
+    @commands.hybrid_command(description="Returns a google drive of free textbooks")
     async def textbooks(self, ctx: commands.Context):
-        DRIVE_LINK: str = 'https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz'
+        DRIVE_LINK = "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"
 
-        embed: discord.Embed = discord.Embed(
-            title='Textbooks',
-            description=f'''Here is a google drive link of freely avaliable textbooks.
-            *Please note that these may or may not be current.*''',
+        embed = discord.Embed(
+            title="Textbooks",
+            description=f"Here is a google drive link of freely avaliable textbooks.\n*Please note that these may or may not be current.*",
             url=DRIVE_LINK,
-            color=ctx.author.color,
+            color=ctx.author.accent_color,
             timestamp=datetime.datetime.now()
         )
 
