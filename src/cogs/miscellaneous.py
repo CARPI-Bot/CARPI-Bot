@@ -5,7 +5,6 @@ import random
 import datetime
 
 class Miscellaneous(commands.Cog):
-
     def __init__(self, bot):
         self.bot = bot
 
@@ -43,6 +42,32 @@ class Miscellaneous(commands.Cog):
             embed_var = discord.Embed(
                 title=ERROR_TITLE,
                 description="Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?",
+                color=0xC80000
+            )
+            await ctx.send(embed=embed_var)
+        else:
+            await sendDefaultError(ctx)
+    
+    ### BANNER ###
+    @commands.hybrid_command(description="Get the banner of any user!")
+    async def banner(self, ctx:Context, member:discord.Member=None):
+        target_user = (await self.bot.fetch_user(member.id)) if member != None \
+                       else (await self.bot.fetch_user(ctx.author.id))
+        banner_url = target_user.banner.url if target_user.banner != None else None
+        target_color = target_user.accent_color
+        embed_var = discord.Embed(
+            title="This user doesn't have a banner set!" if banner_url == None else None,
+            color=target_color
+        )
+        if banner_url != None: embed_var.set_image(url=banner_url)
+        await ctx.send(embed=embed_var)
+    
+    @banner.error
+    async def banner_error(self, ctx, error):
+        if isinstance(error, commands.MemberNotFound):
+            embed_var = discord.Embed(
+                title=ERROR_TITLE,
+                description=BAD_MEMBER_MSG,
                 color=0xC80000
             )
             await ctx.send(embed=embed_var)
@@ -136,63 +161,6 @@ class Miscellaneous(commands.Cog):
             await ctx.send(embed=embed_var)
         else:
             sendDefaultError(ctx)
-    
-    ### SECRET MESSAGE ###
-    @commands.command(description="Secretly message someone")
-    async def secretmessage(self, ctx, members: commands.Greedy[discord.Member], *, msg="Hey!"):
-        for x in members:
-            if not x.dm_channel == None:
-                await x.dm_channel.send(f"Secret message: {msg}")
-                await ctx.send("Message sent!")
-            else:
-                await x.create_dm()
-                await x.dm_channel.send(f"Secret message: {msg}")
-                await ctx.send("Message sent!")
-        await ctx.message.delete()
-
-    ### get the role
-    @commands.command(description="gets the roles the specific users have")
-    async def getRole(self, ctx, members: commands.Greedy[discord.Member]):
-        for x in members:
-            await ctx.send(x.roles)
-    
-    ## get all the memebers in the server with a certain role
-    @commands.command(description="gets all the members in the server with a certain role")
-    async def getMembers(self, ctx, role: discord.Role):
-        await ctx.send(role.members)
-
-    ### blackjack game
-    @commands.command(description = "blackjack game")
-    async def blackJack(self, ctx, msg):
-        numBot = random.randint(1, 11)
-        currentnum = 0
-        statement = msg
-        while (statement != "fold"):
-            if (statement == "hit"):
-                currentnum += random.randint(1, 11)
-                await ctx.send(currentnum)
-                statement = msg
-            elif (statement == "stay"):
-                await ctx.send(currentnum)
-                statement = msg
-            else:
-                await ctx.send("incorrect input")
-                statement = msg
-        if (statement == "fold"):
-            await ctx.send(currentnum)
-            if (currentnum > numBot):
-                await ctx.send("Congrats you won |bot: ", numBot, " you: ", currentnum, "|")
-            elif (currentnum < numBot):
-                await ctx.send("You lose |bot: ", numBot, " you: ", currentnum, "|")
-            else:
-                await ctx.send("tied |bot: ", numBot, " you: ", currentnum, "|")
-                    
-    @blackJack.error
-    async def blackJack_error(self, ctx, error):
-        if isinstance(error, commands.BadArgument):  
-            await ctx.send("Incorrect input")
-        else:
-            await ctx.send("Incorrect input")
 
     @commands.hybrid_command(description="Returns a google drive of free textbooks")
     async def textbooks(self, ctx: commands.Context):
