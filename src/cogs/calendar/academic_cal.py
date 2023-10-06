@@ -32,12 +32,18 @@ def events_from_webpage() :
 
     ## storing calendar dates into a list of dictionaries with keys for the
     ## month, day, event name, and a url of to more details about the event.
-    dates = []
+    dates = {}
+    monthConversion = { "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
+            "July": 6, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12}
+
 
     for month in academicCal.find_all('table'):
         rows = month.find_all('tr')  
-        month = rows[0].text  
+        month = rows[0].text
+        month = month.split()
+        month = monthConversion[month[0]]
 
+        months = []
         for d in range(len(rows)-2):
             day = rows[d+1].find_all('td')[0].text
 
@@ -46,12 +52,8 @@ def events_from_webpage() :
             date['date'] = day
             date['event'] = rows[d+1].find_all('td')[1].text
             date['url'] = rows[d+1].a['href']
-            dates.append(date)
-
-
-    for day in dates:
-        print(day['date'], day['event'], sep="\n")
-        print()
+            months.append(date)
+        dates[month] = months
 
     return dates
 
@@ -87,11 +89,12 @@ if __name__ == "__main__" :
     dates = events_from_webpage()
 
     month = datetime.now().month
+    year = datetime.now().year
 
     cal = calendar.Calendar(calendar.SUNDAY)
-    print(cal.monthdayscalendar(2023, 9))
-
-    currMonth = cal.monthdayscalendar(2023,9)
+    currMonth = cal.monthdayscalendar(year,month)
+    currMonth = [[day if day != 0 else "" for day in week] for week in currMonth]
+    currEvents = dates[month]
 
     thin = table2ascii(
         header=["sun", "mon", "tue", "wed", "thu", "fri", "sat"],
@@ -100,4 +103,6 @@ if __name__ == "__main__" :
     )
 
     print(thin)
+    for event in currEvents:
+        print(event['date'], "-", event['event'])
 
