@@ -74,3 +74,4 @@ DEL_DELAY = 3
 # For use in error handlers
 ERROR_TITLE = "Something went wrong."
 NO_PERM_MSG = "You don't have permissions to do that."
+BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?"
