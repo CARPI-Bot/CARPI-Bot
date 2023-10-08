@@ -56,10 +56,10 @@ def log_fatal(output:str) -> None:
     sys.exit(1)
 
 # Text file containing the token to your bot client
-token_rel_path = "./assets/TOKEN.txt"
+token_rel_path = "./cogs/assets/TOKEN.txt"
 
 # Text file containing (preferably) a single command prefix character
-cmd_prefix_rel_path = "./assets/PREFIX.txt"
+cmd_prefix_rel_path = "./cogs/assets/PREFIX.txt"
 
 # Directory containing discord.py cogs
 cogs_dir_rel_path = "./cogs"
