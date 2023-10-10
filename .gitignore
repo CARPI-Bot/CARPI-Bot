@@ -3,5 +3,3 @@ TOKEN.txt
 CMD_PREFIX.txt
 .DS_Store
 cogs/buttonwork.py
-academic_cal.py
-calendar_main.py
