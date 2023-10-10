@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 from discord.ext import commands
 from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate
+import calendar
+from datetime import date, datetime, timedelta, timezone
 
 class AcadCal(commands.Cog) :
     def __init__(self, bot):
@@ -12,25 +14,27 @@ class AcadCal(commands.Cog) :
     
     @commands.command(description="Prints the current month's calendar and events.",
                              aliases=["cal"])
-    async def print_calendar(self, ctx):
+    async def print(self, ctx):
         
         dates = events_from_webpage()
-        calendar = getMonthAndDate(dates)
-
+        acadCalendar = getMonthAndDate(dates)
 
         # Create an emded for the message
         embedVar = discord.Embed(
-            title=f"upcoming for october"
+            title=f"Upcoming Events for {calendar.month_name[datetime.now().month]}",
+            description=f"```\n{acadCalendar[0]}\n```",
         )
 
-        embedVar.add_field(
-            name = datetime.now().month,
-            value = calendar[0]
-        )
+        for event in acadCalendar[1]:
+            embedVar.add_field(
+                name = event['date'],
+                value = event['event'],
+                inline=False
+            )
 
         await ctx.send(embed=embedVar)
     
-    @print_calendar.error
+    @print.error
     async def print_calendar_error(self, ctx, error):
         print(error)
 

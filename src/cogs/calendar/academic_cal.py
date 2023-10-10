@@ -16,7 +16,7 @@ def events_from_webpage() :
     Something that could be improved about this function would be to make it update and webscrape
     the website automatically instead of needing to manually run the funtion every school year.
     '''
-    
+
     ## accessing the website
     URL = "https://info.rpi.edu/registrar/academic-calendar"
     header = {
@@ -88,7 +88,7 @@ def getMonthAndDate(dates):
 
     month = datetime.now().month
     year = datetime.now().year
-
+    month_name = calendar.month_name[month]    
     cal = calendar.Calendar(calendar.SUNDAY)
     currMonth = cal.monthdayscalendar(year,month)
     currMonth = [[day if day != 0 else "" for day in week] for week in currMonth]
@@ -100,15 +100,13 @@ def getMonthAndDate(dates):
         style=PresetStyle.thin_compact_rounded,
     )
 
-    ret = ""
-    for event in currEvents:
-        ret += "\n" + event['date'] +  " - " + event['event']    
-    return [thin, ret]
+    thin = month_name+" Calendar\n"+thin
 
-
+    return [thin, currEvents]
 
 if __name__ == "__main__" :
     channel_id = 1099112664724152490
     dates = events_from_webpage()
     cal = getMonthAndDate(dates)
-    print(cal)
+    # print(cal)
+    # print(dates)
