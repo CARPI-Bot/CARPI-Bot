@@ -21,34 +21,22 @@ class Compiler(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        # List of all languages respective to their compilers
+        # Compilers are retrieved from the API: "https://godbolt.org/api/compilers/<language>"
         self.compilers = {
-            'python': 'python310',
-            'c++': 'g95'
+            'python': ['python310', 'Python 3.10'],
+            'c++': ['g95', 'x86-64 gcc 9.5'],
+            'cpp': ['g95', 'x86-64 gcc 9.5'],
+            'c': ['g95', 'x86-64 gcc 9.5'],
+            'java': ['java2100', 'jdk 21.0.0']
         }
 
-    @commands.command(description="Compiles source code with a given language")
-    async def compile(self, ctx: commands.Context, *, args):
-        if '```' in args:
-            args = args.split('```')      
-        elif '``' in args:
-            args = args.split('``')
-        elif '`' in args:
-            args = args.split('`')
-
-        if isinstance(args, str):
-            raise commands.CommandError(f"Missing arguments")
-
-        language: str = args[0].lower().strip()
-        source: str = args[1]
-
-        if language not in self.compilers.keys():
-            raise commands.CommandError(f"Language {language} is not avaliable")
-
+    async def get_compile_data(self, language: str, source: str):
         compile_data = {
             "source": source,
-            "compiler": self.compilers[language],
+            "compiler": self.compilers[language][0],
             "options": {
-                "userArguments": "-O3",
+                "userArguments": "",
                 "executeParameters": {
                     "args": [],
                     "stdin": ""
@@ -73,9 +61,63 @@ class Compiler(commands.Cog):
         )
 
         compile_output = compile_request.json()
+        return compile_data, compile_output
 
+    async def get_link_data(self, compile_data): 
+        link_data = {
+            "sessions": [
+                {
+                    "id": 1,
+                    "language": compile_data["lang"],
+                    "source": compile_data["source"],
+                    "compilers": [],
+                    "executors": [
+                        {
+                        "arguments": compile_data["options"]["executeParameters"]["args"],
+                        "compiler": {
+                            "id": compile_data["compiler"],
+                            "libs": compile_data["options"]["libraries"],
+                            "options": compile_data["options"]["userArguments"]
+                        },
+                        "stdin": compile_data["options"]["executeParameters"]["stdin"]
+                        }
+                    ]
+                }
+            ]
+        }
+
+        link_request: requests.Response = requests.post(
+            url = POST_LINK_URL,
+            headers = {"Accept": "application/json"},
+            json = link_data
+        )
+
+        link_output = link_request.json()
+        return link_output
+
+    @commands.hybrid_command(description="Compiles source code with a given language")
+    async def compile(self, ctx: commands.Context, *, args):
+        args = args.split(' ')
+
+        if len(args) <= 1:
+            raise commands.CommandError(f"Missing arguments: **source**")
+        
+        if args[0] not in self.compilers.keys():
+            raise commands.CommandError(f"Language **{args}** not avaliable")
+            
+        language: str = args[0].lower().strip()
+
+        source: str = "".join([a + " " for a in args[1:]])
+        source = source.replace('`', '')
+
+        compile_data, compile_output = await self.get_compile_data(language, source)
+        link_output = await self.get_link_data(compile_data)
+        
         out = ""
+        color = discord.Color.light_embed()
+
         if compile_output["stderr"]:
+            color = discord.Color.red()
             for text in compile_output["stderr"]:
                 out += "\n" + text["text"]
 
@@ -85,16 +127,33 @@ class Compiler(commands.Cog):
 
         embed = discord.Embed(
             title="Program Output",
-            description=out,
+            description=f"```{out}```",
+            color=color,
+            timestamp=datetime.datetime.now(),
+        )
+        embed.set_footer(text=f"{ctx.author.nick} | {language} | {self.compilers[language][1]}")
+
+        view = discord.ui.View()
+        url_button = discord.ui.Button(
+            label=f"\u200bView on godbolt.org", 
+            style=discord.ButtonStyle.gray,
+            url=link_output["url"]
+        )
+
+        view.add_item(url_button)
+
+        await ctx.send(embed=embed, view=view)      
+
+    @compile.error
+    async def compile_error(self, ctx: commands.Context, error):
+        embed = discord.Embed(
+            title="Command Error",
+            description=error,
             color=ctx.author.accent_color,
             timestamp=datetime.datetime.now()
         )
 
-        await ctx.send(embed=embed)      
-
-    @compile.error
-    async def compile_error(self, ctx: commands.Context, error):
-        print(error)
+        await ctx.send(embed=embed)  
     
 async def setup(bot):
     await bot.add_cog(Compiler(bot))
