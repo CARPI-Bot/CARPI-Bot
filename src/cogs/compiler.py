@@ -39,7 +39,7 @@ class Compiler(commands.Cog):
                 "userArguments": "",
                 "executeParameters": {
                     "args": [],
-                    "stdin": ""
+                    "stdin": "1 2 3 4 5"
                 },
                 "compilerOptions": {
                     "executorRequest": True
@@ -128,7 +128,11 @@ class Compiler(commands.Cog):
                 for text in compile_output["buildResult"]["stderr"]:
                     placeholder = text["text"].replace("\x1b[01m\x1b[K", "") \
                         .replace("\x1b[m\x1b[K", "") \
-                        .replace("\x1b[01;31m\x1b[K", "")
+                        .replace("\x1b[01;31m\x1b[K", "") \
+                        .replace("\x1b[01;35m\x1b[K", "") \
+                        .replace("\x1b[m\x1b[K", "") \
+                        .replace("\x1b[32m\x1b[K", "") \
+                        .replace("\x1b[01;36m\x1b[K" , "")
 
                     out += "\n" + placeholder
 
