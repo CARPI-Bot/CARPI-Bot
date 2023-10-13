@@ -5,16 +5,32 @@ from discord.ext import commands
 
 Context = commands.Context
 
+# Standardizes console output, use whenever possible
+def log_info(output:str) -> None:
+    print(f"[INFO] {output}")
+
+def log_warn(output:str) -> None:
+    print(f"[WARNING] {output}")
+
+def log_err(output:str) -> None:
+    print(f"[ERROR] {output}")
+
+def log_fatal(output:str) -> None:
+    print(f"[FATAL] {output}")
+    sys.exit(1)
+
 # The standard error message that should send upon a command error, only for production
 # use though. It will not help you with debugging, since its point is to mask the actual
 # error using a fun-looking embed.
-async def sendDefaultError(ctx:Context) -> None:
+async def sendUnknownError(ctx:Context, error:commands.errors=None) -> None:
     embed_var = discord.Embed(
         title=ERROR_TITLE,
         description="Unknown error. Contact an admin for more details.",
         color=0xC80000
     )
     await ctx.send(embed=embed_var)
+    if (error != None):
+        log_err(f"Command \"{ctx.command}\" in cog \"{ctx.cog.qualified_name}\": {error}")
 
 # Given a relative path, returns its absolute path equivalent, or the absolute path to
 # the temp folder created by PyInstaller's bootloader. Necessary if this project is to
@@ -38,22 +54,9 @@ def readTextFile(rel_path:str) -> str:
         if len(content) == 0:
             raise
     except:
-        print(f"[ERROR] Can't open \"{abs_path}\", path is invalid or file is empty.")
+        log_err(f"Can't open \"{abs_path}\", path is invalid or file is empty.")
         sys.exit(1)
     return content
-
-def log_info(output:str) -> None:
-    print(f"[INFO] {output}")
-
-def log_warn(output:str) -> None:
-    print(f"[WARNING] {output}")
-
-def log_err(output:str) -> None:
-    print(f"[ERROR] {output}")
-
-def log_fatal(output:str) -> None:
-    print(f"[FATAL] {output}")
-    sys.exit(1)
 
 # Text file containing the token to your bot client
 token_rel_path = "./cogs/assets/TOKEN.txt"
