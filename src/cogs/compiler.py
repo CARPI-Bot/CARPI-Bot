@@ -116,10 +116,21 @@ class Compiler(commands.Cog):
         out = ""
         color = discord.Color.light_embed()
 
+        # If the program produces an error, print that instead of the output
         if compile_output["stderr"]:
             color = discord.Color.red()
             for text in compile_output["stderr"]:
                 out += "\n" + text["text"]
+
+            # (For C & CPP compiles; removes all console characters)
+            if 'buildResult' in compile_output:
+                out += '\n'
+                for text in compile_output["buildResult"]["stderr"]:
+                    placeholder = text["text"].replace("\x1b[01m\x1b[K", "") \
+                        .replace("\x1b[m\x1b[K", "") \
+                        .replace("\x1b[01;31m\x1b[K", "")
+
+                    out += "\n" + placeholder
 
         elif compile_output["stdout"]:
             for text in compile_output["stdout"]:
