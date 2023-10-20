@@ -1,5 +1,4 @@
 *.pyc
-TOKEN.txt
-CMD_PREFIX.txt
 .DS_Store
-cogs/buttonwork.py
+PREFIX.txt
+TOKEN.txt
