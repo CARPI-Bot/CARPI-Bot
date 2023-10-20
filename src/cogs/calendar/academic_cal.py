@@ -44,7 +44,7 @@ def events_from_webpage() :
         month = monthConversion[month[0]]
 
         months = []
-        for d in range(len(rows)-2):
+        for d in range(len(rows)-1):
             day = rows[d+1].find_all('td')[0].text
 
             date = {}
@@ -104,9 +104,36 @@ def getMonthAndDate(dates):
 
     return [thin, currEvents]
 
+def findEvent(prompt, dates):
+    ''' dates will be the values for each month (so a list of dictionaries for events of that month) '''
+    # print(dates)
+    prompt = prompt.lower()
+
+    prompt = prompt.split()
+    print(prompt)
+    ## loop through the list
+    for month in dates:
+        ## event will be a dictionary
+        found = False
+        
+        for event in month:
+            description = event['event']
+            description = description.lower()
+            # print(event['date'], event['event'])
+            # print("-----------------")
+            for word in prompt:
+                if description.find("no classes") != -1:
+                    found = True
+                    break
+            
+            if found == True:
+                print(event['date'], event['event'])
+
 if __name__ == "__main__" :
     channel_id = 1099112664724152490
     dates = events_from_webpage()
     cal = getMonthAndDate(dates)
     # print(cal)
     # print(dates)
+    # print(dates.values())
+    findEvent("drop deadline", dates.values())
