@@ -15,7 +15,30 @@ GET_FORMATS_URL = "https://godbolt.org/api/formats/"     # Returns code formats
 
 POST_COMPILE_URL = "https://godbolt.org/api/compiler/"   # Requires data JSON
 POST_FORMAT_URL = "https://godbolt.org/api/format/"      # Requires data JSON
-POST_LINK_URL = "https://godbolt.org/api/shortener"      # Requires data JSON
+POST_LINK_URL = "https://godbolt.org/api/shortener/"      # Requires data JSON
+
+# Error handler for commands that does not have the required language and source arguments
+async def requireTwoArgumentsError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
+    embedVar = discord.Embed(
+        title=ERROR_TITLE,
+        description="Enter language and the source code, each separated by a space.",
+        color=color
+    )
+    
+    await ctx.send(embed=embedVar)
+
+# Error handler for commands that specify a language that is not avaliable
+class CompileLanguageError(commands.UserInputError):
+    ...
+
+async def languageNotAvaliableError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
+    embedVar = discord.Embed(
+        title=ERROR_TITLE,
+        description="Language not avaliable.",
+        color=color
+    )
+
+    await ctx.send(embed=embedVar)
 
 class Compiler(commands.Cog):
     def __init__(self, bot):
@@ -27,8 +50,7 @@ class Compiler(commands.Cog):
             'python': ['python310', 'Python 3.10'],
             'c++': ['g95', 'x86-64 gcc 9.5'],
             'cpp': ['g95', 'x86-64 gcc 9.5'],
-            'c': ['g95', 'x86-64 gcc 9.5'],
-            'java': ['java2100', 'jdk 21.0.0']
+            'c': ['g95', 'x86-64 gcc 9.5']
         }
 
     async def get_compile_data(self, language: str, source: str):
@@ -39,7 +61,7 @@ class Compiler(commands.Cog):
                 "userArguments": "",
                 "executeParameters": {
                     "args": [],
-                    "stdin": "1 2 3 4 5"
+                    "stdin": "0"
                 },
                 "compilerOptions": {
                     "executorRequest": True
@@ -99,13 +121,13 @@ class Compiler(commands.Cog):
     async def compile(self, ctx: commands.Context, *, args):
         args = args.split(' ')
 
-        if len(args) <= 1:
-            raise commands.CommandError(f"Missing arguments: **source**")
-        
-        if args[0] not in self.compilers.keys():
-            raise commands.CommandError(f"Language **{args}** not avaliable")
-            
         language: str = args[0].lower().strip()
+
+        if language not in self.compilers.keys():
+            raise CompileLanguageError
+        
+        if len(args) <= 1:
+            raise commands.BadArgument
 
         source: str = "".join([a + " " for a in args[1:]])
         source = source.replace('`', '')
@@ -160,15 +182,13 @@ class Compiler(commands.Cog):
         await ctx.send(embed=embed, view=view)      
 
     @compile.error
-    async def compile_error(self, ctx: commands.Context, error):
-        embed = discord.Embed(
-            title="Command Error",
-            description=error,
-            color=ctx.author.accent_color,
-            timestamp=datetime.datetime.now()
-        )
+    async def compile_error(self, ctx: commands.Context, error: commands.errors):
+        if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
+            await requireTwoArgumentsError(ctx, error)
+        elif isinstance(error, CompileLanguageError):
+            await languageNotAvaliableError(ctx, error)
+        else:
+            await sendDefaultError(ctx)
 
-        await ctx.send(embed=embed)  
-    
 async def setup(bot):
     await bot.add_cog(Compiler(bot))
