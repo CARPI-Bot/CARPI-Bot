@@ -1,127 +1,156 @@
 import discord
 from discord.ext import commands
-import asyncio
-
-# for webscraping
 import requests
 from bs4 import BeautifulSoup
 import re
-#checks if each character in str is a letter, num, or a space
-def isnumalpha(c:str) -> bool:
-        if (ord(c) >= 97 and ord(c) <= 122) or (ord(c) >= 48 and ord(c) <= 57 ) or ord(c) == 32:
-            return True
-        return False
+from globals import sendUnknownError
 
-#takes in a str type link and outputs information about given course
-def get_info(course, Header) -> str:
-    link = f"https://catalog.rpi.edu/{course}"
-    r = requests.get(link, Header)
-    soup = BeautifulSoup(r.content, 'html.parser')
-    texts = soup.find_all('p')
-    #blurb about the course itself
-    information = texts[4].hr.next_sibling.get_text()
+Context = commands.Context
 
-    # #whether it is a prereq or a coreq and provide the link along with the req
-    # prereq = texts[4].strong.next_sibling.get_text()
-    # prereq_course = texts[4].a.get_text() #prereq/coreq course name
+# Filters the user input so all non-alphanumeric characters are eliminated, except for spaces.
+async def sanitize_str(input:str) -> str:
+    return "".join(
+    [c.lower() for c in input.strip()
+        if c.isnumeric() or c.isalpha() or c == ' ']
+    )
 
-    # #when it is offered
-    # time_offered = texts[4].span.find_next('strong').next_sibling.get_text()
-    # #number of credit hours given and lab hours
-    # credit_hours = texts[4].find_all('em')[1]
-    # lab_hours = credit_hours.find_next('strong').next_sibling.get_text()
-    
-    
-    # print_text = f"{information}\n\
-    #                {prereq} {prereq_course}\n\
-    #                When Offered: {time_offered}\n\
-    #                Credit Hours: {credit_hours.get_text()}\n\
-    #                Contact, Lecture or Lab Hours: {lab_hours}"
-    return information
+# Accesses a specific course's preview webpage and gathers data such as the course title
+# and its description, given a HTTP session, URL, and headers to use in the GET request.
+async def get_course_info(session:requests.Session, url:str, parser:str, headers:dict) -> dict:
+    info = dict()
+    course_response = session.get(
+        url = url,
+        headers = headers
+    )
+    if course_response.status_code != 200:
+        raise 1
+    course_soup = BeautifulSoup(course_response.content, parser)
+    # Gets the header containing the course's name
+    header = course_soup.find("h1", id="course_preview_title")
+    info["title"] = header.string
+    # Start searching for the course description following the course title header
+    elements = list(header.next_siblings)
+    course_desc = ""
+    # Gathers all text between the first <hr> and <br> tag after the header
+    for i in range(len(elements)):
+        if elements[i].name == "hr":
+            for j in range(i + 1, len(elements)):
+                if elements[j].name == "br":
+                    break
+                text = elements[j].string
+                course_desc += text.strip() if text != None else ""
+            break
+    info["description"] = course_desc
+    return info
 
-def get_title(course, Headers) -> str:
-    link = f"https://catalog.rpi.edu/{course}"
-    r = requests.get(link, Headers)
-    soup = BeautifulSoup(r.content, 'html.parser')
-    title = soup.find('h1', id='course_preview_title')
-    return title.get_text()
-
-
-class course_search(commands.Cog):
-    def __init__(self, bot):
+class CourseSearch(commands.Cog):
+    def __init__(self, bot:commands.Bot):
         self.bot = bot    
 
-    @commands.command(description = 'Searches for courses in course catalog')
-    async def course_search(self, ctx, *, arg):
-        arg = "".join([c for c in arg if isnumalpha(c.lower())])
-        url = f"https://catalog.rpi.edu/search_advanced.php?cur_cat_oid=26&search_database=\
-            Search&search_db=Search&cpage=1&ecpage=1&ppage=1&spage=1&tpage=1&location=33\
-                &filter%5Bkeyword%5D={arg}&filter%5Bexact_match%5D=1"
-        Headers = ({'User-Agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 \
-                (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36', 'Accept-Language': 'en-US, en;q=0.5'})
-                
-        embedVar = discord.Embed(
-            title = '',
-            description='',
-            color = 0x07CEFD
-        )
-        # get html content from the website
-        r = requests.get(url, headers = Headers)
-        soup = BeautifulSoup(r.content, 'html.parser')
-        links = soup('a', href=re.compile("preview_course"))
+    @commands.command(description="Search for a course in the RPI catalog.")
+    async def course(self, ctx:Context, *, search_term:str):
+        PARSER = "html5lib"
+        DOMAIN = "https://catalog.rpi.edu/"
+        SEARCH_HREF = "search_advanced.php?"
+        search_term = await sanitize_str(search_term)
+        if len(search_term) == 0:
+            raise commands.MissingRequiredArgument
+        search_params = {
+            # "cur_cat_oid": 26,
+            "search_database": "Search",
+            "filter[keyword]": search_term,
+            "filter[exact_match]": 1,
+            "filter[3]": 1,
+            "filter[31]": 1
+        }
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
+                        "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.46"
+        }
 
-        # checks if user input has a search. if not tell them to try again
-        if len(links) == 0: 
-            embedVar.title = f"Search results for {arg}"
-            embedVar.description=f"There is no information on {arg}"
-            await ctx.send(embed = embedVar)
-            return
+        embed_var = discord.Embed(color=0xC80000)
+
+        # Creates a HTTP session
+        session = requests.Session()
+        # Submits a search query with the specified search term and appropriate filters
+        search_response = session.get(
+            url = f"{DOMAIN}{SEARCH_HREF}",
+            params = search_params,
+            headers = headers
+        )
+        if search_response.status_code != 200:
+            raise 1
+        search_soup = BeautifulSoup(search_response.content, PARSER)
+
+        # Returns all anchor elements that links to a course info preview
+        anchors = search_soup.find_all("a", href=re.compile("preview_course.+coid=.+"))
+        # NOTE: Anchors is sometimes empty, even though the HTTP response is always successful
+        if len(anchors) == 0:
+            raise 2
+
+        # If no exact match is found, just display a list of other results
+        title = "Possible Matches"
+        description = "No prefix/code matches, but maybe you're looking for one of these courses?"
+        # Checks if a best match was found, displays the course info if so
+        # NOTE: Sometimes, no best match is found, yet the desired course still comes up
+        # NOTE: Rarely, no "best match" is found but the desired course pops up twice
+        if "Best Match" in anchors[0].get_text():
+            # After popping twice, anchors is a list of follow-up course links
+            top_anchor = anchors.pop(0)
+            # NOTE: Sometimes, only a best match and no follow-up results are found
+            if len(anchors) > 0:
+                anchors.pop(0)
+            try:
+                info = await get_course_info(
+                    session = session,
+                    url = f"{DOMAIN}{top_anchor['href']}",
+                    parser = PARSER,
+                    headers = headers
+                )
+            except:
+                raise 1
+            title = info["title"]
+            description = info["description"]
         
-        #first result of searches
-        best_result_title = get_title(links[0]['href'], Headers)
-        best_result = get_info(links[0]['href'], Headers)            
-        if len(links) == 1:            
-            embedVar.title = best_result_title
-            embedVar.url = f"https://catalog.rpi.edu/{links[0]['href']}"
-            embedVar.description=best_result
-            await ctx.send(embed = embedVar)
-            return
-        #list of intersted links user may want
-        embedVar.add_field(
-            name = 'Related courses that may interest you',
-            value = '',
-            inline = False
+        embed_var.title = title
+        embed_var.description = description
+        # Prints a list of results whether or not a best match was found
+        if len(anchors) > 0:
+            related_courses = "\n".join([f"[{anchor.string}]({DOMAIN}{anchor['href']})" for anchor in anchors[:5]])
+            embed_var.add_field(
+                name = "Related courses:",
+                value = related_courses
             )
-        if len(links)-1 >= 4:
-            for i in range(1,5):
-                related_title = get_title(links[i]['href'], Headers)
-                link = f"https://catalog.rpi.edu/{links[i]['href']}"
-                embedVar.add_field(
-                    name = '',
-                    value = f"[{related_title}]({link})",
-                    inline = False
-                )
-                # await ctx.send(get_title(links[i]['href'], Headers))
-        else:
-            for i in range(1,range(len(links))):
-                related_title = get_title(links[i]['href'], Headers)
-                link = f"https://catalog.rpi.edu/{links[i]['href']}"
-                embedVar.add_field(
-                    name = '',
-                    value = f"[{related_title}]({link})",
-                    inline = True
-                )
-        embedVar.title = best_result_title
-        embedVar.url = f"https://catalog.rpi.edu/{links[0]['href']}"
-        embedVar.description = best_result
-        await ctx.send(embed = embedVar)
+        
+        await ctx.send(embed=embed_var)
 
-    @course_search.error
-    async def course_search_error(self, ctx, error):
-        embedVar = discord.Embed(
-            description=str(error)
-        )
-        await ctx.send(embed = embedVar)
+    @course.error
+    async def course_search_error(self, ctx:Context, error):
+        if isinstance(error, commands.MissingRequiredArgument):
+            embed_var = discord.Embed(
+                title = "Missing Required Argument",
+                color = 0xC80000
+            )
+            await ctx.send(embed=embed_var)
+        elif isinstance(error, commands.BadArgument):
+            embed_var = discord.Embed(
+                title = "Bad Argument",
+                color = 0xC80000
+            )
+            await ctx.send(embed=embed_var)
+        elif isinstance(error, int):
+            embed_var = discord.Embed(
+                description = "This is likely an issue with RPI's servers, but we're making a workaround to that!",
+                color = 0xC80000
+            )
+            match error:
+                case 1:
+                    embed_var.title = "Error receiving a response"
+                case 2:
+                    embed_var.title = "No search results found"
+            await ctx.send(embed=embed_var)
+        else:
+            await sendUnknownError(ctx, error)
     
 async def setup(bot):
-    await bot.add_cog(course_search(bot))
+    await bot.add_cog(CourseSearch(bot))
