@@ -3,6 +3,7 @@ from discord.ext import commands
 from globals import *
 import datetime
 import requests
+import re
 
 """
 Compiler Explorer API Documentation: https://github.com/compiler-explorer/compiler-explorer/blob/main/docs/API.md
@@ -15,7 +16,7 @@ GET_FORMATS_URL = "https://godbolt.org/api/formats/"     # Returns code formats
 
 POST_COMPILE_URL = "https://godbolt.org/api/compiler/"   # Requires data JSON
 POST_FORMAT_URL = "https://godbolt.org/api/format/"      # Requires data JSON
-POST_LINK_URL = "https://godbolt.org/api/shortener/"      # Requires data JSON
+POST_LINK_URL = "https://godbolt.org/api/shortener/"     # Requires data JSON
 
 # Error handler for commands that does not have the required language and source arguments
 async def requireTwoArgumentsError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
@@ -26,10 +27,6 @@ async def requireTwoArgumentsError(ctx:commands.Context, error:commands.errors, 
     )
     
     await ctx.send(embed=embedVar)
-
-# Error handler for commands that specify a language that is not avaliable
-class CompileLanguageError(commands.UserInputError):
-    ...
 
 async def languageNotAvaliableError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
     embedVar = discord.Embed(
@@ -47,10 +44,10 @@ class Compiler(commands.Cog):
         # List of all languages respective to their compilers
         # Compilers are retrieved from the API: "https://godbolt.org/api/compilers/<language>"
         self.compilers = {
-            'python': ['python310', 'Python 3.10'],
-            'c++': ['g95', 'x86-64 gcc 9.5'],
-            'cpp': ['g95', 'x86-64 gcc 9.5'],
-            'c': ['g95', 'x86-64 gcc 9.5']
+            "python": ["python310", "Python 3.10"],
+            "c++": ["g95", "x86-64 gcc 9.5"],
+            "cpp": ["g95", "x86-64 gcc 9.5"],
+            "c": ["g95", "x86-64 gcc 9.5"]
         }
 
     async def get_compile_data(self, language: str, source: str):
@@ -76,7 +73,7 @@ class Compiler(commands.Cog):
             "allowStoreCodeDebug": True
         }
 
-        compile_request: requests.Response = requests.post(
+        compile_request = requests.post(
             url = POST_COMPILE_URL + compile_data["compiler"] + "/compile",
             headers = {"Accept": "application/json"},
             json = compile_data
@@ -117,20 +114,21 @@ class Compiler(commands.Cog):
         link_output = link_request.json()
         return link_output
 
+    ### COMPILE ###
     @commands.hybrid_command(description="Compiles source code with a given language")
     async def compile(self, ctx: commands.Context, *, args):
-        args = args.split(' ')
+        args = args.split(" ")
 
-        language: str = args[0].lower().strip()
+        language = args[0].lower().strip()
 
         if language not in self.compilers.keys():
-            raise CompileLanguageError
+            raise commands.UserInputError
         
         if len(args) <= 1:
             raise commands.BadArgument
 
-        source: str = "".join([a + " " for a in args[1:]])
-        source = source.replace('`', '')
+        source = "".join([a + " " for a in args[1:]])
+        source = source.replace("`", "")
 
         compile_data, compile_output = await self.get_compile_data(language, source)
         link_output = await self.get_link_data(compile_data)
@@ -144,19 +142,11 @@ class Compiler(commands.Cog):
             for text in compile_output["stderr"]:
                 out += "\n" + text["text"]
 
-            # (For C & CPP compiles; removes all console characters)
-            if 'buildResult' in compile_output:
-                out += '\n'
+            # (For C & CPP compiles; removes all console characters using regex compile)
+            if "buildResult" in compile_output:
+                out += "\n"
                 for text in compile_output["buildResult"]["stderr"]:
-                    placeholder = text["text"].replace("\x1b[01m\x1b[K", "") \
-                        .replace("\x1b[m\x1b[K", "") \
-                        .replace("\x1b[01;31m\x1b[K", "") \
-                        .replace("\x1b[01;35m\x1b[K", "") \
-                        .replace("\x1b[m\x1b[K", "") \
-                        .replace("\x1b[32m\x1b[K", "") \
-                        .replace("\x1b[01;36m\x1b[K" , "")
-
-                    out += "\n" + placeholder
+                    out += re.compile(r"(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]").sub("", "\n" + text["text"])
 
         elif compile_output["stdout"]:
             for text in compile_output["stdout"]:
@@ -185,10 +175,10 @@ class Compiler(commands.Cog):
     async def compile_error(self, ctx: commands.Context, error: commands.errors):
         if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
             await requireTwoArgumentsError(ctx, error)
-        elif isinstance(error, CompileLanguageError):
+        elif isinstance(error, commands.UserInputError):
             await languageNotAvaliableError(ctx, error)
         else:
-            await sendDefaultError(ctx)
+            await sendUnknownError(ctx)
 
 async def setup(bot):
     await bot.add_cog(Compiler(bot))
