@@ -1,7 +1,7 @@
-import os
-import sys
 import discord
 from discord.ext import commands
+import os
+import sys
 from globals import *
 
 class CARPIBot(commands.Bot):
@@ -9,16 +9,12 @@ class CARPIBot(commands.Bot):
         super().__init__(command_prefix=prefix, intents=intents)
         self.loaded_cogs = []
         self.token = token
-
         python_ver = ".".join(str(ver) for ver in sys.version_info[:3])
-        print(
-            "Bot client initialized",
-            f"Discord.py version {discord.__version__} | Python version {python_ver}",
-            sep="\n"
-        )
+        log_info("Bot client initialized")
+        log_info(f"discord.py version {discord.__version__} | Python version {python_ver}")
 
     async def setup_hook(self) -> None:
-        print("Loading cogs")
+        log_info("Loading cogs...")
         await self.load_cogs(getResourcePath(cogs_dir_rel_path))
     
     async def on_ready(self) -> None:
@@ -31,7 +27,7 @@ class CARPIBot(commands.Bot):
         path = getResourcePath(rel_path)
         dir_basename = os.path.basename(path)
         if not os.path.isdir(path):
-            print(f"[ERROR] Extensions directory \"{rel_path}\" is not valid!")
+            log_err(f"Extensions directory \"{rel_path}\" is not valid!")
             sys.exit(1)
         async def recursive_load(path:str) -> None:
             for file_name in os.listdir(path):
@@ -46,35 +42,30 @@ class CARPIBot(commands.Bot):
                         try:
                             await self.load_extension(cog)
                         except commands.ExtensionNotFound:
-                            print(f"[WARNING] {cog} could not be found! Ignoring...")
+                            log_warn(f"{cog} could not be found! Ignoring...")
                         except commands.ExtensionAlreadyLoaded:
-                            print(f"[WARNING] {cog} is already loaded! Ignoring...")
-                        except commands.ExtensionFailed:
-                            print(f"[WARNING] {cog} failed to execute! Ignoring...")
+                            log_warn(f"{cog} is already loaded! Ignoring...")
                         except commands.NoEntryPointError:
-                            print(f"[WARNING] {cog} has no setup() function! Ignoring...")
+                            log_warn(f"{cog} has no setup() function! Ignoring...")
                         except Exception as err:
-                            print(f"{err}")
+                            log_warn(f"{err}, ignoring...")
                         else:
                             self.loaded_cogs.append(cog)
         await recursive_load(path)
                         
     async def consoleHandler(self) -> None:
         num_synced = len(await self.tree.sync())
-        print(f"Logged in as {self.user.name}#{self.user.discriminator}")
+        log_info(f"Logged in as {self.user.name}#{self.user.discriminator}")
         if len(self.loaded_cogs) == 0:
-            print("[WARNING] No extensions were loaded")
+            log_warn("No extensions were loaded!")
         else:
-            print(
-                f"Loaded {len(self.loaded_cogs)} extension(s),",
-                f"{num_synced} commands synced:"
-            )
+            log_info(f"Loaded {len(self.loaded_cogs)} extension(s), {num_synced} commands synced:")
             for cog in self.loaded_cogs:
                 print(f"\t{cog}")
         if len(self.guilds) == 0:
-            print("[WARNING] Bot is not currently in any guilds")
+            log_warn("Bot is not currently in any guilds!")
         else:
-            print(f"Deployed in {len(self.guilds)} guild(s):")
+            log_info(f"Deployed in {len(self.guilds)} guild(s):")
             for guild in self.guilds:
                 print(f"\t{guild.name}")
     
