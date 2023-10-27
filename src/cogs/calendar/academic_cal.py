@@ -6,6 +6,8 @@ from time import sleep
 from table2ascii import table2ascii, PresetStyle
 import calendar
 
+from PIL import Image, ImageDraw
+
 def events_from_webpage() :
     '''
     This funtion is the main webscrapping function of the academic calendar. It when running, it is 
@@ -109,25 +111,45 @@ def findEvent(prompt, dates):
     # print(dates)
     prompt = prompt.lower()
 
-    prompt = prompt.split()
+    split_prompt = prompt.split()
     print(prompt)
     ## loop through the list
-    for month in dates:
-        ## event will be a dictionary
-        found = False
-        
+
+    fullMatches = []
+    otherMatches =[]
+
+    for month in dates:        
         for event in month:
+            found = False
             description = event['event']
             description = description.lower()
-            # print(event['date'], event['event'])
-            # print("-----------------")
-            for word in prompt:
-                if description.find("no classes") != -1:
-                    found = True
+
+            if description.find(prompt) != -1:
+                fullMatches.append(event)
+
+            for word in split_prompt:
+                if description.find(word+" ") != -1:
+                    otherMatches.append(event)
                     break
-            
-            if found == True:
-                print(event['date'], event['event'])
+    
+    for match in fullMatches:
+        print(match["date"], match['event'])
+
+# def convertToImage(dates):
+#     calendar = getMonthAndDate(dates)
+#     text = calendar[0]
+
+#     width, height = (1000, 1000)
+#     im = Image.new("RGBA", (width, height), "white")
+
+#     draw = ImageDraw.Draw(im)
+#     # w, h = draw.multiline_text(text)
+
+#     draw.multiline_text(((width)/2,(height)/2), text, fill="black")
+
+#     im.save("final.png", "PNG")
+
+#     return im
 
 if __name__ == "__main__" :
     channel_id = 1099112664724152490
@@ -136,4 +158,6 @@ if __name__ == "__main__" :
     # print(cal)
     # print(dates)
     # print(dates.values())
-    findEvent("drop deadline", dates.values())
+    findEvent("no classes", dates.values())
+
+    # convertToImage(dates)
