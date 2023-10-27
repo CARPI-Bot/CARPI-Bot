@@ -10,11 +10,20 @@ class building_search(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+    '''
+    get_description takes in each building name and the overall 
+    scrapped website and returns the blurb of description information 
+    for every building.
+    '''
     async def get_description(self, building_name, soup):
+        #finds all HTML <div> elements that have a "class" attribute with the value "field-content", 
         info = soup.find_all("div", {"class": "field-content"})
         for building_info in info:
+            #gets the name of the buildings that are associated with h2 tag
             curr_building_name = building_info.find("h2").text
+            #checks if the building names in both are the same
             if curr_building_name.lower() in (building_name).lower():
+                #gets the actual description
                 blurbs = building_info.find("div", {"class": "grid-6"})
                 #check if blurbs is empty
                 if blurbs is not None:
@@ -25,6 +34,7 @@ class building_search(commands.Cog):
                         #check if paragraph is empty
                         if paragraph.text.strip():
                             blurb += paragraph.text
+                            #checks if the description of the building is more than one paragraph
                             if i < len(paragraphs) - 1:
                                 blurb += '\n\n'
                     return blurb
@@ -53,13 +63,13 @@ class building_search(commands.Cog):
             building_name = building.text
             if arg.lower() in (building.text).lower():
                 lat = building["data-lat"]
-                long = building["data-lng"]
+                lon = building["data-lng"]
                 description = await self.get_description(building_name, soup)
                 description = description.lstrip()
                 # description = description.rstrip(' ')
                 # description = "N/A"
-                google_map_link = f"https://www.google.com/maps/search/?api=1&query={lat}%2C{long}"
-                await ctx.send(f"### {building_name}\n[Click for directions to {arg.title()}](<{google_map_link}>)\n```{description}```")
+                google_map_link = f"https://www.google.com/maps/search/?api=1&query={lat}%2C{lon}"
+                await ctx.send(f"### {building_name}\n[Click for directions to {building_name}](<{google_map_link}>)\n```{description}```")
         
 
         # URL = "https://info.rpi.edu/map/Academic%20Research"
