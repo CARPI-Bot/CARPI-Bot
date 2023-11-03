@@ -3,7 +3,7 @@ from discord.ext import commands
 import asyncio
 
 #for webscraping
-import requests
+import requests 
 from bs4 import BeautifulSoup
 
 class building_search(commands.Cog):
@@ -49,6 +49,10 @@ class building_search(commands.Cog):
         page = requests.get(URL, headers = Headers)
         soup = BeautifulSoup(page.content, 'html.parser')
 
+        embedMsg = discord.Embed(title = f"Search Reuslts for **{arg}**",
+                                 color = 0x9B27E6) 
+        message = ""
+
         search_found = False
         #long lat building
         buildings = soup.find_all("a", {"class": "rpi-poi"})
@@ -58,12 +62,20 @@ class building_search(commands.Cog):
                 search_found = True
                 lat = building["data-lat"]
                 lon = building["data-lng"]
-                description = await self.get_description(building_name, soup)
+                building_description = await self.get_description(building_name, soup)
                 google_map_link = f"https://www.google.com/maps/search/?api=1&query={lat}%2C{lon}"
-                await ctx.send(f"### {building_name}\n[Click for directions to {building_name}](<{google_map_link}>)\n```{description}```")
-        if(not search_found):
-            await ctx.send(f"**{arg}** not found")
+                embedDescription = embedMsg.add_field(name = f"**{building_name}**",
+                                   value = f"```{building_description}```",
+                                   inline = True)
+                embedMsg.add_field(name = "Link", value = f"[Click for directions to {building_name}](<{google_map_link}>)", inline = True)
+                # message += f"### {building_name}\n[Click for directions to {building_name}](<{google_map_link}>)\n```{description}```"
 
+                # await ctx.send(f"### {building_name}\n[Click for directions to {building_name}](<{google_map_link}>)\n```{description}```")
+        if(not search_found):
+            message = f"**{arg}** not found"
+            # await ctx.send(f"**{arg}** not found")
+            
+        await ctx.send(embed=embedMsg)
 
     @building_search.error
     async def building_search_error(self, ctx, error):
