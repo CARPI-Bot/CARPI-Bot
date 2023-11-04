@@ -4,7 +4,7 @@ from time import sleep
 from datetime import date, datetime
 
 from discord.ext import commands
-from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate
+from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate, findEvent, formatFind
 import calendar
 from datetime import date, datetime, timedelta, timezone
 
@@ -37,6 +37,55 @@ class AcadCal(commands.Cog) :
     @print.error
     async def print_calendar_error(self, ctx, error):
         print(error)
+    
+    @commands.command(description="Finds relavant events.")
+    async def find(self, ctx:Context, *, prompt:str):
+        # print("here")
+
+        dates = events_from_webpage()
+        # print("here")
+
+        eventsList = findEvent(prompt, dates.values())
+        # print("here")
+
+        finds = formatFind(eventsList)
+
+        # print("here")
+        embedVar = discord.Embed(
+            title=f"Events for " + prompt
+        )
+
+        # print("here")
+        # embedVar.add_field(name = "Matches:")
+
+        # for event in eventsList[0]:
+        #     embedVar.add_field(
+        #         name = event['date'],
+        #         value = event['event'],
+        #         inline = False
+        #     )
+        
+        embedVar.add_field(
+            name = "Exact Matches:",
+            value = finds[0],
+            inline = False
+        )
+        
+        # print("here")
+        # embedVar.add_field(
+        #     name = "Related Matches:",
+        #     value = finds[1],
+        #     inline = False
+        # )
+        # print("1111")
+
+        await ctx.send(embed=embedVar)
+    
+    @find.error
+    async def print_calendar_error(self, ctx, error):
+        print(error)
+
+
 
     
 async def setup(bot):

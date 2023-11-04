@@ -112,7 +112,7 @@ def findEvent(prompt, dates):
     prompt = prompt.lower()
 
     split_prompt = prompt.split()
-    print(prompt)
+    # print(prompt)
     ## loop through the list
 
     fullMatches = []
@@ -132,8 +132,9 @@ def findEvent(prompt, dates):
                     otherMatches.append(event)
                     break
     
-    for match in fullMatches:
-        print(match["date"], match['event'])
+    # for match in fullMatches:
+    #     print(match["date"], match['event'])
+    return [fullMatches, otherMatches]
 
 # def convertToImage(dates):
 #     calendar = getMonthAndDate(dates)
@@ -151,6 +152,25 @@ def findEvent(prompt, dates):
 
 #     return im
 
+def formatFind(findList):
+    fullMatches = findList[0]
+    otherMaches = findList[1]
+
+    full = ""
+    other = ""
+
+    for event in fullMatches:
+        full += "**" + event["date"] + "**\n" + event["event"]
+        full += "\n\n"
+    
+    for event in otherMaches:
+        other += "**" + event["date"] + "**\n " + event["event"]
+        other += "\n\n"
+
+    # print(full, "\n", other)
+    
+    return [full, other]
+
 if __name__ == "__main__" :
     channel_id = 1099112664724152490
     dates = events_from_webpage()
@@ -158,6 +178,7 @@ if __name__ == "__main__" :
     # print(cal)
     # print(dates)
     # print(dates.values())
-    findEvent("no classes", dates.values())
+    find = findEvent("no classes", dates.values())
+    find = formatFind(find)
 
     # convertToImage(dates)
