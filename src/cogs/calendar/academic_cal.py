@@ -59,33 +59,6 @@ def events_from_webpage() :
 
     return dates
 
-def convert_d(date):
-## this function returns the given date into the following format for easier reading for the datetime function:
-##      2023-4-25 00:00:00
-
-    # a dictionary that maps each month name to the corresponding month number
-    months = { "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
-               "July": 6, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12}
-   
-    # isolating all parts of the date string and removing not needed characters
-    date = date.split()
-    for i in range(len(date)):
-        date[i] = date[i].strip()
-        date[i] = date[i].strip(",-")
-   
-    # returns a list of formatted dates
-    date_range = []
-    i = 0
-    while i < len(date):
-        month = months[date[i]]
-        day = date[i+1]
-        year = date[i+2]
-
-        date_range.append("{}-{}-{} 00:00:00".format(year, month, day))
-        i += 4
-
-    return date_range
-
 def getMonthAndDate(dates):
 
     month = datetime.now().month
@@ -108,13 +81,11 @@ def getMonthAndDate(dates):
 
 def findEvent(prompt, dates):
     ''' dates will be the values for each month (so a list of dictionaries for events of that month) '''
-    # print(dates)
     prompt = prompt.lower()
 
     split_prompt = prompt.split()
-    # print(prompt)
-    ## loop through the list
 
+    ## loop through the list
     fullMatches = []
     otherMatches =[]
 
@@ -131,9 +102,6 @@ def findEvent(prompt, dates):
                     if description.find(word+" ") != -1:
                         otherMatches.append(event)
                         break
-    
-    # for match in fullMatches:
-    #     print(match["date"], match['event'])
     return [fullMatches, otherMatches]
 
 # def convertToImage(dates):
@@ -159,20 +127,15 @@ def formatFind(findList):
     full = ""
     other = ""
 
-    # for event in fullMatches:
-    #     full += "**" + event["date"] + "**\n" + event["event"]
-    #     full += "\n"
+    for event in fullMatches:
+        full += "**" + event["date"] + "**\n[" + event["event"] + "](" + event["url"] + ")"
+        full += "\n"
 
     event = fullMatches[0]
     
-    full += "**" + event["date"] + "**\n[" + event["event"] + "](" + event["url"] + ")"
-
-    
     for event in otherMaches:
-        other += "**" + event["date"] + "**\n " + event["event"]
+        other += "**" + event["date"] + "**\n[" + event["event"] + "](" + event["url"] + ")"
         other += "\n"
-
-    # print(full, "\n", other)
     
     return [full, other]
 
@@ -180,9 +143,7 @@ if __name__ == "__main__" :
     channel_id = 1099112664724152490
     dates = events_from_webpage()
     cal = getMonthAndDate(dates)
-    # print(cal)
-    # print(dates)
-    # print(dates.values())
+
     find = findEvent("no classes", dates.values())
     find = formatFind(find)
 

@@ -3,6 +3,8 @@ from globals import *
 from time import sleep
 from datetime import date, datetime
 
+import discord
+from discord import Button
 from discord.ext import commands
 from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate, findEvent, formatFind
 import calendar
@@ -38,18 +40,16 @@ class AcadCal(commands.Cog) :
     async def print_calendar_error(self, ctx, error):
         print(error)
     
-    @commands.command(description="Finds relavant events.")
-    async def find(self, ctx:Context, *, prompt:str):
+    @commands.command(description="Finds relavant events.",  aliases=["find"])
+    async def findExact(self, ctx:Context, *, prompt:str):
 
         dates = events_from_webpage()
         eventsList = findEvent(prompt, dates.values())
         finds = formatFind(eventsList)
 
         embedVar = discord.Embed(
-            title=f'Events for "' + prompt + '"'
+            title=f'Showing matches for "' + prompt + '"'
         )
-
-        embedVar.add_field(name = "Exact Matches:", value="")
 
         for event in eventsList[0]:
             embedVar.add_field(
@@ -57,9 +57,24 @@ class AcadCal(commands.Cog) :
                 value = "[" + event['event'] + "](" + event['url'] + ")",
                 inline = False
             )
-        
-        embedVar.add_field(name = "Related Matches:", value="")
 
+        await ctx.send(embed=embedVar)
+    
+    @findExact.error
+    async def print_calendar_error(self, ctx, error):
+        print(error)
+
+    @commands.command(description="Finds relavant events.", aliases=["findOthers"])
+    async def findRelevant(self, ctx:Context, *, prompt:str):
+
+        dates = events_from_webpage()
+        eventsList = findEvent(prompt, dates.values())
+        finds = formatFind(eventsList)
+
+        embedVar = discord.Embed(
+            title=f'Showing Related Matches for "' + prompt + '"'
+        )
+        
         for event in eventsList[1]:
             embedVar.add_field(
                 name = event['date'],
@@ -69,9 +84,10 @@ class AcadCal(commands.Cog) :
 
         await ctx.send(embed=embedVar)
     
-    @find.error
+    @findRelevant.error
     async def print_calendar_error(self, ctx, error):
         print(error)
+
 
 async def setup(bot):
     await bot.add_cog(AcadCal(bot))
