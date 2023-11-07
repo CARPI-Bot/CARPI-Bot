@@ -40,44 +40,32 @@ class AcadCal(commands.Cog) :
     
     @commands.command(description="Finds relavant events.")
     async def find(self, ctx:Context, *, prompt:str):
-        # print("here")
 
         dates = events_from_webpage()
-        # print("here")
-
         eventsList = findEvent(prompt, dates.values())
-        # print("here")
-
         finds = formatFind(eventsList)
 
-        # print("here")
         embedVar = discord.Embed(
-            title=f"Events for " + prompt
+            title=f'Events for "' + prompt + '"'
         )
 
-        # print("here")
-        # embedVar.add_field(name = "Matches:")
+        embedVar.add_field(name = "Exact Matches:", value="")
 
-        # for event in eventsList[0]:
-        #     embedVar.add_field(
-        #         name = event['date'],
-        #         value = event['event'],
-        #         inline = False
-        #     )
+        for event in eventsList[0]:
+            embedVar.add_field(
+                name = event['date'],
+                value = "[" + event['event'] + "](" + event['url'] + ")",
+                inline = False
+            )
         
-        embedVar.add_field(
-            name = "Exact Matches:",
-            value = finds[0],
-            inline = False
-        )
-        
-        # print("here")
-        # embedVar.add_field(
-        #     name = "Related Matches:",
-        #     value = finds[1],
-        #     inline = False
-        # )
-        # print("1111")
+        embedVar.add_field(name = "Related Matches:", value="")
+
+        for event in eventsList[1]:
+            embedVar.add_field(
+                name = event['date'],
+                value = event['event'],
+                inline = False
+            )
 
         await ctx.send(embed=embedVar)
     
@@ -85,8 +73,5 @@ class AcadCal(commands.Cog) :
     async def print_calendar_error(self, ctx, error):
         print(error)
 
-
-
-    
 async def setup(bot):
     await bot.add_cog(AcadCal(bot))

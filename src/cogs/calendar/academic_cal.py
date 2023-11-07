@@ -6,7 +6,7 @@ from time import sleep
 from table2ascii import table2ascii, PresetStyle
 import calendar
 
-from PIL import Image, ImageDraw
+# from PIL import Image, ImageDraw
 
 def events_from_webpage() :
     '''
@@ -126,11 +126,11 @@ def findEvent(prompt, dates):
 
             if description.find(prompt) != -1:
                 fullMatches.append(event)
-
-            for word in split_prompt:
-                if description.find(word+" ") != -1:
-                    otherMatches.append(event)
-                    break
+            else: 
+                for word in split_prompt:
+                    if description.find(word+" ") != -1:
+                        otherMatches.append(event)
+                        break
     
     # for match in fullMatches:
     #     print(match["date"], match['event'])
@@ -159,13 +159,18 @@ def formatFind(findList):
     full = ""
     other = ""
 
-    for event in fullMatches:
-        full += "**" + event["date"] + "**\n" + event["event"]
-        full += "\n\n"
+    # for event in fullMatches:
+    #     full += "**" + event["date"] + "**\n" + event["event"]
+    #     full += "\n"
+
+    event = fullMatches[0]
+    
+    full += "**" + event["date"] + "**\n[" + event["event"] + "](" + event["url"] + ")"
+
     
     for event in otherMaches:
         other += "**" + event["date"] + "**\n " + event["event"]
-        other += "\n\n"
+        other += "\n"
 
     # print(full, "\n", other)
     
