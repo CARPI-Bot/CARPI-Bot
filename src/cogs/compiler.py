@@ -1,6 +1,9 @@
 import discord
 from discord.ext import commands
 from globals import *
+import aiohttp
+import asyncio
+import typing
 import datetime
 import requests
 import re
@@ -18,16 +21,6 @@ POST_COMPILE_URL = "https://godbolt.org/api/compiler/"   # Requires data JSON
 POST_FORMAT_URL = "https://godbolt.org/api/format/"      # Requires data JSON
 POST_LINK_URL = "https://godbolt.org/api/shortener/"     # Requires data JSON
 
-# Error handler for commands that does not have the required language and source arguments
-async def requireTwoArgumentsError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
-    embedVar = discord.Embed(
-        title=ERROR_TITLE,
-        description="Enter language and the source code, each separated by a space.",
-        color=color
-    )
-    
-    await ctx.send(embed=embedVar)
-
 async def languageNotAvaliableError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
     embedVar = discord.Embed(
         title=ERROR_TITLE,
@@ -44,13 +37,40 @@ class Compiler(commands.Cog):
         # List of all languages respective to their compilers
         # Compilers are retrieved from the API: "https://godbolt.org/api/compilers/<language>"
         self.compilers = {
-            "python": ["python310", "Python 3.10"],
-            "c++": ["g95", "x86-64 gcc 9.5"],
-            "cpp": ["g95", "x86-64 gcc 9.5"],
-            "c": ["g95", "x86-64 gcc 9.5"]
+            "python": ("python310", "Python 3.10"),
+            "c++": ("g95", "x86-64 gcc 9.5"),
+            "cpp": ("g95", "x86-64 gcc 9.5"),
+            "c": ("g95", "x86-64 gcc 9.5")
         }
 
-    async def get_compile_data(self, language: str, source: str):
+        # An embed that is sent with the command is called without any arguments
+        self.help_embed = discord.Embed(
+                title="Compiler",
+                description=f"Compiles source code with a given language",
+                color=discord.Color.light_embed(),
+                timestamp=datetime.datetime.now(),
+        )
+
+        self.help_embed.add_field(
+            name="Languages",
+            value="First specify a language. The avaliable languages are: \n`{}`".format(
+                  "` `".join(self.compilers.keys())),
+            inline=False
+        )
+
+        self.help_embed.add_field(
+            name="Source Formatting",
+            value="Second, include the code you want the bot to run.\n\n\
+                   For single lines, you want to surround your code with either \` or \`\` characters.\n\
+                   ***{}compile python*** `print('Hello, world!')`\n\n\
+                   For multi line code, you want to surround your code in \`\`\` characters.\n\
+                   ***{}compile c++***\
+                   ```#include <iostream>\n\nint main() {{\n    std::cout << \"Hello, world!\\n\";\n    return 0;\n}}```".format(
+                   COMMAND_PREFIX, COMMAND_PREFIX),
+            inline=False
+        )
+
+    async def get_compile_data(self, session, language: str, source: str):
         compile_data = {
             "source": source,
             "compiler": self.compilers[language][0],
@@ -73,16 +93,18 @@ class Compiler(commands.Cog):
             "allowStoreCodeDebug": True
         }
 
-        compile_request = requests.post(
-            url = POST_COMPILE_URL + compile_data["compiler"] + "/compile",
-            headers = {"Accept": "application/json"},
-            json = compile_data
-        )
+        compile_output = None
+        async with session.post(
+                url = POST_COMPILE_URL + compile_data["compiler"] + "/compile",
+                headers = {"Accept": "application/json"},
+                json = compile_data
+            ) as response:
 
-        compile_output = compile_request.json()
+            compile_output = await response.json()
+
         return compile_data, compile_output
 
-    async def get_link_data(self, compile_data): 
+    async def get_link_data(self, session, compile_data):
         link_data = {
             "sessions": [
                 {
@@ -105,34 +127,33 @@ class Compiler(commands.Cog):
             ]
         }
 
-        link_request: requests.Response = requests.post(
-            url = POST_LINK_URL,
-            headers = {"Accept": "application/json"},
-            json = link_data
-        )
+        link_output = None
+        async with session.post(
+                url = POST_LINK_URL,
+                headers = {"Accept": "application/json"},
+                json = link_data
+            ) as response:
 
-        link_output = link_request.json()
+            link_output = await response.json()
+
         return link_output
 
     ### COMPILE ###
     @commands.hybrid_command(description="Compiles source code with a given language")
-    async def compile(self, ctx: commands.Context, *, args):
-        args = args.split(" ")
-
-        language = args[0].lower().strip()
-
+    async def compile(self, ctx: commands.Context, language, *, source):
+        if not language:
+            raise commands.MissingRequiredArgument
+        elif (not language and source) or (language and not source):
+            raise commands.BadArgument
         if language not in self.compilers.keys():
             raise commands.UserInputError
-        
-        if len(args) <= 1:
-            raise commands.BadArgument
 
-        source = "".join([a + " " for a in args[1:]])
         source = source.replace("`", "")
 
-        compile_data, compile_output = await self.get_compile_data(language, source)
-        link_output = await self.get_link_data(compile_data)
-        
+        async with aiohttp.ClientSession() as session:
+            compile_data, compile_output = await self.get_compile_data(session, language, source)
+            link_output = await self.get_link_data(session, compile_data)
+
         out = ""
         color = discord.Color.light_embed()
 
@@ -152,29 +173,32 @@ class Compiler(commands.Cog):
             for text in compile_output["stdout"]:
                 out += "\n" + text["text"]
 
+        out += " "
+        returned = compile_output["code"]
         embed = discord.Embed(
             title="Program Output",
             description=f"```{out}```",
             color=color,
             timestamp=datetime.datetime.now(),
         )
+        embed.add_field(name="Program Returned", value=returned, inline=False)
         embed.set_footer(text=f"{ctx.author.nick} | {language} | {self.compilers[language][1]}")
 
         view = discord.ui.View()
         url_button = discord.ui.Button(
-            label=f"\u200bView on godbolt.org", 
+            label=f"\u200bView on godbolt.org",
             style=discord.ButtonStyle.gray,
             url=link_output["url"]
         )
 
         view.add_item(url_button)
 
-        await ctx.send(embed=embed, view=view)      
+        await ctx.send(embed=embed, view=view)
 
     @compile.error
     async def compile_error(self, ctx: commands.Context, error: commands.errors):
-        if isinstance(error, commands.BadArgument) or isinstance(error, commands.MissingRequiredArgument):
-            await requireTwoArgumentsError(ctx, error)
+        if isinstance(error, commands.MissingRequiredArgument):
+            await ctx.send(embed=self.help_embed)
         elif isinstance(error, commands.UserInputError):
             await languageNotAvaliableError(ctx, error)
         else:
