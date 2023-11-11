@@ -20,27 +20,38 @@ async def get_course_info(session:ClientSession, url:str, parser:str, data:dict)
     info["title"] = header.string
     # Start searching for the course description following the course title header
     elements = list(header.next_siblings)
-    course_desc, misc_info = "", ""
+    raw_info = ""
     # Gathers all text between the first and second <hr> tag after the header
     for i in range(len(elements)):
         if elements[i].name == "hr":
             j = i + 1
-            # Between the first <hr> and <br>, read all text as the course description
             while elements[j].name != "hr":
-                text = elements[j].get_text()
-                course_desc += text.strip() if text != None else ""
-                # Between the first <br> and second <hr>, read all text as misc info
-                if elements[j].name == "br":
-                    k = j + 1
-                    while elements[k].name != "hr":
-                        text = elements[k].get_text()
-                        misc_info += text.strip() if text != None else ""
-                        k += 1
-                    break
+                if elements[j].name == "br" and len(raw_info) > 0 and raw_info[-1] != "\n":
+                    raw_info += "\n"
+                buffer = elements[j].get_text()
+                raw_info += buffer.strip() if buffer != None else ""
                 j += 1
             break
-    info["description"] = course_desc
-    info["misc"] = misc_info
+    pattern = re.compile("[\W_]+")
+    raw_info = raw_info.strip("\n").split("\n")
+    misc_keywords = {
+        "prerequisitescorequisites": "Prerequisites/Corequisites",
+        "corequisite": "Corequisite(s)",
+        "whenoffered": "When Offered",
+        "crosslisted": "Cross-Listed",
+        "colisted": "Co-Listed",
+        "credithours": "Credit Hours",
+        "contactlectureorlabhours": "Contact, Lecture, or Lab Hours" 
+    }     
+    for i, field in enumerate(raw_info):
+        pair = field.split(":")
+        sanitized_key = pattern.sub("", pair[0].lower())
+        if sanitized_key in misc_keywords:
+            # NOTE: Fix missing spaces between colons
+            info[misc_keywords[sanitized_key]] = ":".join(pair[1:])
+        else:
+            if i == 0:
+                info["description"] = field
     data[info["title"]] = info
 
 async def courses_to_json(parser:str, domain:str, href:str, req_params:str, headers:str) -> str:
