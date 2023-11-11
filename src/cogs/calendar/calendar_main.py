@@ -4,7 +4,6 @@ from time import sleep
 from datetime import date, datetime
 
 import discord
-from discord import Button
 from discord.ext import commands
 from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate, findEvent, formatFind
 import calendar
@@ -57,9 +56,25 @@ class AcadCal(commands.Cog) :
                 value = "[" + event['event'] + "](" + event['url'] + ")",
                 inline = False
             )
+        
+        # add a button to ask if the user also wants a list of relevant events
+        view = discord.ui.View()
+        button = discord.ui.Button(
+                label="Find Relevant", 
+                style=discord.ButtonStyle.blurple,
+                custom_id="find_relevant_button"
+        )
 
-        await ctx.send(embed=embedVar)
-    
+        view.add_item(button)
+
+        message = await ctx.send(embed=embedVar, view=view)
+
+        async def button_clicked(interaction):
+            await self.findRelevant(ctx, prompt=prompt)
+            await interaction.response.send_message(content="")
+        
+        button.callback = button_clicked
+
     @findExact.error
     async def print_calendar_error(self, ctx, error):
         print(error)
