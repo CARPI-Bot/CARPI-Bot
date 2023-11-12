@@ -1,64 +1,124 @@
 import asyncio
 import aiohttp
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 import re
 import json
 import time
 
 ClientSession = aiohttp.ClientSession
 
-async def get_course_info(session:ClientSession, url:str, parser:str, data:dict) -> None:
-    info = dict()
-    status_code = 0
-    # Repeatedly requests the course webpage until the response is successful
-    while (status_code != 200):
-        course_response = await session.get(url=url)
-        status_code = course_response.status
-    course_soup = BeautifulSoup(await course_response.text(), parser)
-    # Gets the header containing the course's name
-    header = course_soup.find("h1", id="course_preview_title")
-    info["title"] = header.string
+"""
+Example header.getText() -> CSCI 1100 - Computer Science I
+
+Given a course title of type bs4.Tag, checks that the title contains a valid department
+name, course number, and a non-empty course name. Parses the title and returns a tuple
+in the form of (dept_name, course_num, course_name).
+"""
+async def split_course_title(header:Tag) -> tuple:
+    title = header.getText()
+    # Check that both the department and course number are valid 
+    try:
+        # There should be a hyphen in every course title
+        if title.find("-"):
+            title_list = title.split("-")
+            course_name = "-".join(title_list[1:]).strip()
+            dept_and_num = title_list[0].split()
+            if len(dept_and_num) < 2:
+                raise
+            dept_name = dept_and_num[0].strip()
+            course_num = dept_and_num[1].strip()
+        # If for whatever reason there is no hyphen
+        else:
+            title_list = title.split()
+            if len(title_list) < 3:
+                raise
+            course_name = "-".join(title_list[2:]).strip()
+            dept_name = title_list[0].strip()
+            course_num = title_list[1].strip()
+        # Course numbers may contain a period
+        float(course_num)
+        if not (len(dept_name) == 4 and dept_name.isalpha()) or len(course_name) == 0:
+            raise
+    except:
+        print(f"Bad course title \"{title.strip()}\", ignoring...")
+        raise
+    return dept_name, course_num, course_name
+
+"""
+Example course preview page: https://catalog.rpi.edu/preview_course_nopop.php?catoid=26&coid=61385
+
+Given a course title of type bs4.Tag and a dictionary to store course attributes in,
+parses all course information below the course title. Any recognized attributes in the
+parsed content such as requisites, credit hours, etc. are added to the dictionary.
+"""
+async def parse_course_content(header:Tag, course_info:dict) -> None:
     # Start searching for the course description following the course title header
-    elements = list(header.next_siblings)
+    elements = tuple(header.next_siblings)
     raw_info = ""
     # Gathers all text between the first and second <hr> tag after the header
     for i in range(len(elements)):
         if elements[i].name == "hr":
             j = i + 1
-            while elements[j].name != "hr":
+            while elements[j].name != "hr" and j < len(elements):
                 if elements[j].name == "br" and len(raw_info) > 0 and raw_info[-1] != "\n":
                     raw_info += "\n"
                 buffer = elements[j].get_text()
                 raw_info += buffer.strip() if buffer != None else ""
                 j += 1
             break
-    pattern = re.compile("[\W_]+")
     raw_info = raw_info.strip("\n").split("\n")
+    pattern = re.compile("[\W_]+")
+    # Keywords match order in which attributes are listed on webpage
     misc_keywords = {
-        "prerequisitescorequisites": "Prerequisites/Corequisites",
-        "corequisite": "Corequisite(s)",
-        "whenoffered": "When Offered",
-        "crosslisted": "Cross-Listed",
-        "colisted": "Co-Listed",
-        "credithours": "Credit Hours",
-        "contactlectureorlabhours": "Contact, Lecture, or Lab Hours" 
-    }     
+        "prerequisitescorequisites": "prereq/coreq",
+        "corequisite": "coreq",
+        "whenoffered": "offered",
+        "crosslisted": "crosslisted",
+        "colisted": "colisted",
+        "credithours": "credits",
+        "contactlectureorlabhours": "contact_lecture_lab_hours" 
+    }
     for i, field in enumerate(raw_info):
         pair = field.split(":")
         sanitized_key = pattern.sub("", pair[0].lower())
         if sanitized_key in misc_keywords:
             # NOTE: Fix missing spaces between colons
-            info[misc_keywords[sanitized_key]] = ":".join(pair[1:])
+            course_info[misc_keywords[sanitized_key]] = ":".join(pair[1:])
         else:
             if i == 0:
-                info["description"] = field
-    data[info["title"]] = info
+                course_info["description"] = field
 
-async def courses_to_json(parser:str, domain:str, href:str, req_params:str, headers:str) -> str:
+async def scrape_course(session:ClientSession, url:str, parser:str, data:dict) -> None:
+    course_info = dict()
+    status_code = 0
+    # Repeatedly requests course preview page until response is successful
+    while (status_code != 200):
+        course_response = await session.get(url=url)
+        status_code = course_response.status
+    page_soup = BeautifulSoup(await course_response.text(), parser)
+    # Gets header containing the course's title
+    header = page_soup.find("h1", id="course_preview_title")
+    try:
+        # Splits course title into multiple attributes
+        course_title_tup = await split_course_title(header)
+        dept_name = course_title_tup[0]
+        course_info["title"] = " ".join(course_title_tup)
+        course_info["code"] = course_title_tup[1]
+        course_info["name"] = course_title_tup[2]
+        # Parses remainder of course preview, adding to dictionary
+        await parse_course_content(header, course_info)
+    except:
+        return
+    if dept_name in data:
+        data[dept_name].append(course_info)
+    else:
+        data[dept_name] = [course_info]
+
+async def courses_to_json(parser:str, domain:str, req_params:str, headers:str) -> str:
     start_time = time.time()
     json_data = dict()
     page_num = 1
-    url = f"{domain}{href}"
+    url = f"{domain}content.php?"
     async with ClientSession(headers=headers) as session:
         while (url != None):
             page_start_time = time.time()
@@ -71,7 +131,7 @@ async def courses_to_json(parser:str, domain:str, href:str, req_params:str, head
                 print(f"Bad response from page {page_num}, retrying...")
                 continue
             search_soup = BeautifulSoup(await search_response.text(), parser)
-            # Finds all anchor elements that links to a course info preview
+            # Finds all anchor elements that links to a course preview page
             course_anchors = search_soup.find_all(
                 name = "a",
                 href = re.compile("preview_course.+coid=.+")
@@ -84,14 +144,14 @@ async def courses_to_json(parser:str, domain:str, href:str, req_params:str, head
             async with asyncio.TaskGroup() as tg:
                 for anchor in course_anchors:
                     tg.create_task(
-                        get_course_info(
+                        scrape_course(
                             session = session,
                             url = f"{domain}{anchor['href']}",
                             parser = parser,
                             data = json_data
                         )
                     )
-            # Finds the first link to the next page
+            # Finds the link to the next page of courses
             page_anchor = search_soup.find(
                 name = "a",
                 attrs = {
@@ -105,31 +165,30 @@ async def courses_to_json(parser:str, domain:str, href:str, req_params:str, head
     print(f"Total time to parse all courses: {time.time() - start_time:.2f}s")
     global write_start_time
     write_start_time = time.time()
-    json_obj = json.dumps(json_data, indent = 4)
+    json_obj = json.dumps(json_data, indent=4)
     return json_obj
 
 async def main() -> None:
     PARSER = "html5lib"
     DOMAIN = "https://catalog.rpi.edu/"
-    HREF = "content.php?"
     REQUEST_PARAMS = {
         "catoid": 26,
         "navoid": 671
     }
     HEADERS = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 " +
-                      "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.46"
+                      "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.46",
+        "Accept-Language": "en-US,en;q=0.9"
     }
     json_obj = await courses_to_json(
         parser = PARSER,
         domain = DOMAIN,
-        href = HREF,
         req_params = REQUEST_PARAMS,
         headers = HEADERS
     )
     with open("data.json", "w") as outfile:
         outfile.write(json_obj)
-    print(f"Total time to write to JSON: {time.time() - write_start_time:.2f}s")
+        print(f"Total time to write to JSON: {time.time() - write_start_time:.2f}s")
 
 if __name__ == "__main__":
     asyncio.run(main())
