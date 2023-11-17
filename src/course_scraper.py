@@ -92,10 +92,11 @@ async def scrape_course(session:ClientSession, url:str, parser:str, data:dict) -
     course_info = dict()
     status_code = 0
     # Repeatedly requests course preview page until response is successful
-    while (status_code != 200):
-        course_response = await session.get(url=url)
+    while status_code != 200:
+        course_response = await session.get(url)
         status_code = course_response.status
-    page_soup = BeautifulSoup(await course_response.text(), parser)
+    page_soup = BeautifulSoup(await course_response.text(encoding="utf-8"), parser)
+    course_response.close()
     # Gets header containing the course's title
     header = page_soup.find("h1", id="course_preview_title")
     try:
@@ -114,7 +115,7 @@ async def scrape_course(session:ClientSession, url:str, parser:str, data:dict) -
     else:
         data[dept_name] = [course_info]
 
-async def courses_to_json(parser:str, domain:str, req_params:str, headers:str) -> str:
+async def courses_to_dict(parser:str, domain:str, req_params:str, headers:str) -> dict:
     start_time = time.time()
     json_data = dict()
     page_num = 1
@@ -163,10 +164,7 @@ async def courses_to_json(parser:str, domain:str, req_params:str, headers:str) -
             print(f"Page {page_num} parse time: {time.time() - page_start_time:.2f}s")
             page_num += 1
     print(f"Total time to parse all courses: {time.time() - start_time:.2f}s")
-    global write_start_time
-    write_start_time = time.time()
-    json_obj = json.dumps(json_data, indent=4)
-    return json_obj
+    return json_data
 
 async def main() -> None:
     PARSER = "html5lib"
@@ -180,15 +178,17 @@ async def main() -> None:
                       "(KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36 Edg/118.0.2088.46",
         "Accept-Language": "en-US,en;q=0.9"
     }
-    json_obj = await courses_to_json(
+    print(f"Collecting all course data from \"{DOMAIN}\"...")
+    json_data = await courses_to_dict(
         parser = PARSER,
         domain = DOMAIN,
         req_params = REQUEST_PARAMS,
         headers = HEADERS
     )
-    with open("data.json", "w") as outfile:
-        outfile.write(json_obj)
-        print(f"Total time to write to JSON: {time.time() - write_start_time:.2f}s")
+    write_start_time = time.time()
+    with open("data.json", "w", encoding="utf-8") as outfile:
+        json.dump(json_data, outfile, ensure_ascii=False, indent=4)
+    print(f"JSON write time: {time.time() - write_start_time:.2f}s")
 
 if __name__ == "__main__":
     asyncio.run(main())
