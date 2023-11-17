@@ -5,7 +5,10 @@ from discord.ext import commands
 
 Context = commands.Context
 
-# Standardizes console output, use whenever possible
+"""
+Super rudimentary console logging standardization, use these to display to the console
+instead of print() if not for debugging.
+"""
 def log_info(output:str) -> None:
     print(f"[INFO] {output}")
 
@@ -19,9 +22,12 @@ def log_fatal(output:str) -> None:
     print(f"[FATAL] {output}")
     sys.exit(1)
 
-# The standard error message that should send upon a command error, only for production
-# use though. It will not help you with debugging, since its point is to mask the actual
-# error using a fun-looking embed.
+"""
+Error message that should be displayed to the user in case of any unhandled or otherwise
+unexpected errors. When writing commands, do your best to handle as many expected errors
+(incorrect usage, missing/bad arguments, etc.) as possible and use this to handle any
+"else" cases.
+"""
 async def sendUnknownError(ctx:Context, error:commands.errors=None) -> None:
     embed_var = discord.Embed(
         title=ERROR_TITLE,
@@ -32,9 +38,11 @@ async def sendUnknownError(ctx:Context, error:commands.errors=None) -> None:
     if (error != None):
         log_err(f"Command \"{ctx.command}\" in cog \"{ctx.cog.qualified_name}\": {error}")
 
-# Given a relative path, returns its absolute path equivalent, or the absolute path to
-# the temp folder created by PyInstaller's bootloader. Necessary if this project is to
-# be compiled into a one-file build.
+"""
+Given a relative path, returns its absolute path equivalent, or the absolute path to
+the temp folder created by PyInstaller's bootloader. Really only useful if this project is
+to be compiled into a one-file build.
+"""
 def getResourcePath(rel_path:str) -> str:
     try:
         base_path = sys._MEIPASS
@@ -43,8 +51,10 @@ def getResourcePath(rel_path:str) -> str:
     # Returns a Unix-friendly path using only forward slashes
     return os.path.join(base_path, rel_path).replace("\\", "/")
 
-# Given a relative path, reads the text file at the location and returns its contents
-# while performing a few sanity checks along the way.
+"""
+Given a relative path, reads the text file at the given path and returns its contents,
+doing a few sanity checks along the way.
+"""
 def readTextFile(rel_path:str) -> str:
     content = ""
     abs_path = getResourcePath(rel_path)
@@ -73,10 +83,9 @@ OWNER_IDS = {
     208718477240827905, # Julian
     522893218036187138, # Miranda
     810600609736163329, # Florence
+    310864184923652107, # Edwin
     322193892260708352, # Ryan
-    298223516262596608, # Anthony
-    185164088479973394, # Justin
-    534900930915729408 # Lawrence
+    298223516262596608  # Anthony
 }
 
 # Your bot token
