@@ -67,30 +67,54 @@ class building_search(commands.Cog):
         #long lat building
         buildings = soup.find_all("a", {"class": "rpi-poi"})
 
-        building_to_access = soup.find_all("td")
-        print("times: ", building_to_access)
+        building_to_access = soup2.find_all("tr")
+        #print("times: ", building_to_access)
         #loops through the buildings relating to the html scrapping above
         for building in buildings:
             building_name = building.text
-            #to compare the argument with the building name all in lowercase for correct comparison
-            if arg.lower() in building_name.lower():
+            #for a_building in building_to_access:
+
+                #building_and_access = a_building.text
+                #print(building_and_access)
+                #a_building_name = building_and_access.split('\n')[0]
+                #print(a_building_name)
+        
+                #to compare the argument with the building name all in lowercase for correct comparison
+            if (arg.lower() in building_name.lower()):
                 search_found = True
                 lat = building["data-lat"]
                 lon = building["data-lng"]
                 building_description = await self.get_description(building_name, soup)
                 #works on now scrapping the google maps link for the long and lat provided by the first website scrap
                 google_map_link = f"https://www.google.com/maps/search/?api=1&query={lat}%2C{lon}"
+
                 
-                #if building_name.lower() in 
+                
                 
                 #format for the name and description of a building
                 embedMsg.add_field(name   = f"**{building_name}**",
-                                   value  = f"```{building_description}```",
-                                   inline = False)
+                                value  = f"```{building_description}```",
+                                inline = False)
                 #format for the google maps link for the location and directions to the building
                 embedMsg.add_field(name   = "", 
-                                   value  = f"[Directions to {building_name}](<{google_map_link}>)", 
-                                   inline = False)
+                                value  = f"[Directions to {building_name}](<{google_map_link}>)", 
+                                inline = False)
+                
+                for a_building in building_to_access:
+                    building_and_access = a_building.text
+                    a_building_name = building_and_access.split('\n')[0]
+                    if(arg.lower() in a_building_name.lower()):
+                        a_building_mode = building_and_access.split('\n')[1]
+                        a_building_time = building_and_access.split('\n')[2]
+                        embedMsg.add_field(name = "",
+                                           value = f"```Who has access to {a_building_name}: {a_building_mode}```",
+                                           inline = False)
+                        embedMsg.add_field(name = "",
+                                           value = f"```Opening and Closing of {a_building_name}: {a_building_time}```",
+                                           inline = False)
+                        
+                
+          
                 
         #case for when the building the user inputs is not found, return custom message
         if(not search_found):
