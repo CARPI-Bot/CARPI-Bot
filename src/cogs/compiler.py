@@ -2,10 +2,7 @@ import discord
 from discord.ext import commands
 from globals import *
 import aiohttp
-import asyncio
-import typing
 import datetime
-import requests
 import re
 
 """
@@ -21,7 +18,7 @@ POST_COMPILE_URL = "https://godbolt.org/api/compiler/"   # Requires data JSON
 POST_FORMAT_URL = "https://godbolt.org/api/format/"      # Requires data JSON
 POST_LINK_URL = "https://godbolt.org/api/shortener/"     # Requires data JSON
 
-async def languageNotAvaliableError(ctx:commands.Context, error:commands.errors, color:int=0xC80000):
+async def languageNotAvaliableError(ctx:commands.Context, color:int=0xC80000):
     embedVar = discord.Embed(
         title=ERROR_TITLE,
         description="Language not avaliable.",
@@ -139,7 +136,7 @@ class Compiler(commands.Cog):
         return link_output
 
     ### COMPILE ###
-    @commands.hybrid_command(description="Compiles source code with a given language")
+    @commands.command(description="Compiles source code with a given language")
     async def compile(self, ctx: commands.Context, language, *, source):
         if not language:
             raise commands.MissingRequiredArgument
@@ -200,9 +197,9 @@ class Compiler(commands.Cog):
         if isinstance(error, commands.MissingRequiredArgument):
             await ctx.send(embed=self.help_embed)
         elif isinstance(error, commands.UserInputError):
-            await languageNotAvaliableError(ctx, error)
+            await languageNotAvaliableError(ctx)
         else:
-            await sendUnknownError(ctx)
+            await sendUnknownError(ctx, error)
 
 async def setup(bot):
     await bot.add_cog(Compiler(bot))
