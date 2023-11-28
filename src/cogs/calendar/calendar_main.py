@@ -57,6 +57,13 @@ class AcadCal(commands.Cog) :
                 inline = False
             )
         
+        if len(eventsList[0]) == 0:
+            embedVar.add_field(
+                name = "",
+                value = "Sorry! There are no events :(",
+                inline = False
+            )
+        
         # add a button to ask if the user also wants a list of relevant events
         view = discord.ui.View()
         button = discord.ui.Button(
@@ -79,7 +86,7 @@ class AcadCal(commands.Cog) :
     async def print_calendar_error(self, ctx, error):
         print(error)
 
-    @commands.command(description="Finds relavant events.", aliases=["findOthers"])
+    @commands.command(description="Finds relevant events.", aliases=["findOthers"])
     async def findRelevant(self, ctx:Context, *, prompt:str):
 
         dates = events_from_webpage()
@@ -94,6 +101,13 @@ class AcadCal(commands.Cog) :
             embedVar.add_field(
                 name = event['date'],
                 value = event['event'],
+                inline = False
+            )
+
+        if len(eventsList[1]) == 0:
+            embedVar.add_field(
+                name = "",
+                value = "Sorry! There are no more relevant events :(",
                 inline = False
             )
 
