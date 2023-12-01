@@ -28,16 +28,20 @@ class FacultySearch(commands.Cog):
         general_info = self.general(link,headers)
         about_info = self.about(link,headers)
         publication_list = self.publications(link,headers)
-        for info in general_info:
-            await ctx.send(info)
-        for info in about_info:
-            await ctx.send(info)
-        for pub in publication_list:
-            await ctx.send(pub)
+        if general_info[0] == "Faculty Not Found":
+            await ctx.send(general_info[0])
+        else:
+            for info in general_info:
+                await ctx.send(info)
+        
+            await ctx.send(about_info)
 
-    # @faculty_search.error
-    # async def faculty_error(self, ctx:Context, error):
-    #     await sendUnknownError(ctx, error)        
+            for pub in publication_list:
+                await ctx.send(pub)
+
+    @faculty_search.error
+    async def faculty_search_error(self, ctx, error):
+        await ctx.send(str(error))     
 
     def general(self,link,headers):  
 
@@ -52,8 +56,10 @@ class FacultySearch(commands.Cog):
     
         print_elements = [faculty_name,department_name,room,email,website]
         general_info = []
+        print(print_elements[0])
         if print_elements[0] == None:
-            return "Faculty Not Found"
+            general_info.append("Faculty Not Found")
+            return general_info
         else:
             for element in print_elements:
                 if element == None:
@@ -63,17 +69,21 @@ class FacultySearch(commands.Cog):
             return general_info
 
 
-    def about(self,link,headers):  
+    def about(self,link,headers): 
+         
         html = requests.get(link,headers = headers)
         scrape = BeautifulSoup(html.content, 'html5lib')
-        container2 = scrape.find_all('p')
-        about_info = []
-        for element in container2:
-            if element == None:
-                about_info += "N/A\n".strip()
+        container2 = scrape.find('div', class_="clearfix text-formatted field field--name-field-bio field--type-text-long field--label-hidden field__item")
+        truncated_paragraph = ""
+        if container2 == None:
+            return "There is no about section for this faculty member."
+        else:
+            sentences = re.split(r'(?<!\w\.\w.)(?<![A-Z][a-z]\.)(?<=\.|\?)\s', (container2.get_text().strip()))
+            if len(sentences) > 4:
+                truncated_paragraph = ' '.join(sentences[:3])
+                return (truncated_paragraph)
             else:
-                about_info += ((element.get_text().strip()) + "\n").strip()
-        return about_info
+                return (container2.get_text().strip())
                 
     def publications(self,link,headers): 
         html = requests.get(link,headers = headers)
@@ -82,9 +92,12 @@ class FacultySearch(commands.Cog):
         publication_list = []
         for pub in publications:
             if "©" in pub:
-                return "No publications to date"
+                publication_list += ("No publications to date")
+                return publication_list
             else:
-                publication_list += pub.get_text().rstrip()
+                stripped_string = (pub.get_text().strip())
+                cleaned_string = re.sub('\s+', ' ', stripped_string)
+                publication_list.append(cleaned_string)
         return publication_list
     
 async def setup(bot):
