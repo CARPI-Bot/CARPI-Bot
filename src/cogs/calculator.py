@@ -60,9 +60,10 @@ class Calculator(commands.Cog):
         if len(nums) < 2:
             raise commands.BadArgument
         # Subtracts all arguments from left to right and creates an equation string
-        difference, equation = nums[0], f"{nums[0]} - "
-        for i in range(1, len(nums)):
-            difference -= nums[i]
+        difference, equation = nums[0], ""
+        for i in range(len(nums)):
+            if i > 0:
+                difference -= nums[i]
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} - " if i < len(nums) - 1 else str(nums[i])
@@ -100,9 +101,10 @@ class Calculator(commands.Cog):
         if len(nums) < 2:
             raise commands.BadArgument
         # Divides all arguments from left to right and creates an equation string
-        quotient, equation = nums[0], f"{nums[0]} ÷ "
-        for i in range(1, len(nums)):
-            quotient /= nums[i]
+        quotient, equation = nums[0], ""
+        for i in range(len(nums)):
+            if i > 0:
+                quotient /= nums[i]
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} ÷ " if i < len(nums) - 1 else str(nums[i])
@@ -120,9 +122,10 @@ class Calculator(commands.Cog):
         if len(nums) < 2:
             raise commands.BadArgument
         # Calculates the powers of all arguments and creates an equation string
-        power, equation = nums[0], f"{nums[0]} ^ "
-        for i in range(1, len(nums)):
-            power **= nums[i]
+        power, equation = nums[0], ""
+        for i in range(len(nums)):
+            if i > 0:
+                power **= nums[i]
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} ^ " if i < len(nums) - 1 else str(nums[i])
@@ -140,9 +143,10 @@ class Calculator(commands.Cog):
         if len(nums) < 2:
             raise commands.BadArgument
         # Calculates the modulus of all arguments and creates an equation string
-        remainder, equation = nums[0], f"{nums[0]} % "
-        for i in range(1, len(nums)):
-            remainder %= nums[i]
+        remainder, equation = nums[0], ""
+        for i in range(len(nums)):
+            if i > 0:
+                remainder %= nums[i]
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} % " if i < len(nums) - 1 else str(nums[i])
