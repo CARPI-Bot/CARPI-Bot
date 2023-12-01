@@ -93,25 +93,21 @@ def findEvent(prompt, dates):
     prompt = prompt.lower()
     split_prompt = prompt.split()
 
-    # Loop through the list of events
-    fullMatches = []
-    otherMatches = []
+    # Use list comprehensions to filter direct and other matches
+    fullMatches = [event for month in dates for event in month if prompt in event['event'].lower()]
 
-    # Search for matches and filter through them
+    # Check for matches with individual words in the prompt
+    otherMatches = []
     for month in dates:
         for event in month:
             description = event['event'].lower()
+            for word in split_prompt:
+                if word in description and event not in fullMatches:
+                    otherMatches.append(event)
+                    break
 
-            # Check for direct matches
-            if description.find(prompt) != -1:
-                fullMatches.append(event)
-            else:
-                # Check for matches with individual words in the prompt
-                for word in split_prompt:
-                    if description.find(word + " ") != -1:
-                        otherMatches.append(event)
-                        break
     return [fullMatches, otherMatches]
+
 
 # Function to format the found events
 def formatFind(findList):
@@ -120,21 +116,13 @@ def formatFind(findList):
     other relevant matches, and returns a formatted list for each category.
     '''
 
-    fullMatches = findList[0]
-    otherMatches = findList[1]
+    fullMatches, otherMatches = findList[0], findList[1]
 
-    full = ""
-    other = ""
+    # Use a list comprehension to format direct matches
+    full = "\n".join(f"**{event['date']}**\n[{event['event']}]({event['url']})" for event in fullMatches)
 
-    # Format direct matches
-    for event in fullMatches:
-        full += "**" + event["date"] + "**\n[" + event["event"] + "](" + event["url"] + ")"
-        full += "\n"
-
-    # Format other relevant matches
-    for event in otherMatches:
-        other += "**" + event["date"] + "**\n[" + event["event"] + "](" + event["url"] + ")"
-        other += "\n"
+    # Use a list comprehension to format other relevant matches
+    other = "\n".join(f"**{event['date']}**\n[{event['event']}]({event['url']})" for event in otherMatches)
 
     return [full, other]
 
