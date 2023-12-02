@@ -72,14 +72,8 @@ class building_search(commands.Cog):
         #loops through the buildings relating to the html scrapping above
         for building in buildings:
             building_name = building.text
-            #for a_building in building_to_access:
-
-                #building_and_access = a_building.text
-                #print(building_and_access)
-                #a_building_name = building_and_access.split('\n')[0]
-                #print(a_building_name)
         
-                #to compare the argument with the building name all in lowercase for correct comparison
+            #to compare the argument with the building name all in lowercase for correct comparison
             if (arg.lower() in building_name.lower()):
                 search_found = True
                 lat = building["data-lat"]
@@ -100,12 +94,18 @@ class building_search(commands.Cog):
                                 value  = f"[Directions to {building_name}](<{google_map_link}>)", 
                                 inline = False)
                 
+                #loops thru each building in the second website
                 for a_building in building_to_access:
                     building_and_access = a_building.text
+                    #content stored is the building name, mode (who has access), open/close times on each line
+                    #split by new line and gets the first line to get the name of building
                     a_building_name = building_and_access.split('\n')[0]
+                    #compares to the argument inputed on discord
                     if(arg.lower() in a_building_name.lower()):
+                        #gets the other two lines
                         a_building_mode = building_and_access.split('\n')[1]
                         a_building_time = building_and_access.split('\n')[2]
+                        #outputs on discord in same manner as how descirption is printed
                         embedMsg.add_field(name = "",
                                            value = f"```Who has access to {a_building_name}: {a_building_mode}```",
                                            inline = False)
