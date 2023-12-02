@@ -56,6 +56,29 @@ def events_from_webpage():
 
     return dates
 
+def convert_d(date):
+## this function returns the given date into the following format for easier reading for the datetime function:
+##      2023-4-25 00:00:00
+    # a dictionary that maps each month name to the corresponding month number
+    months = { "January": 1, "February": 2, "March": 3, "April": 4, "May": 5, "June": 6,
+               "July": 6, "August": 8, "September": 9, "October": 10, "November": 11, "December": 12}
+   
+    # isolating all parts of the date string and removing not needed characters
+    date = date.split()
+    for i in range(len(date)):
+        date[i] = date[i].strip(",")
+   
+    # returns formatted dates
+    month = months[date[0]]
+    day = date[1]
+    year = date[2]
+    day = "{} {} {}".format(month, day, year)
+
+    format = '%m %d %Y'
+    datetime_str = datetime.strptime(day, format)
+ 
+    return datetime_str
+
 # Function to get the current month's calendar and events
 def getMonthAndDate(dates):
     '''
@@ -80,6 +103,49 @@ def getMonthAndDate(dates):
     thin = month_name + " Calendar\n" + thin
 
     return [thin, currEvents]
+
+
+# Function to get the current week's calendar and events
+def getWeekAndDate(dates):
+    '''
+    This function generates a formatted ASCII calendar for the current week and returns
+    a list containing the formatted calendar and a list of events for the current week.
+    '''
+
+    # Retrieve the current date    
+    current_date = datetime.now()
+    year, week, day = current_date.isocalendar()
+    month = datetime.now().month
+
+    cal = calendar.Calendar(calendar.SUNDAY)
+    currMonth = cal.monthdayscalendar(year, month)
+    currMonth = [[day if day != 0 else "" for day in week] for week in currMonth]
+    currEvents = dates[month]
+    
+    weekEvents = []
+
+    for event in currEvents:
+        date = event["date"]
+
+        if '-' in date:
+            date = date.split('-')
+
+            startDate = convert_d(date[0])
+            _, startWeek, _ = startDate.isocalendar()
+
+            endDate = convert_d(date[1])
+            _, endWeek, _ = endDate.isocalendar()
+
+            if week in range(startWeek, endWeek + 1):
+                weekEvents.append(event)
+        else:
+            date = convert_d(date)
+            _, event_week, _ = date.isocalendar()
+
+            if event_week == week:
+                weekEvents.append(event)      
+
+    return weekEvents
 
 # Function to find events based on a prompt
 def findEvent(prompt, dates):
@@ -126,12 +192,14 @@ def formatFind(findList):
 
     return [full, other]
 
+
 # Main block of code to test the functions
 if __name__ == "__main__":
     # Example usage of the functions
     channel_id = 1099112664724152490
     dates = events_from_webpage()
     cal = getMonthAndDate(dates)
+    cal = getWeekAndDate(dates)
 
     # Find and format events related to "no classes"
     find = findEvent("no classes", dates.values())

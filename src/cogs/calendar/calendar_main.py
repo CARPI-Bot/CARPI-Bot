@@ -2,7 +2,7 @@
 from globals import *
 import discord
 from discord.ext import commands
-from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate, findEvent, formatFind
+from cogs.calendar.academic_cal import events_from_webpage, getMonthAndDate, findEvent, getWeekAndDate
 import calendar
 from datetime import datetime
 
@@ -13,7 +13,7 @@ class AcadCal(commands.Cog):
     
     # Command to print the current month's calendar and events
     @commands.command(description="Prints the current month's calendar and events.",
-                      aliases=["month", "cal"])
+                      aliases=["month"])
     async def print(self, ctx):
         # Fetching events data from a webpage
         dates = events_from_webpage()
@@ -40,6 +40,38 @@ class AcadCal(commands.Cog):
     @print.error
     async def print_calendar_error(self, ctx, error):
         print(error)
+    
+     # Command to print the current month's calendar and events
+    
+    # Command to print the current week's calendar and events
+    @commands.command(description="Prints the current week's calendar and events.",
+                    aliases=["week"])
+    async def print_week(self, ctx):
+        # Fetching events data from a webpage
+        dates = events_from_webpage()
+        weekEvents = getWeekAndDate(dates)
+
+        # Creating an embed for the message
+        embedVar = discord.Embed(
+            title=f"Upcoming Events for the week"
+        )
+        
+        # Adding the events for the current week to the embed
+        for event in weekEvents:
+            embedVar.add_field(
+                name=event['date'],
+                value=event['event'],
+                inline=False
+            )
+
+        # Sending the embed as a message
+        await ctx.send(embed=embedVar)
+
+    # Handling errors for the print_week command
+    @print_week.error
+    async def print_week_error(self, ctx, error):
+        print(error)
+
     
     # Command to find exact matches for a given prompt
     @commands.command(description="Finds relevant events.", aliases=["find"])
