@@ -40,9 +40,7 @@ class AcadCal(commands.Cog):
     @print.error
     async def print_calendar_error(self, ctx, error):
         print(error)
-    
-     # Command to print the current month's calendar and events
-    
+        
     # Command to print the current week's calendar and events
     @commands.command(description="Prints the current week's calendar and events.",
                     aliases=["week"])
@@ -72,7 +70,6 @@ class AcadCal(commands.Cog):
     async def print_week_error(self, ctx, error):
         print(error)
 
-    
     # Command to find exact matches for a given prompt
     @commands.command(description="Finds relevant events.", aliases=["find"])
     async def findExact(self, ctx:Context, *, prompt:str):
@@ -84,15 +81,7 @@ class AcadCal(commands.Cog):
         embedVar = discord.Embed(
             title=f'Showing matches for "' + prompt + '"'
         )
-        
-        # Adding matched events to the embed
-        for event in eventsList[0]:
-            embedVar.add_field(
-                name=event['date'],
-                value="[" + event['event'] + "](" + event['url'] + ")",
-                inline=False
-            )
-        
+                
         # If there are no matches, adding a message to the embed
         if len(eventsList[0]) == 0:
             embedVar.add_field(
@@ -100,6 +89,14 @@ class AcadCal(commands.Cog):
                 value="Sorry! There are no events :(",
                 inline=False
             )
+        else:
+            # otherwise add matched events to the embed
+            for event in eventsList[0]:
+                embedVar.add_field(
+                    name=event['date'],
+                    value="[" + event['event'] + "](" + event['url'] + ")",
+                    inline=False
+                )
         
         # Adding a button to ask if the user also wants a list of relevant events
         view = discord.ui.View()
@@ -136,14 +133,6 @@ class AcadCal(commands.Cog):
             title=f'Showing Related Matches for "' + prompt + '"'
         )
         
-        # Adding related events to the embed
-        for event in eventsList[1]:
-            embedVar.add_field(
-                name=event['date'],
-                value=event['event'],
-                inline=False
-            )
-
         # If there are no matches, adding a message to the embed
         if len(eventsList[1]) == 0:
             embedVar.add_field(
@@ -151,6 +140,14 @@ class AcadCal(commands.Cog):
                 value="Sorry! There are no more relevant events :(",
                 inline=False
             )
+        else: 
+            # otherwise add related events to the embed
+            for event in eventsList[1]:
+                embedVar.add_field(
+                    name=event['date'],
+                    value=event['event'],
+                    inline=False
+                )
 
         # Sending the embed as a message
         await ctx.send(embed=embedVar)
