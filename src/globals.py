@@ -1,5 +1,6 @@
 import os
 import sys
+import json
 import discord
 from discord.ext import commands
 
@@ -43,27 +44,6 @@ def getResourcePath(rel_path:str) -> str:
     # Returns a Unix-friendly path using only forward slashes
     return os.path.join(base_path, rel_path).replace("\\", "/")
 
-# Given a relative path, reads the text file at the location and returns its contents
-# while performing a few sanity checks along the way.
-def readTextFile(rel_path:str) -> str:
-    content = ""
-    abs_path = getResourcePath(rel_path)
-    try:
-        with open(abs_path) as file:
-            content = file.read().strip("\n\r ")
-        if len(content) == 0:
-            raise
-    except:
-        log_err(f"Can't open \"{abs_path}\", path is invalid or file is empty.")
-        sys.exit(1)
-    return content
-
-# Text file containing the token to your bot client
-token_rel_path = "./assets/TOKEN.txt"
-
-# Text file containing (preferably) a single command prefix character
-cmd_prefix_rel_path = "./assets/PREFIX.txt"
-
 # Directory containing discord.py cogs
 cogs_dir_rel_path = "./cogs"
 
@@ -79,11 +59,17 @@ OWNER_IDS = {
     534900930915729408 # Lawrence
 }
 
-# Your bot token
-TOKEN = readTextFile(token_rel_path)
+with open("config.json", "r") as infile:
+    config = json.load(infile)
+
+# Your bot's token
+TOKEN = config["token"]
 
 # Your bot's command prefix
-COMMAND_PREFIX = readTextFile(cmd_prefix_rel_path)
+COMMAND_PREFIX = config["prefix"]
+
+# Your bot's login credentials to the MySQL database
+SQL_LOGIN = config["sql_login"]
 
 # For use in temporary messages
 DEL_DELAY = 3

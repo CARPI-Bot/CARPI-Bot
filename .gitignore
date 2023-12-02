@@ -1,4 +1,3 @@
 *.pyc
 .DS_Store
-PREFIX.txt
-TOKEN.txt
+config.json
