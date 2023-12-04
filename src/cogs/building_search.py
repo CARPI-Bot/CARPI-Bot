@@ -57,6 +57,11 @@ class building_search(commands.Cog):
         card_access_times_link = f"https://publicsafety.rpi.edu/campus-security/card-access-schedule"
         page2 = requests.get(card_access_times_link, headers = Headers)
         soup2 = BeautifulSoup(page2.content, 'html.parser')
+
+        #information on Union specifically
+        union_link = f"https://union.rpi.edu/business-and-service-directory/"
+        page3 = requests.get(union_link, headers = Headers)
+        soup3 = BeautifulSoup(page3.content, 'html.parser')
         
 
         #discord embeded message that has the header title for the output and the color of the block strip of info
@@ -102,16 +107,32 @@ class building_search(commands.Cog):
                     a_building_name = building_and_access.split('\n')[0]
                     #compares to the argument inputed on discord
                     if(arg.lower() in a_building_name.lower()):
-                        #gets the other two lines
+                        #gets the mode of the building
                         a_building_mode = building_and_access.split('\n')[1]
+
+
+                        formatted_mode = ""
+                        #the building mode is stored as one word, with all words stuck together,, so this formats the string
+                        for word in a_building_mode:
+                            if word.isupper() and formatted_mode:
+                                #adds a space before each capital letter
+                                formatted_mode += " "  
+                            formatted_mode += word
+
+                            
                         a_building_time = building_and_access.split('\n')[2]
+
                         #outputs on discord in same manner as how descirption is printed
                         embedMsg.add_field(name = "",
-                                           value = f"```Who has access to {a_building_name}: {a_building_mode}```",
+                                           value = f"```Who has access to {a_building_name}: {formatted_mode} \n```",
                                            inline = False)
                         embedMsg.add_field(name = "",
                                            value = f"```Opening and Closing of {a_building_name}: {a_building_time}```",
                                            inline = False)
+                        
+        if(str(arg).lower() in "rensselaer union"):
+            union_services = soup3.find_all("a")
+
                         
                 
           
@@ -132,3 +153,4 @@ class building_search(commands.Cog):
 async def setup(bot):
     await bot.add_cog(building_search(bot))
     
+#SCRAP FOR UNION INFORMATION
