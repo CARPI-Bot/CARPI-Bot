@@ -119,19 +119,38 @@ class building_search(commands.Cog):
                                 formatted_mode += " "  
                             formatted_mode += word
 
-                            
+
+                        
                         a_building_time = building_and_access.split('\n')[2]
 
+                        
                         #outputs on discord in same manner as how descirption is printed
                         embedMsg.add_field(name = "",
-                                           value = f"```Who has access to {a_building_name}: {formatted_mode} \n```",
+                                           value = f"```Who has access to {a_building_name}: {formatted_mode}```",
                                            inline = False)
                         embedMsg.add_field(name = "",
                                            value = f"```Opening and Closing of {a_building_name}: {a_building_time}```",
                                            inline = False)
                         
+        #SCRAPE FOR UNION INFORMATION
         if(str(arg).lower() in "rensselaer union"):
-            union_services = soup3.find_all("a")
+            #formats the title of the list of info of services
+            embedMsg.add_field(name   = f"**The Union offers the services below: **",
+                                value  = "",
+                                inline = False)
+            #scrapes the name of the service
+            union_services = soup3.find_all("a", {'style': 'color:black;'})
+            #outputs each service's name
+            for service in union_services:
+                name_of_service = service.text
+                embedMsg.add_field(name = "",
+                                           value = f"```{name_of_service}```",
+                                           inline = False)
+            
+            #finds the text of the service,, description
+            service_text = soup.find('p', {'data-block-key': 'fop2b'})
+            
+            
 
                         
                 
@@ -153,4 +172,3 @@ class building_search(commands.Cog):
 async def setup(bot):
     await bot.add_cog(building_search(bot))
     
-#SCRAP FOR UNION INFORMATION
