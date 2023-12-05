@@ -5,15 +5,24 @@ from bs4 import BeautifulSoup
 import requests
 import re
 
-
-
 class FacultySearch(commands.Cog):
 
     def __init__(self, bot):
         self.bot = bot
 
+
+
     @commands.command(description="Get name of faculty")
+
+
     async def faculty_search(self, ctx, *args):
+
+        embed_var = discord.Embed(
+        title = "Faculty Profile",
+        color = 0, # usually a hex value
+        url = None,
+        timestamp = None # usually a datetime object
+        )
         name = "-".join(args)
         name = name.lower()
         
@@ -27,21 +36,52 @@ class FacultySearch(commands.Cog):
 
         general_info = self.general(link,headers)
         about_info = self.about(link,headers)
+        image = self.image(link,headers)
         publication_list = self.publications(link,headers)
         if general_info[0] == "Faculty Not Found":
-            await ctx.send(general_info[0])
+            embed_var.add_field(
+            name = "Error",
+            value = general_info[0],
+            inline = True # defaults to true if not specified
+            )            
         else:
-            for info in general_info:
-                await ctx.send(info)
-        
-            await ctx.send(about_info)
-
-            for pub in publication_list:
-                await ctx.send(pub)
+            embed_var.add_field(
+                name="General Information",
+                value= "Name: " + general_info[0] + "\nDepartment: " + general_info[1] + "\nRoom: " + general_info[2] + "\nEmail: " + general_info[3] + "\nWebsite: " + general_info[4],
+                inline=True
+            )
+            embed_var.add_field(
+                name="About",
+                value=about_info,
+                inline=False
+            )        
+        if len(publication_list) >= 2:
+            embed_var.add_field(
+                name="Publication List",
+                value=publication_list[0] + "\n\n" + publication_list[1],
+                inline=False
+            )
+        elif len(publication_list) >= 1:
+            embed_var.add_field(
+                name="Publication List",
+                value=publication_list[0],
+                inline=False
+            )
+            embed_var.add_field(
+            name="Profile Picture",
+            value="",
+            inline=False
+            )
+        embed_var.set_image(
+            url=image
+        )
+        await ctx.send(embed=embed_var)           
 
     @faculty_search.error
     async def faculty_search_error(self, ctx, error):
         await ctx.send(str(error))     
+
+
 
     def general(self,link,headers):  
 
@@ -56,7 +96,6 @@ class FacultySearch(commands.Cog):
     
         print_elements = [faculty_name,department_name,room,email,website]
         general_info = []
-        print(print_elements[0])
         if print_elements[0] == None:
             general_info.append("Faculty Not Found")
             return general_info
@@ -67,7 +106,27 @@ class FacultySearch(commands.Cog):
                 else:
                     general_info.append(((element.get_text().strip()) + "\n").strip())
             return general_info
+        
+    def image(self,link,headers):
+        html = requests.get(link,headers = headers)
+        scrape = BeautifulSoup(html.content, 'html5lib')
+        img = scrape.find_all("img")
+        img_link = img[1]
+        part = str(img_link)
 
+        start_index = part.find('src="')
+
+        # If 'src="' is found, find the end of the attribute value
+        if start_index != -1:
+            end_index = part.find('"', start_index + 5)
+    
+        # Extract the attribute value
+            if end_index != -1:
+                extracted_line = part[start_index + 5:end_index]
+
+        half1 = "https://faculty.rpi.edu"
+        image_link = half1+extracted_line
+        return image_link
 
     def about(self,link,headers): 
          
@@ -91,7 +150,7 @@ class FacultySearch(commands.Cog):
         publications = scrape.find_all("div", class_="faculty-doc")
         publication_list = []
         for pub in publications:
-            if "©" in pub:
+            if "Â©" in pub:
                 publication_list += ("No publications to date")
                 return publication_list
             else:
