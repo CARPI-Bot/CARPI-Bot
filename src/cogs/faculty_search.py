@@ -10,7 +10,11 @@ class FacultySearch(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+
+
     @commands.command(description="Get name of faculty")
+
+
     async def faculty_search(self, ctx, *args):
 
         name = "-".join(args)
@@ -81,6 +85,8 @@ class FacultySearch(commands.Cog):
     @faculty_search.error
     async def faculty_search_error(self, ctx, error):
         await ctx.send(str(error))     
+
+
 
     def general(self,link,headers):  
 
