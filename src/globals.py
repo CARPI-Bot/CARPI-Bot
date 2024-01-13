@@ -1,24 +1,11 @@
 import os
 import sys
 import json
+import logging
 import discord
 from discord.ext import commands
 
 Context = commands.Context
-
-# Standardizes console output, use whenever possible
-def log_info(output:str) -> None:
-    print(f"[INFO] {output}")
-
-def log_warn(output:str) -> None:
-    print(f"[WARNING] {output}")
-
-def log_err(output:str) -> None:
-    print(f"[ERROR] {output}")
-
-def log_fatal(output:str) -> None:
-    print(f"[FATAL] {output}")
-    sys.exit(1)
 
 # The standard error message that should send upon a command error, only for production
 # use though. It will not help you with debugging, since its point is to mask the actual
@@ -31,7 +18,7 @@ async def sendUnknownError(ctx:Context, error:commands.errors=None) -> None:
     )
     await ctx.send(embed=embed_var)
     if (error != None):
-        log_err(f"Command \"{ctx.command}\" in cog \"{ctx.cog.qualified_name}\": {error}")
+        logging.error(f"Command \"{ctx.command}\" in cog \"{ctx.cog.qualified_name}\": {error}")
 
 # Given a relative path, returns its absolute path equivalent, or the absolute path to
 # the temp folder created by PyInstaller's bootloader. Necessary if this project is to
@@ -50,13 +37,9 @@ cogs_dir_rel_path = "./cogs"
 # For use in commands that check for owner status
 OWNER_IDS = {
     230003732836909056, # Raymond
-    208718477240827905, # Julian
-    522893218036187138, # Miranda
-    810600609736163329, # Florence
-    322193892260708352, # Ryan
     298223516262596608, # Anthony
-    185164088479973394, # Justin
-    534900930915729408 # Lawrence
+    310864184923652107, # Edwin
+    455125448884748308, # Jack
 }
 
 with open("config.json", "r") as infile:
