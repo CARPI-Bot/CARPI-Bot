@@ -2,7 +2,7 @@ import discord
 from discord.ext import commands
 import mysql.connector as mysql
 import re
-from globals import ERROR_TITLE, COMMAND_PREFIX, sendUnknownError
+from globals import ERROR_TITLE, COMMAND_PREFIX, SQL_LOGIN, SQL_SCHEMA, sendUnknownError
 
 Context = commands.Context
 
@@ -19,12 +19,8 @@ def sanitize_str(input:str) -> str:
 class CourseSearch(commands.Cog):
     def __init__(self, bot:commands.Bot):
         self.bot = bot
-        self.connection = mysql.connect(
-            host = "localhost",
-            user = "root",
-            password = "carpibot"
-        )
-        self.connection.database = "course_data"
+        self.connection = mysql.connect(**SQL_LOGIN)
+        self.connection.database = SQL_SCHEMA
         self.cursor = self.connection.cursor()
         self.search_query = """
             SELECT

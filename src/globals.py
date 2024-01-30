@@ -54,6 +54,9 @@ COMMAND_PREFIX = config["prefix"]
 # Your bot's login credentials to the MySQL database
 SQL_LOGIN = config["sql_login"]
 
+# The SQL schema your bot should target
+SQL_SCHEMA = config["sql_schema"]
+
 # For use in temporary messages
 DEL_DELAY = 3
 
