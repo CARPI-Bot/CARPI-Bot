@@ -24,12 +24,20 @@ class CourseSearch(commands.Cog):
         self.cursor = self.connection.cursor()
         self.search_query = """
             SELECT
-                dept,
-                `code`,
-                `name`,
-                REGEXP_LIKE(CONCAT(dept, " ", `code`), %s, 'i') AS code_match,
-                REGEXP_LIKE(`name`, %s, 'i') AS title_match,
-                REGEXP_LIKE(`name`, %s, 'i') AS title_similar
+                dept, # 0
+                `code`, # 1
+                `name`, # 2
+                `description`, # 3
+                `offered`, # 4
+                `url`, # 5
+                `credits`, # 6
+                `prereq_coreq`, # 7
+                `colisted`, # 8
+                `crosslisted`, # 9
+                `contact_lecture_lab_hours`, # 10
+                REGEXP_LIKE(CONCAT(dept, " ", `code`), %s, 'i') AS code_match, # 11
+                REGEXP_LIKE(`name`, %s, 'i') AS title_match, # 12
+                REGEXP_LIKE(`name`, %s, 'i') AS title_similar # 13
             FROM
                 courses
             HAVING
@@ -37,7 +45,7 @@ class CourseSearch(commands.Cog):
                 OR title_similar > 0
                 OR code_match > 0
             ORDER BY
-                code_match DESC, title_match DESC, title_similar DESC
+                `name` ASC, code_match DESC, title_match DESC, title_similar DESC
             LIMIT 20
         """
     
@@ -48,7 +56,6 @@ class CourseSearch(commands.Cog):
     @commands.command(description="Search for a course in the RPI catalog.")
     async def course(self, ctx:Context, *, search_term:str):
         search_term = sanitize_str(search_term)
-        print(len(search_term))
         if len(search_term) == 0:
             raise commands.MissingRequiredArgument
         reg_start_or_space = "(^|.* )"
@@ -71,20 +78,19 @@ class CourseSearch(commands.Cog):
             regex2 = regex2[:-3]
         regex2 += ")"
         self.cursor.execute(self.search_query, (search_term, regex1, regex2))
-        for db in self.cursor:
-            # dept and code match
-            if db[3] == 1:
-                print("\033[93m", f"{db[0]} {db[1]}: {db[2]}", "\033[0m")
-            # full title match
-            elif db[4] == 1:
-                print("\033[92m", f"{db[0]} {db[1]}: {db[2]}", "\033[0m")
-            # partial title match
-            elif db[5] == 1:
-                print("\033[96m", f"{db[0]} {db[1]}: {db[2]}", "\033[0m")
-            # just similar in description
+        return_string = ""
+        for row_num, row in enumerate(self.cursor):
+            if (row_num == 0):
+                return_string += f"{row[0]} {row[1]}: {row[2]}\n{row[3]}\n{row[4]}\n{row[5]}\nCredits: {row[6]}\n{row[7]}\n{row[8]}\n{row[9]}\n{row[10]}\n"
+            elif (row_num == 1):
+                return_string += "Other results: \n"
+                return_string += f"{row[0]} {row[1]}: {row[2]}\n"
             else:
-                print(f"{db[0]} {db[1]}: {db[2]}")
-            await ctx.send(f"{db[0]} {db[1]}: {db[2]}")
+                return_string += f"{row[0]} {row[1]}: {row[2]}\n"
+            # dept and code match: db[11] == 1:
+            # full title match: db[12] == 1:
+            # partial title match: db[13] == 1:
+        await ctx.send(return_string.strip("\n"))
 
     @course.error
     async def course_search_error(self, ctx:Context, error):
