@@ -2,37 +2,38 @@ import os
 import sys
 import json
 import logging
+
 import discord
 from discord.ext import commands
 
 Context = commands.Context
 
-# The standard error message that should send upon a command error, only for production
-# use though. It will not help you with debugging, since its point is to mask the actual
-# error using a fun-looking embed.
-async def sendUnknownError(ctx:Context, error:commands.errors=None) -> None:
+async def sendUnknownError(ctx: Context, error: commands.errors = None) -> None:
+    """
+    Standard error message for use in local command error listeners,
+    only for production use. It will not help with debugging, since
+    the point is to mask the actual error.
+    """
     embed_var = discord.Embed(
-        title=ERROR_TITLE,
-        description="Unknown error. Contact an admin for more details.",
-        color=0xC80000
+        title = ERROR_TITLE,
+        description = "Unknown error. Contact an admin for more details.",
+        color = 0xC80000
     )
     await ctx.send(embed=embed_var)
-    if (error != None):
-        logging.error(f"Command \"{ctx.command}\" in cog \"{ctx.cog.qualified_name}\": {error}")
+    if (error is not None):
+        logging.error(f'Command "{ctx.command}" in extension "{ctx.cog.qualified_name}": {error}')
 
-# Given a relative path, returns its absolute path equivalent, or the absolute path to
-# the temp folder created by PyInstaller's bootloader. Necessary if this project is to
-# be compiled into a one-file build.
-def getResourcePath(rel_path:str) -> str:
+def getAbsPath(rel_path: str) -> str:
+    """
+    Given a relative path, returns a unix-friendly absolute path,
+    or the absolute path to the temp folder created by PyInstaller's
+    bootloader.
+    """
     try:
         base_path = sys._MEIPASS
     except Exception:
         base_path = os.path.abspath("./")
-    # Returns a Unix-friendly path using only forward slashes
     return os.path.join(base_path, rel_path).replace("\\", "/")
-
-# Directory containing discord.py cogs
-cogs_dir_rel_path = "./cogs"
 
 # For use in commands that check for owner status
 OWNER_IDS = {
@@ -46,10 +47,12 @@ with open("config.json", "r") as infile:
     config = json.load(infile)
 
 # Your bot's token
+# This should not be referenced outside of the main file
 TOKEN = config["token"]
 
 # Your bot's command prefix
-COMMAND_PREFIX = config["prefix"]
+# Consider using commands.Bot.command_prefix instead
+CMD_PREFIX = config["prefix"]
 
 # Your bot's login credentials to the MySQL database
 SQL_LOGIN = config["sql_login"]
