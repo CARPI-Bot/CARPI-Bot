@@ -1,18 +1,23 @@
-import discord
-from discord.ext import commands
 import datetime as dt
 import random
-from globals import *
+
+import discord
+from discord.ext import commands
+
+from bot import CARPIBot
+from globals import ERROR_TITLE, BAD_MEMBER_MSG, sendUnknownError
 
 Context = commands.Context
 
 class Miscellaneous(commands.Cog):
-    def __init__(self, bot:commands.Bot):
+    def __init__(self, bot: CARPIBot):
         self.bot = bot
 
     ### PING ###
-    @commands.hybrid_command(description="Pong!")
-    async def ping(self, ctx:Context):
+    @commands.hybrid_command(
+        description="Pong!"
+    )
+    async def ping(self, ctx: Context):
         # Gets the bot to server latency in milliseconds
         embedVar = discord.Embed(
             title = "Pong!",
@@ -22,12 +27,14 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embedVar)
     
     @ping.error
-    async def ping_error(self, ctx:Context, error):
+    async def ping_error(self, ctx: Context, error):
         await sendUnknownError(ctx, error)
     
     ### AVATAR ###
-    @commands.hybrid_command(description="Get the avatar of any user.")
-    async def avatar(self, ctx:Context, member:discord.Member=None):
+    @commands.hybrid_command(
+        description="Get the avatar of any user."
+    )
+    async def avatar(self, ctx: Context, member: discord.Member = None):
         # Avatar and color information is only accessible using fetch_user()
         target_user = (await self.bot.fetch_user(member.id if member != None else ctx.author.id))
         avatar_url = target_user.avatar.url
@@ -37,7 +44,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embed_var)
     
     @avatar.error
-    async def avatar_error(self, ctx:Context, error):
+    async def avatar_error(self, ctx: Context, error):
         if isinstance(error, commands.MemberNotFound):
             embed_var = discord.Embed(
                 title = ERROR_TITLE,
@@ -49,8 +56,10 @@ class Miscellaneous(commands.Cog):
             await sendUnknownError(ctx, error)
     
     ### BANNER ###
-    @commands.hybrid_command(description="Get the banner of any user.")
-    async def banner(self, ctx:Context, member:discord.Member=None):
+    @commands.hybrid_command(
+        description="Get the banner of any user."
+    )
+    async def banner(self, ctx: Context, member: discord.Member = None):
         # Banner and color information is only accessible using fetch_user()
         target_user = (await self.bot.fetch_user(member.id if member != None else ctx.author.id))
         banner_url = target_user.banner.url if target_user.banner != None else None
@@ -64,7 +73,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embed_var)
     
     @banner.error
-    async def banner_error(self, ctx:Context, error):
+    async def banner_error(self, ctx: Context, error):
         if isinstance(error, commands.MemberNotFound):
             embed_var = discord.Embed(
                 title = ERROR_TITLE,
@@ -76,8 +85,11 @@ class Miscellaneous(commands.Cog):
             await sendUnknownError(ctx, error)
 
     ### COINFLIP ###
-    @commands.hybrid_command(description="Flip a coin!", aliases=["flip", "coin"])
-    async def coinflip(self, ctx:Context):
+    @commands.hybrid_command(
+        description="Flip a coin!",
+        aliases=["flip", "coin"]
+    )
+    async def coinflip(self, ctx: Context):
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
         embedVar = discord.Embed(
             title = result,
@@ -87,12 +99,15 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embedVar)
     
     @coinflip.error
-    async def coinflip_error(self, ctx:Context, error):
+    async def coinflip_error(self, ctx: Context, error):
         await sendUnknownError(ctx, error)
 
     ### REPO ###
-    @commands.hybrid_command(description="Check out our repository!", aliases=["repository"])
-    async def repo(self, ctx:Context):
+    @commands.hybrid_command(
+        description="Check out our repository!",
+        aliases=["repository"]
+    )
+    async def repo(self, ctx: Context):
         embedVar = discord.Embed(
             title = f"Click Here to Redirect to the {self.bot.user.name} Repository!",
             url = "https://github.com/SameriteRL/CARPI-Bot",
@@ -106,8 +121,10 @@ class Miscellaneous(commands.Cog):
         await sendUnknownError(ctx, error)
 
     ### TEXTBOOKS ###
-    @commands.hybrid_command(description="Shhh...")
-    async def textbooks(self, ctx:commands.Context):
+    @commands.hybrid_command(
+        description="Shhh..."
+    )
+    async def textbooks(self, ctx: commands.Context):
         DRIVE_LINK = "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"
         embed = discord.Embed(
             title = "Textbooks",
@@ -118,5 +135,5 @@ class Miscellaneous(commands.Cog):
         )
         await ctx.send(embed=embed)
     
-async def setup(bot:commands.Bot):
+async def setup(bot: commands.Bot):
     await bot.add_cog(Miscellaneous(bot))
