@@ -1,6 +1,7 @@
 import os
 import sys
 import logging
+from typing import Tuple
 
 import discord
 from discord.ext import commands
@@ -37,17 +38,21 @@ class CARPIBot(commands.Bot):
         """
         pass
 
-    async def load_cogs(self, rel_path: str = "./cogs") -> None:
+    async def load_cogs(self, rel_path: str = "./cogs") -> Tuple[Tuple[str]]:
         """
         Loads all extensions recursively within the given directory to
         the bot, and unloads any extensions that went missing since
         before this function's execution.
+
+        Returns a tuple in the format:
+        (reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs)
         """
         path = getAbsPath(rel_path)
         dir_basename = os.path.basename(path)
         if not os.path.isdir(path):
-            logging.error(f"Extensions directory \"{rel_path}\" is not valid!")
-            sys.exit(1)
+            logging.error(f'Extensions directory "{rel_path}" is not valid!')
+            return
+        reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs = set(), set(), set(), set()
         
         async def recursive_load(path: str, present_cogs: set = set()) -> set:
             """
@@ -67,9 +72,11 @@ class CARPIBot(commands.Bot):
                         if cog not in self.extensions.keys():
                             logging.info(f"Loading extension {cog}")
                             await self.load_extension(cog)
+                            new_cogs.add(cog)
                         else:
                             logging.info(f"Reloading extension {cog}")
                             await self.reload_extension(cog)
+                            reloaded_cogs.add(cog)
                     except Exception as err:
                         if isinstance(err, commands.ExtensionNotFound):
                             err_log = f"{cog} could not be found! Ignoring..."
@@ -80,21 +87,24 @@ class CARPIBot(commands.Bot):
                         else:
                             err_log = f"{err}, ignoring..."
                         logging.warn(err_log)
+                        bad_cogs.add(cog)
                     else:
                         present_cogs.add(cog)
             return present_cogs
         
         present_cogs = await recursive_load(path)
         for missing_cog in set(self.extensions.keys()) - present_cogs:
-            logging.info(f"Unloading extension {missing_cog}")
             try:
+                logging.info(f"Unloading extension {missing_cog}")
                 await self.unload_extension(missing_cog)
+                unloaded_cogs.add(missing_cog)
             except Exception as err:
                 if isinstance(err, commands.ExtensionNotFound):
-                    err_log = f"{cog} could not be found! Ignoring..."
+                    err_log = f"{missing_cog} could not be found! Ignoring..."
                 if isinstance(err, commands.ExtensionNotLoaded):
-                    err_log = f"{cog} is already unloaded! Ignoring..."
+                    err_log = f"{missing_cog} is already unloaded! Ignoring..."
                 logging.warn(err_log)
+                bad_cogs.add(missing_cog)
         loaded_cogs = set(self.extensions.keys())
         if len(loaded_cogs) == 0:
             logging.warn("No extensions were loaded!")
@@ -102,3 +112,5 @@ class CARPIBot(commands.Bot):
             logging.info(f"Loaded {len(loaded_cogs)} extension(s):")
             for cog in loaded_cogs:
                 logging.info(f"\t{cog}")
+
+        return (reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs)

@@ -15,7 +15,7 @@ class Moderator(commands.Cog):
 
     ### SHUTDOWN ###
     @commands.command(
-        aliases = ["kill"],
+        aliases = ["stop", "kill"],
         hidden = True
     )
     @commands.check(
@@ -52,20 +52,33 @@ class Moderator(commands.Cog):
         commands.is_owner()
     )
     async def reload(self, ctx: Context):
-        await self.bot.load_cogs()
+        cogs_status = await self.bot.load_cogs()
         embed_var = discord.Embed(
-            title = "Cogs successfully reloaded!",
+            title = "Extensions successfully reloaded!",
             color = 0x00C500
         )
+        field_names = ("Reloaded", "New", "Unloaded", "Problem")
+        for i, category in enumerate(cogs_status):
+            if len(category) == 0:
+                continue
+            embed_var.add_field(
+                name = f"{field_names[i]} cogs:",
+                value = "\n".join(f"`{cog}`" for cog in category),
+                inline = False
+            )
+        if len(cogs_status[3]) > 0:
+            embed_var.title = "There was a problem with some extensions"
+            embed_var.color = 0xC80000
+            embed_var.set_footer(text="Check the console for more details.")
         await ctx.send(embed=embed_var)
 
     @reload.error
     async def reload_error(self, ctx:Context, error):
         if isinstance(error, commands.CheckFailure):
             embed_var = discord.Embed(
-                title=ERROR_TITLE,
-                description=NO_PERM_MSG,
-                color=0xC80000
+                title = ERROR_TITLE,
+                description = NO_PERM_MSG,
+                color = 0xC80000
             )
             await ctx.send(embed=embed_var)
         else:
@@ -73,7 +86,7 @@ class Moderator(commands.Cog):
     
     ### CLEAR ###
     @commands.command(
-        aliases = ["purge"],
+        aliases = ["erase", "purge"],
         hidden = True
     )
     @commands.check_any(
@@ -81,7 +94,6 @@ class Moderator(commands.Cog):
         commands.is_owner()
     )
     async def clear(self, ctx: Context, num: int):
-        # Creates a response embed and clears messages
         if num < 1:
             embed_title = "Enter a number greater than or equal to 1."
         else:
@@ -91,10 +103,9 @@ class Moderator(commands.Cog):
             except:
                 raise
         embed_var = discord.Embed(
-            title=embed_title,
-            color=0x00FF00
+            title = embed_title,
+            color = 0x00FF00
         )
-        # Embed automatically deletes itself after a delay
         await ctx.send(embed=embed_var, delete_after=DEL_DELAY)
 
     @clear.error
@@ -109,9 +120,9 @@ class Moderator(commands.Cog):
 
         if embed_desc != None:
             embed_var = discord.Embed(
-                title=ERROR_TITLE,
-                description=embed_desc,
-                color=0xC80000
+                title = ERROR_TITLE,
+                description = embed_desc,
+                color = 0xC80000
             )
             await ctx.send(embed=embed_var)
         else:
@@ -176,9 +187,9 @@ class Moderator(commands.Cog):
             )
         )
         embed_var = discord.Embed(
-            title=f"{member.name} has been timed out.",
-            description=f"Duration: {days}D {hours}H {minutes}M {seconds}S",
-            color=0xC80000
+            title = f"{member.name} has been timed out.",
+            description = f"Duration: {days}D {hours}H {minutes}M {seconds}S",
+            color = 0xC80000
         )
         await ctx.send(embed=embed_var)
     
@@ -195,9 +206,9 @@ class Moderator(commands.Cog):
 
         if embed_desc != None:
             embed_var = discord.Embed(
-                title=ERROR_TITLE,
-                description=embed_desc,
-                color=0xC80000
+                title = ERROR_TITLE,
+                description = embed_desc,
+                color = 0xC80000
             )
             await ctx.send(embed=embed_var)
         else:
