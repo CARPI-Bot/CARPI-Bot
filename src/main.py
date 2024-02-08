@@ -1,13 +1,13 @@
-import sys
 import asyncio
 import logging
+import sys
 from datetime import datetime
 from pathlib import Path
 
 import discord
 
 from bot import CARPIBot
-from globals import CMD_PREFIX, TOKEN, getAbsPath
+from globals import CMD_PREFIX, TOKEN
 
 class ColoredFormatter(logging.Formatter):
     """
@@ -70,7 +70,7 @@ def logging_init(log_level: int = logging.INFO) -> None:
         logging.info('No "./logs" directory detected, creating one for you...')
     except:
         pass
-    logfile_path = Path(getAbsPath(f"logs/{curr_time}.log"))
+    logfile_path = Path(f"./logs/{curr_time}.log").resolve()
     logfile_path.touch()
     file_handler = logging.FileHandler(
         filename = logfile_path,
@@ -92,9 +92,13 @@ async def main():
         prefix = CMD_PREFIX,
         intents = discord.Intents.all()
     )
+    # Main program loop
     await bot.start(TOKEN)
 
 if __name__ == "__main__":
     logging_init()
-    # Main program loop
+    discordpy_ver = discord.__version__
+    python_ver = ".".join(str(ver) for ver in sys.version_info[:3])
+    logging.info(f"discord.py version {discordpy_ver}")
+    logging.info(f"Python version {python_ver}")
     asyncio.run(main())

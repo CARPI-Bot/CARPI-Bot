@@ -3,7 +3,7 @@ import math
 import discord
 from discord.ext import commands
 
-from globals import ERROR_TITLE, sendUnknownError
+from globals import ERROR_TITLE, send_generic_error
 
 Context = commands.Context
 
@@ -22,17 +22,21 @@ async def displayAnswer(ctx: Context, answer: float, equation: str):
 async def requireTwoArgumentsError(ctx: Context, error: commands.errors):
     if isinstance(error, commands.BadArgument):
         embedVar = discord.Embed(
-            title = ERROR_TITLE,
+            title = "Incorrect usage",
             description = "Enter two or more valid numbers, each separated by a space.",
             color = 0xC80000
         )
         await ctx.send(embed=embedVar)
     else:
-        await sendUnknownError(ctx, error)
+        await send_generic_error(ctx, error)
 
 class Calculator(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
+    
+    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
+        if not ctx.command.has_error_handler():
+            await send_generic_error(ctx, error)
     
     ### ADD ###
     @commands.hybrid_command(
@@ -188,7 +192,7 @@ class Calculator(commands.Cog):
             )
             await ctx.send(embed=embedVar)
         else:
-            await sendUnknownError(ctx, error)
+            await send_generic_error(ctx, error)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(Calculator(bot))

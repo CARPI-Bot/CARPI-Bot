@@ -1,18 +1,15 @@
-import os
-import sys
 import json
 import logging
+import sys
 
 import discord
 from discord.ext import commands
 
 Context = commands.Context
 
-async def sendUnknownError(ctx: Context, error: commands.errors = None) -> None:
+async def send_generic_error(ctx: Context, error: Exception = None) -> None:
     """
-    Standard error message for use in local command error listeners,
-    only for production use. It will not help with debugging, since
-    the point is to mask the actual error.
+    Standard error message for any unhandled or unexpected command errors.
     """
     embed_var = discord.Embed(
         title = ERROR_TITLE,
@@ -20,20 +17,11 @@ async def sendUnknownError(ctx: Context, error: commands.errors = None) -> None:
         color = 0xC80000
     )
     await ctx.send(embed=embed_var)
-    if (error is not None):
-        logging.error(f'Command "{ctx.command}" in extension "{ctx.cog.qualified_name}": {error}')
-
-def getAbsPath(rel_path: str) -> str:
-    """
-    Given a relative path, returns a unix-friendly absolute path,
-    or the absolute path to the temp folder created by PyInstaller's
-    bootloader.
-    """
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath("./")
-    return os.path.join(base_path, rel_path).replace("\\", "/")
+    if error is not None:
+        logging.error(
+            f'Error from command "{ctx.command}" in extension "{ctx.cog.qualified_name}"',
+            exc_info = True
+        )
 
 # For use in commands that check for owner status
 OWNER_IDS = {
@@ -43,8 +31,12 @@ OWNER_IDS = {
     455125448884748308, # Jack
 }
 
-with open("config.json", "r") as infile:
-    config = json.load(infile)
+try:
+    with open("config.json", "r") as infile:
+        config = json.load(infile)
+except:
+    print("Bad or missing config.json!")
+    sys.exit(1)
 
 # Your bot's token
 # This should not be referenced outside of the main file
@@ -57,10 +49,7 @@ CMD_PREFIX = config["prefix"]
 # Your bot's login credentials to the MySQL database
 SQL_LOGIN = config["sql_login"]
 
-# For use in temporary messages
-DEL_DELAY = 3
-
 # For use in error handlers
-ERROR_TITLE = "Something went wrong."
+ERROR_TITLE = "Something went wrong"
 NO_PERM_MSG = "You don't have permissions to do that."
 BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?"

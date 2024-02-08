@@ -5,13 +5,17 @@ import discord
 from discord.ext import commands
 
 from bot import CARPIBot
-from globals import ERROR_TITLE, BAD_MEMBER_MSG, sendUnknownError
+from globals import BAD_MEMBER_MSG, ERROR_TITLE, send_generic_error
 
 Context = commands.Context
 
 class Miscellaneous(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
+
+    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
+        if not ctx.command.has_error_handler():
+            await send_generic_error(ctx, error)
 
     ### PING ###
     @commands.hybrid_command(
@@ -28,7 +32,7 @@ class Miscellaneous(commands.Cog):
     
     @ping.error
     async def ping_error(self, ctx: Context, error):
-        await sendUnknownError(ctx, error)
+        await send_generic_error(ctx, error)
     
     ### AVATAR ###
     @commands.hybrid_command(
@@ -47,13 +51,13 @@ class Miscellaneous(commands.Cog):
     async def avatar_error(self, ctx: Context, error):
         if isinstance(error, commands.MemberNotFound):
             embed_var = discord.Embed(
-                title = ERROR_TITLE,
+                title = "Member not found",
                 description = BAD_MEMBER_MSG,
                 color = 0xC80000
             )
             await ctx.send(embed=embed_var)
         else:
-            await sendUnknownError(ctx, error)
+            await send_generic_error(ctx, error)
     
     ### BANNER ###
     @commands.hybrid_command(
@@ -82,7 +86,7 @@ class Miscellaneous(commands.Cog):
             )
             await ctx.send(embed=embed_var)
         else:
-            await sendUnknownError(ctx, error)
+            await send_generic_error(ctx, error)
 
     ### COINFLIP ###
     @commands.hybrid_command(
@@ -100,7 +104,7 @@ class Miscellaneous(commands.Cog):
     
     @coinflip.error
     async def coinflip_error(self, ctx: Context, error):
-        await sendUnknownError(ctx, error)
+        await send_generic_error(ctx, error)
 
     ### REPO ###
     @commands.hybrid_command(
@@ -118,7 +122,7 @@ class Miscellaneous(commands.Cog):
     
     @repo.error
     async def repo_error(self, ctx:Context, error):
-        await sendUnknownError(ctx, error)
+        await send_generic_error(ctx, error)
 
     ### TEXTBOOKS ###
     @commands.hybrid_command(

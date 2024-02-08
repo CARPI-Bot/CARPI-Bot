@@ -1,22 +1,24 @@
-import os
-import sys
 import logging
+import re
+from pathlib import Path
 from typing import Tuple
 
 import discord
 from discord.ext import commands
 
-from globals import getAbsPath
+from globals import OWNER_IDS
 
 Context = commands.Context
 CommandError = commands.CommandError
 
 class CARPIBot(commands.Bot):
     def __init__(self, prefix: str, intents: discord.Intents):
-        super().__init__(command_prefix=prefix, intents=intents)
+        super().__init__(
+            command_prefix = prefix,
+            intents = intents,
+            owner_ids = OWNER_IDS
+        )
         logging.info("Bot initialized")
-        logging.info(f"discord.py version {discord.__version__}")
-        logging.info(f"Python version {'.'.join(str(ver) for ver in sys.version_info[:3])}")
 
     async def setup_hook(self) -> None:
         await self.load_cogs()
@@ -33,8 +35,8 @@ class CARPIBot(commands.Bot):
     async def on_command_error(self, ctx: Context, error: CommandError) -> None:
         """
         Overridden function to silence all command errors by default.
-        This behavior is ignored for any command that has a local error
-        listener implemented.
+        This behavior is ignored for any command that has a local error handler
+        or if cog_command_error() is implemented in the command's parent cog.
         """
         pass
 
@@ -47,27 +49,30 @@ class CARPIBot(commands.Bot):
         Returns a tuple in the format:
         (reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs)
         """
-        path = getAbsPath(rel_path)
-        dir_basename = os.path.basename(path)
-        if not os.path.isdir(path):
+        abs_path = Path(rel_path).resolve()
+        if not abs_path.is_dir():
             logging.error(f'Extensions directory "{rel_path}" is not valid!')
             return
         reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs = set(), set(), set(), set()
         
-        async def recursive_load(path: str, present_cogs: set = set()) -> set:
+        async def recursive_load(dir: Path, present_cogs: set = set()) -> set:
             """
             Does the actual loading of cogs. Returns a set containing
             the module names of all successfully loaded cogs present in
             the cogs directory at the time of this function's execution.
             """
-            for file_name in os.listdir(path):
-                new_path = os.path.join(path, file_name).replace("\\", "/")
-                if os.path.isdir(new_path):
+            for file_name in dir.iterdir():
+                new_path = dir / file_name
+                if new_path.is_dir():
                     await recursive_load(new_path, present_cogs)
-                elif os.path.splitext(new_path)[1] == ".py":
-                    # Formats the path to a module-like name like "cogs.calculator"
-                    cog = os.path.splitext(new_path)[0] \
-                        .replace("/", ".")[new_path.find(dir_basename):]
+                elif new_path.suffix == ".py":
+                    # Formats absolute path to an importable name like "cogs.calculator"
+                    cog = re.sub(
+                        pattern = R"[\\/]",
+                        repl = ".",
+                        string = str(new_path.relative_to(Path.cwd()).parent
+                                 / Path(new_path.stem))
+                    )
                     try:
                         if cog not in self.extensions.keys():
                             logging.info(f"Loading extension {cog}")
@@ -92,7 +97,7 @@ class CARPIBot(commands.Bot):
                         present_cogs.add(cog)
             return present_cogs
         
-        present_cogs = await recursive_load(path)
+        present_cogs = await recursive_load(abs_path)
         for missing_cog in set(self.extensions.keys()) - present_cogs:
             try:
                 logging.info(f"Unloading extension {missing_cog}")
