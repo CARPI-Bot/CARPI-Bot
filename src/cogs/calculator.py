@@ -175,6 +175,8 @@ class Calculator(commands.Cog):
         aliases=["root", "squareroot", "sqroot"]
     )
     async def sqrt(self, ctx: Context, num: float):
+        if num < 0:
+            raise commands.BadArgument
         if num.is_integer():
             num = int(num)
         equation = f"√{num}"

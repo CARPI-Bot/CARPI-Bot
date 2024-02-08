@@ -95,7 +95,7 @@ class Moderator(commands.Cog):
     )
     async def clear(self, ctx: Context, num: int):
         if num < 1:
-            embed_title = "Enter a number greater than or equal to 1."
+            raise commands.BadArgument
         else:
             try:
                 num_deleted = len(await ctx.channel.purge(limit=num+1)) - 1
