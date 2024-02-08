@@ -11,13 +11,12 @@ from globals import CMD_PREFIX, TOKEN
 
 class ColoredFormatter(logging.Formatter):
     """
-    Wrapper class that simply adds coloring to logging.Formatter.
-    Requires a format and date format, but also accepts any kwargs
-    accepted by logging.Formatter().
+    Simple wrapper class that adds colors to logging. Requires a
+    format, and otherwise accepts any kwargs that are accepted by
+    logging.Formatter().
     """
-    def __init__(self, fmt: str, datefmt: str, **kwargs):
+    def __init__(self, fmt: str, **kwargs):
         self._fmt = fmt
-        self._datefmt = datefmt
         self._kwargs = kwargs
         self._reset_color = "\x1b[0m"
         self._COLORS = {
@@ -32,8 +31,7 @@ class ColoredFormatter(logging.Formatter):
         color = self._COLORS[record.levelno]
         formatter = logging.Formatter(
             **self._kwargs,
-            fmt = f"{color}{self._fmt}{self._reset_color}",
-            datefmt = self._datefmt,
+            fmt = f"{color}{self._fmt}{self._reset_color}"
         )
         return formatter.format(record)
 
@@ -77,6 +75,8 @@ def logging_init(log_level: int = logging.INFO) -> None:
         encoding = "utf-8"
     )
     file_handler.setLevel(log_level)
+    # Normal Formatter is used instead of ColoredFormatter for file
+    # logging because colors would just render as text.
     file_handler.setFormatter(formatter)
     root_logger.addHandler(file_handler)
 
