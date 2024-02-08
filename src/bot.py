@@ -5,11 +5,10 @@ from typing import Tuple
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
 from globals import OWNER_IDS
 
-Context = commands.Context
-CommandError = commands.CommandError
 
 class CARPIBot(commands.Bot):
     def __init__(self, prefix: str, intents: discord.Intents):

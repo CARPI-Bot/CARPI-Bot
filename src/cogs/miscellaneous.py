@@ -3,17 +3,17 @@ import random
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
 from bot import CARPIBot
 from globals import BAD_MEMBER_MSG, ERROR_TITLE, send_generic_error
 
-Context = commands.Context
 
 class Miscellaneous(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
 
-    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
+    async def cog_command_error(self, ctx: Context, error: CommandError):
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)
 
@@ -31,7 +31,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embedVar)
     
     @ping.error
-    async def ping_error(self, ctx: Context, error):
+    async def ping_error(self, ctx: Context, error: CommandError):
         await send_generic_error(ctx, error)
     
     ### AVATAR ###
@@ -40,7 +40,8 @@ class Miscellaneous(commands.Cog):
     )
     async def avatar(self, ctx: Context, member: discord.Member = None):
         # Avatar and color information is only accessible using fetch_user()
-        target_user = (await self.bot.fetch_user(member.id if member != None else ctx.author.id))
+        target_user = (await self.bot.fetch_user(member.id if member is not None \
+                                                 else ctx.author.id))
         avatar_url = target_user.avatar.url
         target_color = target_user.accent_color
         embed_var = discord.Embed(color=target_color)
@@ -48,7 +49,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embed_var)
     
     @avatar.error
-    async def avatar_error(self, ctx: Context, error):
+    async def avatar_error(self, ctx: Context, error: CommandError):
         if isinstance(error, commands.MemberNotFound):
             embed_var = discord.Embed(
                 title = "Member not found",
@@ -65,11 +66,12 @@ class Miscellaneous(commands.Cog):
     )
     async def banner(self, ctx: Context, member: discord.Member = None):
         # Banner and color information is only accessible using fetch_user()
-        target_user = (await self.bot.fetch_user(member.id if member != None else ctx.author.id))
-        banner_url = target_user.banner.url if target_user.banner != None else None
+        target_user = (await self.bot.fetch_user(member.id if member is not None \
+                                                 else ctx.author.id))
+        banner_url = target_user.banner.url if target_user.banner is not None else None
         target_color = target_user.accent_color
         embed_var = discord.Embed()
-        if banner_url != None:
+        if banner_url is not None:
             embed_var.color = target_color
             embed_var.set_image(url=banner_url)
         else:
@@ -77,7 +79,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embed_var)
     
     @banner.error
-    async def banner_error(self, ctx: Context, error):
+    async def banner_error(self, ctx: Context, error: CommandError):
         if isinstance(error, commands.MemberNotFound):
             embed_var = discord.Embed(
                 title = ERROR_TITLE,
@@ -103,7 +105,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embedVar)
     
     @coinflip.error
-    async def coinflip_error(self, ctx: Context, error):
+    async def coinflip_error(self, ctx: Context, error: CommandError):
         await send_generic_error(ctx, error)
 
     ### REPO ###
@@ -121,7 +123,7 @@ class Miscellaneous(commands.Cog):
         await ctx.send(embed=embedVar)
     
     @repo.error
-    async def repo_error(self, ctx:Context, error):
+    async def repo_error(self, ctx:Context, error: CommandError):
         await send_generic_error(ctx, error)
 
     ### TEXTBOOKS ###

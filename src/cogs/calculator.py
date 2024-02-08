@@ -2,28 +2,31 @@ import math
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
 from globals import ERROR_TITLE, send_generic_error
 
-Context = commands.Context
 
-# Handles output for most calculator functions
-async def displayAnswer(ctx: Context, answer: float, equation: str):
-    # Truncates decimal in output if answer is an integer, otherwise truncate down to four digits
-    display_answer = f"{int(answer):,}" if answer == int(answer) else f"{round(answer, 4):,}"
+async def display_answer(ctx: Context, answer: float, equation: str) -> None:
+    """
+    Handles output for most calculator functions.
+    """
+    answer = f"{int(answer):,}" if answer == int(answer) else f"{round(answer, 4):,}"
     embedVar = discord.Embed(
-        title = display_answer,
+        title = answer,
         description = equation,
         color = 0x00C500
     )
     await ctx.send(embed=embedVar)
 
-# Error handler for functions that fault if less than two arguments are provided
-async def requireTwoArgumentsError(ctx: Context, error: commands.errors):
+async def require_two_args_error(ctx: Context, error: CommandError) -> None:
+    """
+    Error handler for functions that fault if less than two arguments are provided.
+    """
     if isinstance(error, commands.BadArgument):
         embedVar = discord.Embed(
             title = "Incorrect usage",
-            description = "Enter two or more valid numbers, each separated by a space.",
+            description = "Enter two or more valid numbers, separated by spaces.",
             color = 0xC80000
         )
         await ctx.send(embed=embedVar)
@@ -34,7 +37,7 @@ class Calculator(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     
-    async def cog_command_error(self, ctx: Context, error: Exception) -> None:
+    async def cog_command_error(self, ctx: Context, error: CommandError):
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)
     
@@ -54,16 +57,16 @@ class Calculator(commands.Cog):
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} + " if i < len(nums) - 1 else str(nums[i])
-        await displayAnswer(ctx, summation, equation)
+        await display_answer(ctx, summation, equation)
     
     @add.error
-    async def add_error(self, ctx: Context, error):
-        await requireTwoArgumentsError(ctx, error)
+    async def add_error(self, ctx: Context, error: CommandError):
+        await require_two_args_error(ctx, error)
 
     ### SUBTRACT ###
     @commands.hybrid_command(
-        description="Calculate the difference of any number of values, from left to right.",
-        aliases=["sub", "subt", "subtraction", "minus"]
+        description = "Calculate the difference of any number of values, from left to right.",
+        aliases = ["difference", "diff", "sub", "subt", "subtraction", "minus"]
     )
     async def subtract(self, ctx: Context, nums: commands.Greedy[float]):
         if len(nums) < 2:
@@ -76,11 +79,11 @@ class Calculator(commands.Cog):
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} - " if i < len(nums) - 1 else str(nums[i])
-        await displayAnswer(ctx, difference, equation)
+        await display_answer(ctx, difference, equation)
     
     @subtract.error
-    async def subtract_error(self, ctx: Context, error):
-        await requireTwoArgumentsError(ctx, error)
+    async def subtract_error(self, ctx: Context, error: CommandError):
+        await require_two_args_error(ctx, error)
 
     ### MULTIPLY ###
     @commands.hybrid_command(
@@ -97,16 +100,16 @@ class Calculator(commands.Cog):
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} × " if i < len(nums) - 1 else str(nums[i])
-        await displayAnswer(ctx, product, equation)
+        await display_answer(ctx, product, equation)
 
     @multiply.error
-    async def multiply_error(self, ctx: Context, error):
-        await requireTwoArgumentsError(ctx, error)
+    async def multiply_error(self, ctx: Context, error: CommandError):
+        await require_two_args_error(ctx, error)
 
     ### DIVIDE ###
     @commands.hybrid_command(
         description = "Calculate the quotient of any number of values, from left to right.",
-        aliases = ["div", "division"]
+        aliases = ["quotient", "div", "division"]
     )
     async def divide(self, ctx: Context, nums: commands.Greedy[float]):
         if len(nums) < 2:
@@ -119,11 +122,11 @@ class Calculator(commands.Cog):
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} ÷ " if i < len(nums) - 1 else str(nums[i])
-        await displayAnswer(ctx, quotient, equation)
+        await display_answer(ctx, quotient, equation)
 
     @divide.error
-    async def divide_error(self, ctx: Context, error):
-        await requireTwoArgumentsError(ctx, error)
+    async def divide_error(self, ctx: Context, error: CommandError):
+        await require_two_args_error(ctx, error)
     
     ### POWER ###
     @commands.hybrid_command(
@@ -141,11 +144,11 @@ class Calculator(commands.Cog):
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} ^ " if i < len(nums) - 1 else str(nums[i])
-        await displayAnswer(ctx, power, equation)
+        await display_answer(ctx, power, equation)
 
     @power.error
-    async def power_error(self, ctx: Context, error):
-        await requireTwoArgumentsError(ctx, error)
+    async def power_error(self, ctx: Context, error: CommandError):
+        await require_two_args_error(ctx, error)
     
     ### MODULUS ###
     @commands.hybrid_command(
@@ -163,11 +166,11 @@ class Calculator(commands.Cog):
             if (nums[i].is_integer()):
                 nums[i] = int(nums[i])
             equation += f"{nums[i]} % " if i < len(nums) - 1 else str(nums[i])
-        await displayAnswer(ctx, remainder, equation)
+        await display_answer(ctx, remainder, equation)
     
     @modulus.error
-    async def modulus_error(self, ctx: Context, error):
-        await requireTwoArgumentsError(ctx, error)
+    async def modulus_error(self, ctx: Context, error: CommandError):
+        await require_two_args_error(ctx, error)
     
     ### SQUARE ROOT ###
     @commands.hybrid_command(
@@ -181,10 +184,10 @@ class Calculator(commands.Cog):
             num = int(num)
         equation = f"√{num}"
         root = math.sqrt(num)
-        await displayAnswer(ctx, root, equation)
+        await display_answer(ctx, root, equation)
 
     @sqrt.error
-    async def sqrt_error(self, ctx: Context, error):
+    async def sqrt_error(self, ctx: Context, error: CommandError):
         if isinstance(error, commands.BadArgument) or \
            isinstance(error, commands.MissingRequiredArgument):
             embedVar = discord.Embed(

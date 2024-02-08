@@ -9,6 +9,7 @@ import discord
 from bot import CARPIBot
 from globals import CMD_PREFIX, TOKEN
 
+
 class ColoredFormatter(logging.Formatter):
     """
     Simple wrapper class that adds colors to logging. Requires a
