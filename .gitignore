@@ -1,4 +1,5 @@
+*.env
 *.pyc
+*.log
 .DS_Store
 config.json
-*.log
