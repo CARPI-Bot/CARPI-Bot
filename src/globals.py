@@ -49,9 +49,6 @@ CMD_PREFIX = config["prefix"]
 # Your bot's login credentials to the MySQL database
 SQL_LOGIN = config["sql_login"]
 
-# The SQL schema your bot should target
-SQL_SCHEMA = config["sql_schema"]
-
 # For use in error handlers
 ERROR_TITLE = "Something went wrong"
 NO_PERM_MSG = "You don't have permissions to do that."
