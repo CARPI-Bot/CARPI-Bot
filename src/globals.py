@@ -3,11 +3,10 @@ import logging
 import sys
 
 import discord
-from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
-Context = commands.Context
 
-async def send_generic_error(ctx: Context, error: Exception = None) -> None:
+async def send_generic_error(ctx: Context, error: CommandError = None) -> None:
     """
     Standard error message for any unhandled or unexpected command errors.
     """

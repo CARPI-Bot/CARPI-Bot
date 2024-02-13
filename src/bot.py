@@ -5,11 +5,10 @@ from typing import Tuple
 
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
 from globals import OWNER_IDS
 
-Context = commands.Context
-CommandError = commands.CommandError
 
 class CARPIBot(commands.Bot):
     def __init__(self, prefix: str, intents: discord.Intents):
@@ -110,6 +109,7 @@ class CARPIBot(commands.Bot):
                     err_log = f"{missing_cog} is already unloaded! Ignoring..."
                 logging.warn(err_log)
                 bad_cogs.add(missing_cog)
+        await self.tree.sync()
         loaded_cogs = set(self.extensions.keys())
         if len(loaded_cogs) == 0:
             logging.warn("No extensions were loaded!")
