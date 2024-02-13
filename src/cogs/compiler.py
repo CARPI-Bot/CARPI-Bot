@@ -18,7 +18,7 @@ POST_COMPILE_URL = "https://godbolt.org/api/compiler/"   # Requires data JSON
 POST_FORMAT_URL = "https://godbolt.org/api/format/"      # Requires data JSON
 POST_LINK_URL = "https://godbolt.org/api/shortener/"     # Requires data JSON
 
-async def languageNotAvaliableError(ctx:commands.Context, color:int=0xC80000):
+async def languageNotAvaliableError(ctx: commands.Context, color: int=0xC80000) -> None:
     embedVar = discord.Embed(
         title=ERROR_TITLE,
         description="Language not avaliable.",
@@ -39,6 +39,9 @@ class Compiler(commands.Cog):
             "cpp": ("g95", "x86-64 gcc 9.5"),
             "c": ("g95", "x86-64 gcc 9.5")
         }
+
+        # Language decorators for code blocks
+        self.decorators = ["python", "py", "c++", "cpp", "c"]
 
         # An embed that is sent with the command is called without any arguments
         self.help_embed = discord.Embed(
@@ -63,11 +66,12 @@ class Compiler(commands.Cog):
                    For multi line code, you want to surround your code in \`\`\` characters.\n\
                    ***{}compile c++***\
                    ```#include <iostream>\n\nint main() {{\n    std::cout << \"Hello, world!\\n\";\n    return 0;\n}}```".format(
-                   COMMAND_PREFIX, COMMAND_PREFIX),
+                   CMD_PREFIX, CMD_PREFIX),
             inline=False
         )
 
-    async def get_compile_data(self, session, language: str, source: str):
+    async def get_compile_data(self, session: aiohttp.ClientSession, 
+                               language: str, source: str) -> tuple[dict[str, any], any]:
         compile_data = {
             "source": source,
             "compiler": self.compilers[language][0],
@@ -101,7 +105,8 @@ class Compiler(commands.Cog):
 
         return compile_data, compile_output
 
-    async def get_link_data(self, session, compile_data):
+    async def get_link_data(self, session: aiohttp.ClientSession, 
+                            compile_data: dict[str, any]) -> any:
         link_data = {
             "sessions": [
                 {
@@ -135,24 +140,27 @@ class Compiler(commands.Cog):
 
         return link_output
 
-    ### COMPILE ###
-    @commands.command(description="Compiles source code with a given language")
-    async def compile(self, ctx: commands.Context, language, *, source):
-        if not language:
-            raise commands.MissingRequiredArgument
-        elif (not language and source) or (language and not source):
-            raise commands.BadArgument
-        if language not in self.compilers.keys():
-            raise commands.UserInputError
+    async def clean_source(self, source) -> str: 
+        # Remove surrounding synonym block quotes, if any
+        blocks = 0
+        while source[0] == "`" and source[-1] == "`":
+           blocks += 1
+           source = source[1:-1]
 
-        source = source.replace("`", "")
+        if blocks >= 3:
+            # Check for discord's code block decorator
+            for language in self.decorators:
+                if source[:len(language) + 1] == language + "\n":
+                    source = source[len(language) + 1:]
+                    break
 
-        async with aiohttp.ClientSession() as session:
-            compile_data, compile_output = await self.get_compile_data(session, language, source)
-            link_output = await self.get_link_data(session, compile_data)
+        return source
 
+    async def format_output(self, compile_output: any) -> tuple[str, discord.Color, str]:
         out = ""
         color = discord.Color.light_embed()
+
+        overflow_string = "\n..."
 
         # If the program produces an error, print that instead of the output
         if compile_output["stderr"]:
@@ -170,14 +178,56 @@ class Compiler(commands.Cog):
             for text in compile_output["stdout"]:
                 out += "\n" + text["text"]
 
-        out += " "
-        returned = compile_output["code"]
+        # Truncate if more than 15 new lines
+        newline_count = out.count("\n")
+        if newline_count > 15:
+            out = "\n".join(out.split("\n")[:15])
+            out += overflow_string
+
+        # Truncate if more than N characters
+        if len(out) > 2000:
+            out = out[:2000 - len(overflow_string)]
+            out += overflow_string
+
+        elif len(out) < 2000:
+            out += " "
+
+        return out, color, compile_output["code"]
+
+    ### COMPILE ###
+    @commands.command(description="Compiles source code with a given language")
+    async def compile(self, ctx: commands.Context, language: str, *, source: str) -> None:
+        if not language:
+            raise commands.MissingRequiredArgument
+        
+        elif (not language and source) or (language and not source):
+            raise commands.BadArgument
+        
+        if language not in self.compilers.keys():
+            # Check if given language is abbreviated
+            found = False
+            for l in self.compilers.keys():
+                if language in l:
+                    language = l
+                    found = True
+
+            if not found:
+                raise commands.UserInputError
+        
+        source = await self.clean_source(source)
+
+        async with aiohttp.ClientSession() as session:
+            compile_data, compile_output = await self.get_compile_data(session, language, source)
+            link_output = await self.get_link_data(session, compile_data)
+
+        out, color, returned = await self.format_output(compile_output)
+
         embed = discord.Embed(
             title="Program Output",
             description=f"```{out}```",
             color=color,
-            timestamp=datetime.datetime.now(),
-        )
+            timestamp=datetime.datetime.now())
+
         embed.add_field(name="Program Returned", value=returned, inline=False)
         embed.set_footer(text=f"{ctx.author.nick} | {language} | {self.compilers[language][1]}")
 
@@ -189,7 +239,6 @@ class Compiler(commands.Cog):
         )
 
         view.add_item(url_button)
-
         await ctx.send(embed=embed, view=view)
 
     @compile.error
@@ -199,7 +248,7 @@ class Compiler(commands.Cog):
         elif isinstance(error, commands.UserInputError):
             await languageNotAvaliableError(ctx)
         else:
-            await sendUnknownError(ctx, error)
+            await send_generic_error(ctx, error)
 
 async def setup(bot):
     await bot.add_cog(Compiler(bot))
