@@ -18,15 +18,18 @@ Once CARPI Bot is in your server, all of its commands are at your disposal! Use 
 > [Download Python](https://www.python.org "Click to redirect!")
 
 **MySQL Server (8.2.0)**
-> [Download MySQL Server](https://dev.mysql.com/downloads/mysql/ "Click to redirect!")
-
-**MySQL Connector for Python**
-> `pip install mysql-connector-python` \
-> [Documentation](https://dev.mysql.com/doc/connector-python/en/connector-python-reference.html "Click to redirect!")
+> [Download MySQL Server](https://dev.mysql.com/downloads/mysql "Click to redirect!")
 
 **discord.py (2.0+)**
 > `pip install discord.py` \
 > [Documentation & Getting Started](https://discordpy.readthedocs.io/en/latest/index.html "Click to redirect!")
+
+**aiomysql**
+> `pip install aiomysql` \
+> [Documentation](https://aiomysql.readthedocs.io/en/stable "Click to redirect!")
+
+**cryptography**
+> `pip install cryptography`
 
 **Beautiful Soup 4**
 > `pip install beautifulsoup4` \
