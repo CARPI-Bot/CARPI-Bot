@@ -19,7 +19,7 @@ class Miscellaneous(commands.Cog):
 
     ### PING ###
     @commands.hybrid_command(
-        description="Pong!"
+        description = "Pong!"
     )
     async def ping(self, ctx: Context):
         # Gets the bot to server latency in milliseconds
@@ -36,7 +36,7 @@ class Miscellaneous(commands.Cog):
     
     ### AVATAR ###
     @commands.hybrid_command(
-        description="Get the avatar of any user."
+        description = "Get the avatar of any user."
     )
     async def avatar(self, ctx: Context, member: discord.Member = None):
         # Avatar and color information is only accessible using fetch_user()
@@ -62,7 +62,7 @@ class Miscellaneous(commands.Cog):
     
     ### BANNER ###
     @commands.hybrid_command(
-        description="Get the banner of any user."
+        description = "Get the banner of any user."
     )
     async def banner(self, ctx: Context, member: discord.Member = None):
         # Banner and color information is only accessible using fetch_user()
@@ -92,8 +92,8 @@ class Miscellaneous(commands.Cog):
 
     ### COINFLIP ###
     @commands.hybrid_command(
-        description="Flip a coin!",
-        aliases=["flip", "coin"]
+        description = "Flip a coin!",
+        aliases = ["flip", "coin"]
     )
     async def coinflip(self, ctx: Context):
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
@@ -110,8 +110,8 @@ class Miscellaneous(commands.Cog):
 
     ### REPO ###
     @commands.hybrid_command(
-        description="Check out our repository!",
-        aliases=["repository"]
+        description = "Check out our repository!",
+        aliases = ["repository"]
     )
     async def repo(self, ctx: Context):
         embedVar = discord.Embed(
@@ -128,7 +128,7 @@ class Miscellaneous(commands.Cog):
 
     ### TEXTBOOKS ###
     @commands.hybrid_command(
-        description="Shhh..."
+        description = "Shhh..."
     )
     async def textbooks(self, ctx: commands.Context):
         DRIVE_LINK = "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"

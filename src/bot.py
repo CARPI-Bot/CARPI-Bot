@@ -109,6 +109,7 @@ class CARPIBot(commands.Bot):
                     err_log = f"{missing_cog} is already unloaded! Ignoring..."
                 logging.warn(err_log)
                 bad_cogs.add(missing_cog)
+        await self.tree.sync()
         loaded_cogs = set(self.extensions.keys())
         if len(loaded_cogs) == 0:
             logging.warn("No extensions were loaded!")
