@@ -1,5 +1,6 @@
 *.env
 *.pyc
 *.log
+*.code-workspace
 .DS_Store
 config.json
