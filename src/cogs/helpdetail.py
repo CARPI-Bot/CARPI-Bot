@@ -11,15 +11,15 @@ class helpdetail(commands.Cog):
         calculator_help = discord.Embed(title = "Calculator", description="Define function and enter two or more valid numbers, each separated by a space.", color=0x005b86)
         calculator_help.add_field(name="Commands", value="add `#` `#` ...\ndivide `#` `#` ...\nmodulus `#` `#` ...\nmultiply `#` `#` ...\npower `#` `#` ...\nsqrt `#` `#` ...\nsubtract `#` `#` ...")
 
-        miscellaneous_help = discord.Embed(title = "Miscellaneous", description="Description Here")
+        miscellaneous_help = discord.Embed(title = "Miscellaneous", description="Description Here", color=0x005b86)
         miscellaneous_help.add_field(name="Commands", value="avatar `arg`\nbanner `arg`\ncoinflip `arg`\nping `arg`\nrepo `arg`\ntextbooks `arg`")
 
-        cousrse_search_help = discord.Embed(title = "Course Search", description="Search RPI courses and their details")
+        cousrse_search_help = discord.Embed(title = "Course Search", description="Search RPI courses and their details", color=0x005b86)
         cousrse_search_help.add_field(name="Commands", value="course `course name here`")
 
-        calendar_help = discord.Embed(title = "Calendar", description="Calendar Details")
+        calendar_help = discord.Embed(title = "Calendar", description="Calendar Details", color=0x005b86)
         calendar_help.add_field(name="Commands", value="print\nprint_week")
-        
+
         pages = [calculator_help, miscellaneous_help, cousrse_search_help, calendar_help]
         buttons = [u"\u25C0", u"\u25B6"]
         current = 0
