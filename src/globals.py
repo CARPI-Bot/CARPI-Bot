@@ -32,7 +32,7 @@ OWNER_IDS = {
 }
 
 try:
-    with open("config.json", "r") as infile:
+    with open("./assets/config.json", "r") as infile:
         config = json.load(infile)
 except:
     print("Bad or missing config.json!")
