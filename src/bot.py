@@ -1,5 +1,7 @@
+import asyncio
 import logging
 import re
+import signal
 from pathlib import Path
 from typing import Tuple
 
@@ -17,6 +19,11 @@ class CARPIBot(commands.Bot):
             intents = intents,
             owner_ids = OWNER_IDS
         )
+        # Intercepts CTRL+C signal and properly closes bot
+        signal.signal(
+            signal.SIGINT,
+            lambda *args: asyncio.create_task(self.close(*args))
+        )
         logging.info("Bot initialized")
 
     async def setup_hook(self) -> None:
@@ -30,6 +37,17 @@ class CARPIBot(commands.Bot):
             logging.info(f"Deployed in {len(self.guilds)} guild(s):")
             for guild in self.guilds:
                 logging.info(f"\t{guild.name}")
+
+    async def close(self, *args) -> None:
+        """
+        commands.Bot.close() sometimes raises a noisy "Unclosed Connector" error,
+        apparently a bug on aiohttp's part according to discord.py's Discord
+        server. This function is a band-aid fix to the problem.
+        """
+        try:
+            await super().close()
+        except asyncio.CancelledError:
+            await self.http.close()
     
     async def on_command_error(self, ctx: Context, error: CommandError) -> None:
         """
@@ -109,6 +127,7 @@ class CARPIBot(commands.Bot):
                     err_log = f"{missing_cog} is already unloaded! Ignoring..."
                 logging.warn(err_log)
                 bad_cogs.add(missing_cog)
+        logging.info("Syncing application commands")
         await self.tree.sync()
         loaded_cogs = set(self.extensions.keys())
         if len(loaded_cogs) == 0:
