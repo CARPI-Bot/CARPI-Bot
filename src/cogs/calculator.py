@@ -15,7 +15,7 @@ async def display_answer(ctx: Context, answer: float, equation: str) -> None:
     embedVar = discord.Embed(
         title = answer,
         description = equation,
-        color = 0x00C500
+        color = discord.Color.green()
     )
     await ctx.send(embed=embedVar)
 
@@ -27,7 +27,7 @@ async def require_two_args_error(ctx: Context, error: CommandError) -> None:
         embedVar = discord.Embed(
             title = "Incorrect usage",
             description = "Enter two or more valid numbers, separated by spaces.",
-            color = 0xC80000
+            color = discord.Color.red()
         )
         await ctx.send(embed=embedVar)
     else:
@@ -37,7 +37,7 @@ class Calculator(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
     
-    async def cog_command_error(self, ctx: Context, error: CommandError):
+    async def cog_command_error(self, ctx: Context, error: CommandError) -> None:
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)
     
@@ -112,7 +112,7 @@ class Calculator(commands.Cog):
         aliases = ["quotient", "div", "division"]
     )
     async def divide(self, ctx: Context, nums: commands.Greedy[float]):
-        if len(nums) < 2:
+        if len(nums) < 2 or 0.0 in nums:
             raise commands.BadArgument
         # Divides all arguments from left to right and creates an equation string
         quotient, equation = nums[0], ""
@@ -193,7 +193,7 @@ class Calculator(commands.Cog):
             embedVar = discord.Embed(
                 title = ERROR_TITLE,
                 description = "Enter one valid number.",
-                color = 0xC80000
+                color = discord.Color.red()
             )
             await ctx.send(embed=embedVar)
         else:

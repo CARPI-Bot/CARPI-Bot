@@ -14,73 +14,8 @@ class Moderator(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
 
-    async def cog_command_error(self, ctx: Context, error: CommandError):
+    async def cog_command_error(self, ctx: Context, error: CommandError) -> None:
         if not ctx.command.has_error_handler():
-            await send_generic_error(ctx, error)
-
-    ### SHUTDOWN ###
-    @commands.command(
-        aliases = ["stop", "kill"],
-        hidden = True
-    )
-    @commands.check(commands.is_owner())
-    async def shutdown(self, ctx: Context):
-        embed_var = discord.Embed(
-            title = "Shutting down...",
-            color = 0xC80000
-        )
-        await ctx.send(embed=embed_var)
-        await self.bot.close()
-    
-    @shutdown.error
-    async def shutdown_error(self, ctx: Context, error: CommandError):
-        if isinstance(error, commands.CheckFailure):
-            embed_var = discord.Embed(
-                title = ERROR_TITLE,
-                description = NO_PERM_MSG,
-                color = 0xC80000
-            )
-            await ctx.send(embed=embed_var)
-        else:
-            await send_generic_error(ctx, error)
-    
-    ### RELOAD ###
-    @commands.command(
-        aliases = ["refresh"],
-        hidden = True
-    )
-    @commands.check(commands.is_owner())
-    async def reload(self, ctx: Context):
-        cogs_status = await self.bot.load_cogs()
-        embed_var = discord.Embed(
-            title = "Extensions successfully reloaded!",
-            color = 0x00C500
-        )
-        field_names = ("Reloaded", "New", "Unloaded", "Problem")
-        for i, category in enumerate(cogs_status):
-            if len(category) == 0:
-                continue
-            embed_var.add_field(
-                name = f"{field_names[i]} cogs:",
-                value = "\n".join(f"`{cog}`" for cog in category),
-                inline = False
-            )
-        if len(cogs_status[3]) > 0:
-            embed_var.title = "There was a problem with some extensions"
-            embed_var.color = 0xC80000
-            embed_var.set_footer(text="Check the console for more details.")
-        await ctx.send(embed=embed_var)
-
-    @reload.error
-    async def reload_error(self, ctx: Context, error: CommandError):
-        if isinstance(error, commands.CheckFailure):
-            embed_var = discord.Embed(
-                title = ERROR_TITLE,
-                description = NO_PERM_MSG,
-                color = 0xC80000
-            )
-            await ctx.send(embed=embed_var)
-        else:
             await send_generic_error(ctx, error)
     
     ### CLEAR ###
@@ -103,7 +38,7 @@ class Moderator(commands.Cog):
                 raise
         embed_var = discord.Embed(
             title = embed_title,
-            color = 0x00FF00
+            color = discord.Color.green()
         )
         await ctx.send(embed=embed_var, delete_after=3)
 
@@ -111,7 +46,7 @@ class Moderator(commands.Cog):
     async def clear_error(self, ctx: Context, error: CommandError):
         embed_var = discord.Embed(
             title = ERROR_TITLE,
-            color = 0xC80000
+            color = discord.Color.red()
         )
         if isinstance(error, commands.CheckFailure):
             embed_var.description = NO_PERM_MSG
@@ -126,7 +61,7 @@ class Moderator(commands.Cog):
             await send_generic_error(ctx, error)
 
     ### TIMEOUT ###
-    @commands.hybrid_command(
+    @commands.command(
         description = "Time out a user for a specified amount of time.",
         aliases = ["mute", "silence"],
         hidden = True
@@ -155,7 +90,7 @@ class Moderator(commands.Cog):
             except:
                 raise commands.BadArgument
         td = timedelta(days=days, hours=hrs, minutes=mins, seconds=secs)
-        embed_var = discord.Embed(color=0xC80000)
+        embed_var = discord.Embed(color=discord.Color.red())
         error_desc = None
         if member.is_timed_out():
             error_desc = "This user is already timed out."
@@ -180,7 +115,7 @@ class Moderator(commands.Cog):
     async def timeout_error(self, ctx: Context, error: CommandError):
         embed_var = discord.Embed(
             title = ERROR_TITLE,
-            color = 0xC80000
+            color = discord.Color.red()
         )
         if isinstance(error, commands.CheckFailure):
             embed_var.description = NO_PERM_MSG
@@ -198,7 +133,7 @@ class Moderator(commands.Cog):
             await send_generic_error(ctx, error)
 
     ### TIMEIN ###
-    @commands.hybrid_command(
+    @commands.command(
         description = "Remove timeout from a user.",
         aliases = ["untimeout"],
         hidden = True
@@ -208,7 +143,7 @@ class Moderator(commands.Cog):
         commands.is_owner()
     )
     async def timein(self, ctx: Context, member: discord.Member):
-        embed_var = discord.Embed(color=0x00FF00)
+        embed_var = discord.Embed(color=discord.Color.green())
         if not member.is_timed_out():
             embed_var.title = f"{member.name} is not timed out"
             await ctx.send(embed=embed_var)
@@ -229,7 +164,7 @@ class Moderator(commands.Cog):
     async def timein_error(self, ctx: Context, error: CommandError):
         embed_var = discord.Embed(
             title = ERROR_TITLE,
-            color = 0xC80000
+            color = discord.Color.red()
         )
         if isinstance(error, commands.CheckFailure):
             embed_var.description = NO_PERM_MSG

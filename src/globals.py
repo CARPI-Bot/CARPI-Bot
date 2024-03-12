@@ -18,7 +18,8 @@ async def send_generic_error(ctx: Context, error: CommandError = None) -> None:
     await ctx.send(embed=embed_var)
     if error is not None:
         logging.error(
-            f'Error from command "{ctx.command}" in extension "{ctx.cog.qualified_name}"',
+            msg = f'Error from command "{ctx.command}" in extension'
+                  + f'"{ctx.cog.qualified_name}"',
             exc_info = True
         )
 
@@ -51,4 +52,5 @@ SQL_LOGIN = config["sql_login"]
 # For use in error handlers
 ERROR_TITLE = "Something went wrong"
 NO_PERM_MSG = "You don't have permissions to do that."
-BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?"
+BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or" \
+                 + "maybe you spelled it wrong?"
