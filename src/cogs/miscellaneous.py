@@ -13,7 +13,7 @@ class Miscellaneous(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
 
-    async def cog_command_error(self, ctx: Context, error: CommandError):
+    async def cog_command_error(self, ctx: Context, error: CommandError) -> None:
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)
 
@@ -25,14 +25,11 @@ class Miscellaneous(commands.Cog):
         # Gets the bot to server latency in milliseconds
         embedVar = discord.Embed(
             title = "Pong!",
-            description = f"Your message was received in {int(self.bot.latency * 1000)}ms.",
-            color = 0x00C500
+            description = "Your message was received in "
+                          + f"{int(self.bot.latency * 1000)}ms.",
+            color = discord.Color.green()
         )
         await ctx.send(embed=embedVar)
-    
-    @ping.error
-    async def ping_error(self, ctx: Context, error: CommandError):
-        await send_generic_error(ctx, error)
     
     ### AVATAR ###
     @commands.hybrid_command(
@@ -54,7 +51,7 @@ class Miscellaneous(commands.Cog):
             embed_var = discord.Embed(
                 title = "Member not found",
                 description = BAD_MEMBER_MSG,
-                color = 0xC80000
+                color = discord.Color.red()
             )
             await ctx.send(embed=embed_var)
         else:
@@ -84,7 +81,7 @@ class Miscellaneous(commands.Cog):
             embed_var = discord.Embed(
                 title = ERROR_TITLE,
                 description = BAD_MEMBER_MSG,
-                color = 0xC80000
+                color = discord.Color.red()
             )
             await ctx.send(embed=embed_var)
         else:
@@ -100,13 +97,9 @@ class Miscellaneous(commands.Cog):
         embedVar = discord.Embed(
             title = result,
             description = f"This had a 50% chance of happening.",
-            color = 0x00C500
+            color = discord.Color.green()
         )
         await ctx.send(embed=embedVar)
-    
-    @coinflip.error
-    async def coinflip_error(self, ctx: Context, error: CommandError):
-        await send_generic_error(ctx, error)
 
     ### REPO ###
     @commands.hybrid_command(
@@ -117,27 +110,24 @@ class Miscellaneous(commands.Cog):
         embedVar = discord.Embed(
             title = f"Click Here to Redirect to the {self.bot.user.name} Repository!",
             url = "https://github.com/SameriteRL/CARPI-Bot",
-            description = "This is a project within the Rensselaer Center for Open Source (RCOS)",
-            color = 0x0099FF
+            description = "This is a project within the "
+                          + "Rensselaer Center for Open Source (RCOS)",
+            color = discord.Color.blurple()
         )
         await ctx.send(embed=embedVar)
-    
-    @repo.error
-    async def repo_error(self, ctx:Context, error: CommandError):
-        await send_generic_error(ctx, error)
 
     ### TEXTBOOKS ###
     @commands.hybrid_command(
         description = "Shhh..."
     )
     async def textbooks(self, ctx: commands.Context):
-        DRIVE_LINK = "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"
+        drive_link = "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"
         embed = discord.Embed(
-            title = "Textbooks",
-            description = f"Here is a google drive link of freely avaliable textbooks.\n*Please note that these may or may not be current.*",
-            url = DRIVE_LINK,
-            color = ctx.author.accent_color,
-            timestamp = dt.datetime.now()
+            title = "Textbook Google Drive",
+            description = f"Here is a repository of freely avaliable textbooks. "
+                          + "Note that these may or may not be current.",
+            url = drive_link,
+            color = ctx.author.accent_color
         )
         await ctx.send(embed=embed)
     
