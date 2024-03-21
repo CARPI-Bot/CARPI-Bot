@@ -3,10 +3,8 @@ from pathlib import Path
 
 import discord
 from discord import app_commands, Interaction
+from discord.app_commands import AppCommandError
 from discord.ext import commands
-from discord.ext.commands import CommandError, Context
-
-from globals import send_generic_error
 
 
 class AcademicCalendar(commands.Cog):
@@ -15,11 +13,11 @@ class AcademicCalendar(commands.Cog):
         with Path("./assets/acadcal_2024.json").resolve().open() as infile:
             self.calendar_dict = json.load(infile)
 
-    async def cog_command_error(self, ctx: Context, error: CommandError):
-        if not ctx.command.has_error_handler():
-            await send_generic_error(ctx, error)
-
-    @app_commands.command(description="Opens a menu to navigate RPI's academic calendar")
+    @app_commands.command(
+        name = "calendar",
+        description = "See RPI's academic calendar from within Discord!"
+    )
+    @app_commands.checks.cooldown(rate=1, per=5)
     async def calendar(self, interaction: Interaction):
         view_var = CalendarMenu(interaction, self.calendar_dict)
         thumbnail = discord.File(
@@ -32,6 +30,21 @@ class AcademicCalendar(commands.Cog):
             embed = view_var.embed_var,
             ephemeral = True
         )
+    
+    @calendar.error
+    async def calendar_error(self, interaction: Interaction, error: AppCommandError):
+        if isinstance(error, app_commands.CommandOnCooldown):
+            embed_var = discord.Embed(
+                title = "Slow down!",
+                description = "You just saw the calendar! " +
+                              "Try again in about 5 seconds.",
+                color = discord.Color.red()
+            )
+            await interaction.response.send_message(
+                embed = embed_var,
+                ephemeral = True,
+                delete_after = 5
+            )
 
 class CalendarMenu(discord.ui.View):
 
