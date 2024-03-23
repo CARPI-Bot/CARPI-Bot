@@ -16,7 +16,8 @@ class CARPIBot(commands.Bot):
         super().__init__(
             command_prefix = prefix,
             intents = intents,
-            owner_ids = OWNER_IDS
+            owner_ids = OWNER_IDS,
+            help_command = None
         )
         logging.info("Bot initialized")
 
