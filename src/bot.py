@@ -3,30 +3,37 @@ import logging
 import re
 import signal
 from pathlib import Path
-from typing import Tuple
 
+import aiomysql
 import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError, Context
 
-from globals import OWNER_IDS
+from globals import OWNER_IDS, CONFIG
 
 
 class CARPIBot(commands.Bot):
-    def __init__(self, prefix: str, intents: discord.Intents):
+    def __init__(self, prefix: str, intents: discord.Intents, **kwargs):
         super().__init__(
             command_prefix = prefix,
             intents = intents,
-            owner_ids = OWNER_IDS
+            owner_ids = OWNER_IDS,
+            **kwargs
         )
         # Intercepts CTRL+C signal and properly closes bot
         signal.signal(
             signal.SIGINT,
             lambda *args: asyncio.create_task(self.close())
         )
+        # Initialized in self.setup_hook()
+        self.sql_conn_pool = None
         logging.info("Bot initialized")
 
     async def setup_hook(self) -> None:
+        self.sql_conn_pool = await aiomysql.create_pool(
+            **CONFIG["sql_login"],
+            db = CONFIG["sql_schema"]
+        )
         await self.load_cogs()
     
     async def on_ready(self) -> None:
@@ -47,6 +54,9 @@ class CARPIBot(commands.Bot):
         to discord.py's Discord server.
         """
         logging.info("Closing bot...")
+        self.sql_conn_pool.close()
+        self.sql_conn_pool.terminate()
+        await self.sql_conn_pool.wait_closed()
         try:
             await super().close()
         except asyncio.CancelledError:
@@ -61,7 +71,7 @@ class CARPIBot(commands.Bot):
         """
         pass
 
-    async def load_cogs(self, rel_path: str = "./cogs") -> Tuple[Tuple[str]]:
+    async def load_cogs(self, rel_path: str = "./cogs") -> tuple[tuple[str]]:
         """
         Unloads any extensions currently loaded into the bot, then
         loads any extensions recursively within rel_path into the bot.
@@ -78,7 +88,7 @@ class CARPIBot(commands.Bot):
         unloaded_cogs = set(await self.unload_cogs())
         bad_cogs = set()
         
-        async def recursive_load(dir: Path) -> set:
+        async def recursive_load(dir: Path) -> set[str]:
             """
             Does the actual loading of cogs. Returns a set containing
             the module names of all successfully loaded cogs.
@@ -125,7 +135,7 @@ class CARPIBot(commands.Bot):
                 logging.info(f"\t{cog}")
         return (loaded_cogs, unloaded_cogs, bad_cogs)
     
-    async def unload_cogs(self) -> Tuple[str]:
+    async def unload_cogs(self) -> tuple[str]:
         """
         Unconditionally unloads all of the bot's loaded extensions.
         """

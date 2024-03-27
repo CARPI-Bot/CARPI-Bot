@@ -8,7 +8,7 @@ from pathlib import Path
 import discord
 
 from bot import CARPIBot
-from globals import CMD_PREFIX, TOKEN
+from globals import CONFIG
 
 
 class ColoredFormatter(logging.Formatter):
@@ -88,11 +88,11 @@ async def main():
     https://discord.com/developers/applications
     """
     bot = CARPIBot(
-        prefix = CMD_PREFIX,
+        prefix = CONFIG["prefix"],
         intents = discord.Intents.all()
     )
     # Main program loop
-    await bot.start(TOKEN)
+    await bot.start(CONFIG["token"])
 
 if __name__ == "__main__":
     logging_init()

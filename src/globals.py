@@ -33,21 +33,10 @@ OWNER_IDS = {
 
 try:
     with open("config.json", "r") as infile:
-        config = json.load(infile)
+        CONFIG = json.load(infile)
 except:
     print("Bad or missing config.json!")
     sys.exit(1)
-
-# Your bot's token
-# This should not be referenced outside of the main file
-TOKEN = config["token"]
-
-# Your bot's command prefix
-# Consider using commands.Bot.command_prefix instead
-CMD_PREFIX = config["prefix"]
-
-# Your bot's login credentials to the MySQL database
-SQL_LOGIN = config["sql_login"]
 
 # For use in error handlers
 ERROR_TITLE = "Something went wrong"
