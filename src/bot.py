@@ -30,11 +30,19 @@ class CARPIBot(commands.Bot):
         logging.info("Bot initialized")
 
     async def setup_hook(self) -> None:
-        self.sql_conn_pool = await aiomysql.create_pool(
-            **CONFIG["sql_login"],
-            db = CONFIG["sql_schema"]
-        )
-        await self.load_cogs()
+        try:
+            self.sql_conn_pool = await aiomysql.create_pool(
+                **CONFIG["sql_login"],
+                db = CONFIG["sql_schema"]
+            )
+            logging.info("MySQL database connection pool initialized")
+            await self.load_cogs()
+        except:
+            logging.error(
+                "Couldn't connect to MySQL database! Make sure the server is running "
+                + "and login info is correct"
+            )
+            await self.close()
     
     async def on_ready(self) -> None:
         logging.info(f"Logged in as {self.user.name}#{self.user.discriminator}")
@@ -54,9 +62,10 @@ class CARPIBot(commands.Bot):
         to discord.py's Discord server.
         """
         logging.info("Closing bot...")
-        self.sql_conn_pool.close()
-        self.sql_conn_pool.terminate()
-        await self.sql_conn_pool.wait_closed()
+        if self.sql_conn_pool is not None:
+            self.sql_conn_pool.close()
+            self.sql_conn_pool.terminate()
+            await self.sql_conn_pool.wait_closed()
         try:
             await super().close()
         except asyncio.CancelledError:
