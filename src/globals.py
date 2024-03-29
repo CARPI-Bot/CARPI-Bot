@@ -3,11 +3,10 @@ import logging
 import sys
 
 import discord
-from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
-Context = commands.Context
 
-async def send_generic_error(ctx: Context, error: Exception = None) -> None:
+async def send_generic_error(ctx: Context, error: CommandError = None) -> None:
     """
     Standard error message for any unhandled or unexpected command errors.
     """
@@ -19,7 +18,8 @@ async def send_generic_error(ctx: Context, error: Exception = None) -> None:
     await ctx.send(embed=embed_var)
     if error is not None:
         logging.error(
-            f'Error from command "{ctx.command}" in extension "{ctx.cog.qualified_name}"',
+            msg = f'Error from command "{ctx.command}" in extension'
+                  + f'"{ctx.cog.qualified_name}"',
             exc_info = True
         )
 
@@ -33,23 +33,13 @@ OWNER_IDS = {
 
 try:
     with open("config.json", "r") as infile:
-        config = json.load(infile)
+        CONFIG = json.load(infile)
 except:
     print("Bad or missing config.json!")
     sys.exit(1)
 
-# Your bot's token
-# This should not be referenced outside of the main file
-TOKEN = config["token"]
-
-# Your bot's command prefix
-# Consider using commands.Bot.command_prefix instead
-CMD_PREFIX = config["prefix"]
-
-# Your bot's login credentials to the MySQL database
-SQL_LOGIN = config["sql_login"]
-
 # For use in error handlers
 ERROR_TITLE = "Something went wrong"
 NO_PERM_MSG = "You don't have permissions to do that."
-BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or maybe you spelled it wrong?"
+BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or" \
+                 + "maybe you spelled it wrong?"

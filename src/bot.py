@@ -1,26 +1,39 @@
+import asyncio
 import logging
 import re
+import signal
 from pathlib import Path
-from typing import Tuple
 
+import aiomysql
 import discord
 from discord.ext import commands
+from discord.ext.commands import CommandError, Context
 
-from globals import OWNER_IDS
+from globals import OWNER_IDS, CONFIG
 
-Context = commands.Context
-CommandError = commands.CommandError
 
 class CARPIBot(commands.Bot):
-    def __init__(self, prefix: str, intents: discord.Intents):
+    def __init__(self, prefix: str, intents: discord.Intents, **kwargs):
         super().__init__(
             command_prefix = prefix,
             intents = intents,
-            owner_ids = OWNER_IDS
+            owner_ids = OWNER_IDS,
+            **kwargs
         )
+        # Intercepts CTRL+C signal and properly closes bot
+        signal.signal(
+            signal.SIGINT,
+            lambda *args: asyncio.create_task(self.close())
+        )
+        # Initialized in self.setup_hook()
+        self.sql_conn_pool = None
         logging.info("Bot initialized")
 
     async def setup_hook(self) -> None:
+        self.sql_conn_pool = await aiomysql.create_pool(
+            **CONFIG["sql_login"],
+            db = CONFIG["sql_schema"]
+        )
         await self.load_cogs()
     
     async def on_ready(self) -> None:
@@ -31,40 +44,59 @@ class CARPIBot(commands.Bot):
             logging.info(f"Deployed in {len(self.guilds)} guild(s):")
             for guild in self.guilds:
                 logging.info(f"\t{guild.name}")
+
+    async def close(self) -> None:
+        """
+        Overriden function to provide fine control over closing the bot.
+
+        This is because commands.Bot.close() sometimes raises a noisy
+        "Unclosed Connector" error, a bug on aiohttp's part according
+        to discord.py's Discord server.
+        """
+        logging.info("Closing bot...")
+        self.sql_conn_pool.close()
+        self.sql_conn_pool.terminate()
+        await self.sql_conn_pool.wait_closed()
+        try:
+            await super().close()
+        except asyncio.CancelledError:
+            await self.http.close()
     
     async def on_command_error(self, ctx: Context, error: CommandError) -> None:
         """
         Overridden function to silence all command errors by default.
-        This behavior is ignored for any command that has a local error handler
-        or if cog_command_error() is implemented in the command's parent cog.
+        This behavior is ignored for any command that has a local
+        error handler or if cog_command_error() is implemented in the
+        command's parent cog.
         """
         pass
 
-    async def load_cogs(self, rel_path: str = "./cogs") -> Tuple[Tuple[str]]:
+    async def load_cogs(self, rel_path: str = "./cogs") -> tuple[tuple[str]]:
         """
-        Loads all extensions recursively within the given directory to
-        the bot, and unloads any extensions that went missing since
-        before this function's execution.
+        Unloads any extensions currently loaded into the bot, then
+        loads any extensions recursively within rel_path into the bot.
+        Keeps track of successfully loaded cogs, cogs that were removed
+        since before this function call, and cogs that raise errors.
 
         Returns a tuple in the format:
-        (reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs)
+        (loaded_cogs, unloaded_cogs, bad_cogs)
         """
         abs_path = Path(rel_path).resolve()
         if not abs_path.is_dir():
             logging.error(f'Extensions directory "{rel_path}" is not valid!')
             return
-        reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs = set(), set(), set(), set()
+        unloaded_cogs = set(await self.unload_cogs())
+        bad_cogs = set()
         
-        async def recursive_load(dir: Path, present_cogs: set = set()) -> set:
+        async def recursive_load(dir: Path) -> set[str]:
             """
             Does the actual loading of cogs. Returns a set containing
-            the module names of all successfully loaded cogs present in
-            the cogs directory at the time of this function's execution.
+            the module names of all successfully loaded cogs.
             """
             for file_name in dir.iterdir():
                 new_path = dir / file_name
                 if new_path.is_dir():
-                    await recursive_load(new_path, present_cogs)
+                    await recursive_load(new_path)
                 elif new_path.suffix == ".py":
                     # Formats absolute path to an importable name like "cogs.calculator"
                     cog = re.sub(
@@ -74,48 +106,49 @@ class CARPIBot(commands.Bot):
                                  / Path(new_path.stem))
                     )
                     try:
-                        if cog not in self.extensions.keys():
-                            logging.info(f"Loading extension {cog}")
-                            await self.load_extension(cog)
-                            new_cogs.add(cog)
-                        else:
-                            logging.info(f"Reloading extension {cog}")
-                            await self.reload_extension(cog)
-                            reloaded_cogs.add(cog)
+                        logging.info(f"Loading extension {cog}")
+                        await self.load_extension(cog)
                     except Exception as err:
+                        log_bad_cog = True
                         if isinstance(err, commands.ExtensionNotFound):
                             err_log = f"{cog} could not be found! Ignoring..."
                         elif isinstance(err, commands.ExtensionAlreadyLoaded):
                             err_log = f"{cog} is already loaded! Ignoring..."
                         elif isinstance(err, commands.NoEntryPointError):
                             err_log = f"{cog} has no setup() function! Ignoring..."
+                            log_bad_cog = False
                         else:
                             err_log = f"{err}, ignoring..."
                         logging.warn(err_log)
-                        bad_cogs.add(cog)
-                    else:
-                        present_cogs.add(cog)
-            return present_cogs
+                        if log_bad_cog:
+                            bad_cogs.add(cog)
+            return self.extensions.keys()
         
-        present_cogs = await recursive_load(abs_path)
-        for missing_cog in set(self.extensions.keys()) - present_cogs:
-            try:
-                logging.info(f"Unloading extension {missing_cog}")
-                await self.unload_extension(missing_cog)
-                unloaded_cogs.add(missing_cog)
-            except Exception as err:
-                if isinstance(err, commands.ExtensionNotFound):
-                    err_log = f"{missing_cog} could not be found! Ignoring..."
-                if isinstance(err, commands.ExtensionNotLoaded):
-                    err_log = f"{missing_cog} is already unloaded! Ignoring..."
-                logging.warn(err_log)
-                bad_cogs.add(missing_cog)
-        loaded_cogs = set(self.extensions.keys())
+        loaded_cogs = await recursive_load(abs_path)
+        for missing_cog in unloaded_cogs.intersection(loaded_cogs):
+            unloaded_cogs.remove(missing_cog)
         if len(loaded_cogs) == 0:
             logging.warn("No extensions were loaded!")
         else:
             logging.info(f"Loaded {len(loaded_cogs)} extension(s):")
             for cog in loaded_cogs:
                 logging.info(f"\t{cog}")
-
-        return (reloaded_cogs, new_cogs, unloaded_cogs, bad_cogs)
+        return (loaded_cogs, unloaded_cogs, bad_cogs)
+    
+    async def unload_cogs(self) -> tuple[str]:
+        """
+        Unconditionally unloads all of the bot's loaded extensions.
+        """
+        unloaded_cogs = []
+        for cog in set(self.extensions.keys()):
+            try:
+                logging.info(f"Unloading extension {cog}")
+                await self.unload_extension(cog)
+                unloaded_cogs.append(cog)
+            except Exception as err:
+                if isinstance(err, commands.ExtensionNotFound):
+                    err_log = f"{cog} could not be found! Ignoring..."
+                if isinstance(err, commands.ExtensionNotLoaded):
+                    err_log = f"{cog} is already unloaded! Ignoring..."
+                logging.warn(err_log)
+        return tuple(unloaded_cogs)
