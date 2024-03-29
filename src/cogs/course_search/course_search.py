@@ -1,5 +1,6 @@
 import random
 import re
+from pathlib import Path
 
 import aiomysql
 import discord
@@ -51,6 +52,8 @@ def get_random_tip() -> str:
 # TODO: change search to prioritize matches at the beginning of the
 # name, convert numbers to roman numerals or back, prioritize lower
 # level classes, prioritize full title match
+# TODO: if you want to make the search algorithm crazy, do research
+# about subprocesses so you don't hold up the bot
 
 class CourseSearch(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -58,32 +61,9 @@ class CourseSearch(commands.Cog):
         self.connection = None
         self.cursor = None
         # Move this to an external file, maybe
-        self.search_query = """
-            SELECT
-                dept, # 0
-                `code`, # 1
-                `name`, # 2
-                `description`, # 3
-                `offered`, # 4
-                `url`, # 5
-                `credits`, # 6
-                `prereq_coreq`, # 7
-                `colisted`, # 8
-                `crosslisted`, # 9
-                `contact_lecture_lab_hours`, # 10
-                REGEXP_LIKE(CONCAT(dept, " ", `code`), %s, 'i') AS code_match, # 11
-                REGEXP_LIKE(`name`, %s, 'i') AS title_match, # 12
-                REGEXP_LIKE(`name`, %s, 'i') AS title_similar # 13
-            FROM
-                courses
-            HAVING
-                title_match > 0
-                OR title_similar > 0
-                OR code_match > 0
-            ORDER BY
-                `name` ASC, code_match DESC, title_match DESC, title_similar DESC
-            LIMIT 6
-        """
+        query_path = Path("./cogs/course_search/course_data.sql").resolve()
+        with query_path.open() as query:
+            self.course_query = query.read()
     
     async def cog_load(self) -> None:
         try:
@@ -129,7 +109,7 @@ class CourseSearch(commands.Cog):
             regex2 = regex2[:-3]
         regex2 += ")"
         
-        await self.cursor.execute(self.search_query, (search_term, regex1, regex2))
+        await self.cursor.execute(self.course_query, (search_term, regex1, regex2))
         
         # Default embed is "no matches", it will only be changed if
         # there is a match.
