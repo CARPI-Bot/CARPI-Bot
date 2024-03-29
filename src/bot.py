@@ -30,10 +30,18 @@ class CARPIBot(commands.Bot):
         logging.info("Bot initialized")
 
     async def setup_hook(self) -> None:
-        self.sql_conn_pool = await aiomysql.create_pool(
-            **CONFIG["sql_login"],
-            db = CONFIG["sql_schema"]
-        )
+        try:
+            self.sql_conn_pool = await aiomysql.create_pool(
+                **CONFIG["sql_login"],
+                db = CONFIG["sql_schema"]
+            )
+            logging.info("MySQL database connection pool initialized")
+        except:
+            logging.fatal(
+                "Couldn't connect to MySQL database! Make sure the server is running "
+                + "and login info is correct"
+            )
+            await self.close()
         await self.load_cogs()
     
     async def on_ready(self) -> None:
@@ -54,9 +62,10 @@ class CARPIBot(commands.Bot):
         to discord.py's Discord server.
         """
         logging.info("Closing bot...")
-        self.sql_conn_pool.close()
-        self.sql_conn_pool.terminate()
-        await self.sql_conn_pool.wait_closed()
+        if self.sql_conn_pool is not None:
+            self.sql_conn_pool.close()
+            self.sql_conn_pool.terminate()
+            await self.sql_conn_pool.wait_closed()
         try:
             await super().close()
         except asyncio.CancelledError:
@@ -70,6 +79,14 @@ class CARPIBot(commands.Bot):
         command's parent cog.
         """
         pass
+
+    async def load_extension(self, name: str, *, package: str | None = None) -> None:
+        logging.info(f"Loading extension {name}")
+        await super().load_extension(name, package=package)
+
+    async def unload_extension(self, name: str, *, package: str | None = None) -> None:
+        logging.info(f"Unloading extension {name}")
+        await super().unload_extension(name, package=package)
 
     async def load_cogs(self, rel_path: str = "./cogs") -> tuple[tuple[str]]:
         """
@@ -106,7 +123,6 @@ class CARPIBot(commands.Bot):
                                  / Path(new_path.stem))
                     )
                     try:
-                        logging.info(f"Loading extension {cog}")
                         await self.load_extension(cog)
                     except Exception as err:
                         log_bad_cog = True
@@ -142,7 +158,6 @@ class CARPIBot(commands.Bot):
         unloaded_cogs = []
         for cog in set(self.extensions.keys()):
             try:
-                logging.info(f"Unloading extension {cog}")
                 await self.unload_extension(cog)
                 unloaded_cogs.append(cog)
             except Exception as err:
