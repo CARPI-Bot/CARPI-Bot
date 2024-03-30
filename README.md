@@ -21,10 +21,11 @@ Once CARPI Bot is in your server, all of its commands are at your disposal! Use 
 **MySQL Server (8.2.0)**
 > [Download MySQL Server](https://dev.mysql.com/downloads/mysql "Click to redirect!")
 
-Python PIP packages:
-- discord.py
-- aiomysql
-- aiohttp
+**Python PIP packages:**
+> discord.py \
+> aiomysql \
+> aiohttp \
+> cryptography
 
 ### Required configuration
 Because sensitive credentials like Discord bot tokens and database logins exist, this project depends on a `config.json` placed in `src`. The structure of the file is as follows:

@@ -107,8 +107,10 @@ class CARPIBot(commands.Bot):
         
         async def recursive_load(dir: Path) -> set[str]:
             """
-            Does the actual loading of cogs. Returns a set containing
-            the module names of all successfully loaded cogs.
+            Does the actual loading of cogs.
+            
+            Returns a set containing the module names of all successfully
+            loaded cogs.
             """
             for file_name in dir.iterdir():
                 new_path = dir / file_name
@@ -154,6 +156,9 @@ class CARPIBot(commands.Bot):
     async def unload_cogs(self) -> tuple[str]:
         """
         Unconditionally unloads all of the bot's loaded extensions.
+
+        Returns a tuple containing the module names of all extensions that were
+        unloaded.
         """
         unloaded_cogs = []
         for cog in set(self.extensions.keys()):
