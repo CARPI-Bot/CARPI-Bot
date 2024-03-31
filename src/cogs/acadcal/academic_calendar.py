@@ -23,7 +23,7 @@ class AcademicCalendar(commands.Cog):
         self.db_conn = await self.bot.sql_conn_pool.acquire()
     
     async def cog_unload(self) -> None:
-        self.db_conn.close()
+        self.bot.sql_conn_pool.release(self.db_conn)
 
     @app_commands.command(
         name = "calendar",
