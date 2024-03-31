@@ -70,16 +70,83 @@ def get_match_type(row) -> str:
         return "Exact Title Match"
     if row['title_start_match'] or row['title_match']:
         return "Title Match"
-    if row['title_similar']:
-        return "Acronym or Abbreviation Match"
+    if row['title_acronym']:
+        return "Acronym Match"
+    if row['title_abbrev']:
+        return "Abbreviation Match"
 
-# TODO: change search to prioritize matches at the beginning of the
-# name, convert numbers to roman numerals or back, prioritize lower
-# level classes, prioritize full title match
-# TODO: add prerequisite courses to related courses if there are no
-# others, or add them to the dropdown with a (prereq) next to it
-# TODO: if you want to make the search algorithm crazy, do research
-# about subprocesses so you don't hold up the bot
+async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
+    -> tuple[discord.Embed, list[discord.SelectOption]]:
+    """
+    This function, given a cursor, returns an embed that displays the results of the course search
+    query.
+
+    If `search_term` is left blank, that indicates that  the search term should NOT be shown at the
+    top of the embed. For example, in a search started by selecting from a dropdown, the search term
+    should not be shown, as it will directly match a course code, and was not the user's typed
+    input.
+    """
+    # The dictionary keys, and the corresponding field names for the embed
+    field_names = (
+        ['prereqs', "Prerequisites"],
+        ['coreqs', "Corequisites"],
+        ['cross_list', "Crosslisted"],
+        ['restrictions', "Restrictions"]
+    )
+    related_courses = []
+    rel_courses_field = ""
+    match_type = ""
+    new_embed = None
+    # Fetch all data from the cursor, then parse through it
+    for row_num, row in enumerate(await cursor.fetchall()):
+        # The first result is the main result
+        if row_num == 0:
+            new_embed = discord.Embed(
+                title = f"{row['dept']} {row['code_num']}: {row['title']}",
+                color = 0xff00ff
+            )
+            if row['desc_text'] is not None:
+                new_embed.description = row['desc_text']
+            new_embed.add_field(
+                name = "Credits",
+                value = get_credits_desc(row['credit_min'], row['credit_max']),
+                inline = False
+            )
+            for element in field_names:
+                if row[element[0]] is not None:
+                    new_embed.add_field(
+                        name = element[1],
+                        value = row[element[0]],
+                        inline = False
+                    )
+            match_type = get_match_type(row)
+        # Anything not the first result is just "related"
+        else:
+            related_courses.append(
+                discord.SelectOption(
+                    label = f"{row['dept']} {row['code_num']}: {row['title']}",
+                    value = f"{row['dept']} {row['code_num']}"
+                )
+            )
+            rel_courses_field += f"{row['dept']} {row['code_num']}: {row['title']}\n"
+    if len(rel_courses_field) > 0:
+        new_embed.add_field(
+            name = "Other Matches",
+            value = rel_courses_field.strip("\n"),
+            inline = False
+        )
+    if (match_type != "" and search_term != ""):
+        new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
+    return new_embed, related_courses
+    
+
+# TODO: convert numbers to roman numerals or back
+# TODO: add prerequisite courses to related courses if there are no others, or add them to the
+# dropdown with a (prereq) next to it
+# TODO: if you want to make the search algorithm crazy, do research about subprocesses so you don't
+# hold up the bot
+# TODO: add course_help command to show an embed with explanations of course terminology
+# TODO: ask users what they were looking for if there are no matches
 
 class CourseSearch(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -149,34 +216,39 @@ class CourseMenu(discord.ui.View):
 
     async def course_query(self, search_term):
         """
-        This function modifies this CourseMenu to use the specified query, and change the embed to
-        show the resulting course.
+        This function searches for a course using the query defined when constructing this object,
+        and changes the embed to show the resulting course.
         """
         reg_start_or_space = "(^|.* )"
+        # Full code match
+        regex_code = f"^{search_term}$"
         # Full title match
         regex_full = f"^{search_term}$"
         # Title matched at the beginning
         regex_start = f"^{search_term}"
         # Title matched anywhere
         regex_any = search_term
-        regex_short = "("
         # For acronyms
+        regex_acronym = ""
         if len(search_term) > 1:
-            regex_short += reg_start_or_space
+            regex_acronym += reg_start_or_space
             for char in search_term:
                 # Don't use spaces in acronyms
                 if char != " ":
-                    regex_short += f"{char}.* "
-            regex_short = regex_short[:-3]
-        tokens = search_term.split()
-        
+                    regex_acronym += f"{char}.* "
+            regex_acronym = regex_acronym[:-3]
+        else:
+            regex_acronym = "a^" # Automatically make no matches if there's only one character
         # For abbreviations
+        regex_abbrev = ""
+        tokens = search_term.split()
         if len(tokens) > 1:
-            regex_short += f"|{reg_start_or_space}"
+            regex_abbrev += reg_start_or_space
             for token in tokens:
-                regex_short += f"{token}.* "
-            regex_short = regex_short[:-3]
-        regex_short += ")"
+                regex_abbrev += f"{token}.* "
+            regex_abbrev = regex_abbrev[:-3]
+        else:
+            regex_abbrev = "a^"
         
         # Default embed is "no matches", it will only be changed if there is a match.
         self.embed = discord.Embed(
@@ -188,71 +260,24 @@ class CourseMenu(discord.ui.View):
             name = "Tip:",
             value = get_random_tip()
         )
-
-        print(search_term, regex_full, regex_start, regex_any, regex_short)
+        self.embed.set_author(name = f"\"{search_term}\" → Nothing...")
 
         # Execute the query
         async with self.db_conn.cursor(aiomysql.DictCursor) as cursor:
             await cursor.execute(
                 self.query,
-                (search_term, regex_full, regex_start, regex_any, regex_short)
+                (regex_code, regex_full, regex_start, regex_any, regex_acronym, regex_abbrev)
             )
 
-            # The dictionary keys, and the corresponding field names for the embed
-            field_names = (
-                ['prereqs', "Prerequisites"],
-                ['coreqs', "Corequisites"],
-                ['crosslist', "Crosslisted"],
-                ['restrictions', "Restrictions"]
-            )
             # Get rid of UI elements, in case they are not needed for the next result
             self.clear_items()
-            self.related_courses = []
-            rel_courses_field = ""
-            match_type = ""
-            # Fetch all data from the cursor, then parse through it
-            for row_num, row in enumerate(await cursor.fetchall()):
-                print(f"{row['dept']} {row['code_num']}: {row['title']} - {row['code_match']} {row['title_exact_match']} {row['title_start_match']} {row['title_match']} {row['title_similar']}")
-                # The first result is the main result
-                if row_num == 0:
-                    self.embed = discord.Embed(
-                        title = f"{row['dept']} {row['code_num']}: {row['title']}",
-                        color = 0xff00ff
-                    )
-                    if row['desc_text'] is not None:
-                        self.embed.description = row['desc_text']
-                    self.embed.add_field(
-                        name = "Credits",
-                        value = get_credits_desc(row['credit_min'], row['credit_max']),
-                        inline = False
-                    )
-                    for element in field_names:
-                        if row[element[0]] is not None:
-                            self.embed.add_field(
-                                name = element[1],
-                                value = row[element[0]],
-                                inline = False
-                            )
-                    match_type = get_match_type(row)
-                # Anything not the first result is just "related"
-                else:
-                    self.related_courses.append(
-                        discord.SelectOption(
-                            label = f"{row['dept']} {row['code_num']}: {row['title']}",
-                            value = f"{row['dept']} {row['code_num']}"
-                        )
-                    )
-                    rel_courses_field += f"{row['dept']} {row['code_num']}: {row['title']}\n"
-            if len(rel_courses_field) > 0:
-                self.embed.add_field(
-                    name = "Related Courses",
-                    value = rel_courses_field.strip("\n"),
-                    inline = False
-                )
-            self.embed.set_author(name = f"{search_term} → {match_type}!")
+            new_embed, self.related_courses = await course_search_embed(cursor, search_term)
+            if new_embed is not None:
+                self.embed = new_embed
+            
         if len(self.related_courses) > 0:
             dropdown = RelatedCourseDropdown(
-                placeholder = "Choose a related course to learn more...",
+                placeholder = "Choose a course to learn more!",
                 options = self.related_courses
             )
             self.add_item(dropdown)
@@ -271,7 +296,16 @@ class RelatedCourseDropdown(discord.ui.Select):
         )
 
     async def callback(self, interaction: Interaction) -> None:
-        await interaction.response.send_message("🫡")
+        # Steal the connection from the view, then create a cursor
+        async with self.view.db_conn.cursor(aiomysql.DictCursor) as cursor:
+            await cursor.execute(
+                self.view.query, # Use the same query
+                (f"^{self.values[0]}$", "a^", "a^", "a^", "a^", "a^") # Only match course code
+            )
+            # Make sure to unpack the tuple, and we don't need related courses (should be none)
+            new_embed, _ = await course_search_embed(cursor, "")
+            # Send a new message
+            await interaction.response.send_message(embed = new_embed)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CourseSearch(bot))
