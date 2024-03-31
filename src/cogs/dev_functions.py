@@ -110,5 +110,5 @@ class OwnerCommands(commands.Cog):
                 row_count += 1
         await message.edit(embed=embed_var)
 
-async def setup(bot: commands.Bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(OwnerCommands(bot))

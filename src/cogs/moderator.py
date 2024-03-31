@@ -31,11 +31,8 @@ class Moderator(commands.Cog):
         if num < 1:
             raise commands.BadArgument
         else:
-            try:
-                num_deleted = len(await ctx.channel.purge(limit=num+1)) - 1
-                embed_title = f"{num_deleted} messages deleted"
-            except:
-                raise
+            num_deleted = len(await ctx.channel.purge(limit=num+1)) - 1
+            embed_title = f"{num_deleted} messages deleted"
         embed_var = discord.Embed(
             title = embed_title,
             color = discord.Color.green()
@@ -55,7 +52,7 @@ class Moderator(commands.Cog):
             embed_var.description = f"Usage: `{self.bot.command_prefix}clear <num messages>`"
         elif isinstance(error, commands.BadArgument):
             embed_var.description = "Enter a valid integer."
-        if embed_var.description is not None:
+        if embed_var.description:
             await ctx.send(embed=embed_var)
         else:
             await send_generic_error(ctx, error)
@@ -97,7 +94,7 @@ class Moderator(commands.Cog):
         # Maximum possible timeout is 28 days (2,419,200 seconds)
         elif int(td.total_seconds()) >= 2419200:
             error_desc = "The maximum possible timeout duration is just under 28 days."
-        if error_desc is not None:
+        if error_desc:
             embed_var.title = ERROR_TITLE
             embed_var.description = error_desc
             await ctx.send(embed=embed_var)
@@ -127,7 +124,7 @@ class Moderator(commands.Cog):
             embed_var.description = f"Usage: `{self.bot.command_prefix}timeout " \
                                     + "<member> <days>d <hours>h <minutes>m <seconds>s`" \
                                     + "\nAt least one time field is required."
-        if embed_var.description is not None:
+        if embed_var.description:
             await ctx.send(embed=embed_var)
         else:
             await send_generic_error(ctx, error)
@@ -173,7 +170,7 @@ class Moderator(commands.Cog):
             embed_var.description = f"Usage: `{self.bot.command_prefix}timein <member>`"
         elif isinstance(error, commands.MemberNotFound):
             embed_var.description = BAD_MEMBER_MSG
-        if embed_var.description is not None:
+        if embed_var.description:
             await ctx.send(embed=embed_var)
         else:
             await send_generic_error(ctx, error)
