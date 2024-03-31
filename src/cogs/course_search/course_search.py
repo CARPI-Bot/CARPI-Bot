@@ -153,30 +153,30 @@ class CourseMenu(discord.ui.View):
         show the resulting course.
         """
         reg_start_or_space = "(^|.* )"
-        # Just the search itself
-        regex1 = search_term
-        # A full title match
-        regex2 = f"^{search_term}$"
+        # Full title match
+        regex_full = f"^{search_term}$"
         # Title matched at the beginning
-        regex3 = f"^{search_term}"
-        regex4 = "("
+        regex_start = f"^{search_term}"
+        # Title matched anywhere
+        regex_any = search_term
+        regex_short = "("
         # For acronyms
         if len(search_term) > 1:
-            regex4 += reg_start_or_space
+            regex_short += reg_start_or_space
             for char in search_term:
                 # Don't use spaces in acronyms
                 if char != " ":
-                    regex4 += f"{char}.* "
-            regex4 = regex4[:-3]
+                    regex_short += f"{char}.* "
+            regex_short = regex_short[:-3]
         tokens = search_term.split()
         
         # For abbreviations
         if len(tokens) > 1:
-            regex4 += f"|{reg_start_or_space}"
+            regex_short += f"|{reg_start_or_space}"
             for token in tokens:
-                regex4 += f"{token}.* "
-            regex4 = regex4[:-3]
-        regex4 += ")"
+                regex_short += f"{token}.* "
+            regex_short = regex_short[:-3]
+        regex_short += ")"
         
         # Default embed is "no matches", it will only be changed if there is a match.
         self.embed = discord.Embed(
@@ -189,11 +189,13 @@ class CourseMenu(discord.ui.View):
             value = get_random_tip()
         )
 
+        print(search_term, regex_full, regex_start, regex_any, regex_short)
+
         # Execute the query
         async with self.db_conn.cursor(aiomysql.DictCursor) as cursor:
             await cursor.execute(
                 self.query,
-                (search_term, regex1, regex2, regex3, regex4)
+                (search_term, regex_full, regex_start, regex_any, regex_short)
             )
 
             # The dictionary keys, and the corresponding field names for the embed
