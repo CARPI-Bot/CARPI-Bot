@@ -30,14 +30,15 @@ def get_random_tip() -> str:
     """
     Returns a random tip.
     """
-    # Move this to an external file, maybe
+    # Move this to an external MODULE, eventually
     tips = (
-        ("You can search by acronyms! Try `RCOS` or `FOCS`.", 100),
+        ("Don't know what all the terminology means? Try using `/course_terms`!", 200),
+        ("You can search by acronyms! Try `FOCS` or `MAU`.", 100),
         ("You can search by abbreviations! Try `Comp Org` or `P Soft`.", 100),
         ("This bot was made in RCOS! Consider joining the class next semester.", 100),
-        ("You can die from radiation poisioning by eating 10 million bananas. Try not to.", 25),
+        ("You can die from radiation poisioning by eating 10 million bananas. Try not to.", 10),
         ("We made this [video guide](https://www.youtube.com/watch?v=QX43QTYyV-8) to help new " + 
-            "users with this bot!", 25)
+            "users with this bot!", 10)
     )
     total_prob = 1
     for tip in tips:
@@ -141,12 +142,13 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
     
 
 # TODO: convert numbers to roman numerals or back
-# TODO: add prerequisite courses to related courses if there are no others, or add them to the
-# dropdown with a (prereq) next to it
+# TODO: add prerequisite courses to related courses with (prereq) next to it
 # TODO: if you want to make the search algorithm crazy, do research about subprocesses so you don't
 # hold up the bot
-# TODO: add course_help command to show an embed with explanations of course terminology
 # TODO: ask users what they were looking for if there are no matches
+# TODO: account for course codes with dashes or underscores (or anything in between)
+# TODO: add default embed that "welcomes" users if no argument is given
+# TODO: make it so each dropdown option can only be selected once
 
 class CourseSearch(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -160,18 +162,73 @@ class CourseSearch(commands.Cog):
         self.db_conn = await self.bot.sql_conn_pool.acquire()
     
     async def cog_unload(self) -> None:
-        self.db_conn.close()
+        self.bot.sql_conn_pool.release(self.db_conn)
 
     @app_commands.command(
         name = "course",
         description = "Search for a course in the RPI catalog!"
     )
-    async def course(self, interaction: Interaction, *, search_term: str):
-        search_term = sanitize_str(search_term)
-        if len(search_term) == 0:
+    @app_commands.describe(course = "The course you want to search for, as a code or name.")
+    async def course(self, interaction: Interaction, *, course: str):
+        course = sanitize_str(course)
+        if len(course) == 0:
             raise "Bad argument"
         view = CourseMenu(interaction, self.db_conn, self.course_query)
-        await view.course_query(search_term)
+        await view.course_query(course)
+        await interaction.response.send_message(
+            view = view,
+            embed = view.embed,
+            ephemeral = False
+        )
+
+    @app_commands.command(
+        name = "course_terms",
+        description = "Learn how to understand course search info."
+    )
+    async def course_terms(self, interaction: Interaction):
+        view = CourseMenu(interaction, self.db_conn, self.course_query)
+        help_embed = discord.Embed(
+            title = "CRPI 2024: Course Search",
+            description = "This is a course! Every course has a department (CRPI), code (2024), " +
+                "and title (Course Search), as shown in the header above.",
+            color = 0xFF00FF
+        )
+        help_embed.add_field(
+            name = "Credits",
+            value = "This is the number of credit hours you can earn for this course. For some " +
+                "courses, it can vary between sections.",
+            inline = False
+        )
+        help_embed.add_field(
+            name = "Prerequisites",
+            value = "These are courses that you must take before (or in some cases, during) this " +
+                "course.",
+            inline = False
+        )
+        help_embed.add_field(
+            name = "Corequisites",
+            value = "These are courses that you must take alongside this course.",
+            inline = False
+        )
+        help_embed.add_field(
+            name = "Crosslisted",
+            value = "These are courses where you cannot earn credit if you've already completed " +
+                "this course, and vice versa.",
+            inline = False
+        )
+        help_embed.add_field(
+            name = "Restrictions",
+            value = "These are conditions you must fulfill in order to take this course. Some " +
+                "examples are major and year restrictions.",
+            inline = False
+        )
+        help_embed.add_field(
+            name = "Other Matches",
+            value = "These are other course results from your search. You can choose any of them " +
+                "from the dropdown menu to learn more.",
+            inline = False
+        )
+        view.set_embed(help_embed)
         await interaction.response.send_message(
             view = view,
             embed = view.embed,
@@ -281,6 +338,12 @@ class CourseMenu(discord.ui.View):
                 options = self.related_courses
             )
             self.add_item(dropdown)
+
+    def set_embed(self, embed):
+        """
+        Directly set the embed of this menu. Useful for an override, like in `course_terms`.
+        """
+        self.embed = embed
 
 class RelatedCourseDropdown(discord.ui.Select):
     def __init__(
