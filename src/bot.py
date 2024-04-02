@@ -3,22 +3,32 @@ import logging
 import re
 import signal
 from pathlib import Path
+from typing import Optional
 
 import aiomysql
-import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError, Context
 
-from globals import OWNER_IDS, CONFIG
+from globals import CONFIG, OWNER_IDS
 
 
 class CARPIBot(commands.Bot):
-    def __init__(self, prefix: str, intents: discord.Intents, **kwargs):
+
+    """
+    This class is a subclass of discord.ext.commands.Bot that includes a few
+    new instance methods and overrides several others, tailored to the needs
+    of the CARPI Bot project.
+    
+    CARPI Bot is a part of the Rensselaer Center for Open Source (RCOS).
+    
+    GitHub repository: https://github.com/SameriteRL/CARPI-Bot
+    """
+
+    def __init__(self, command_prefix: str, **options):
         super().__init__(
-            command_prefix = prefix,
-            intents = intents,
+            command_prefix = command_prefix,
             owner_ids = OWNER_IDS,
-            **kwargs
+            **options
         )
         # Intercepts CTRL+C signal and properly closes bot
         signal.signal(
@@ -30,18 +40,26 @@ class CARPIBot(commands.Bot):
         logging.info("Bot initialized")
 
     async def setup_hook(self) -> None:
+        """
+        Performs asynchronous setup after the bot is logged in but before it
+        has connected to the websocket.
+
+        This is only called once, in login, and will be called before any
+        events are dispatched, making it a better solution than doing such
+        setup in the on_ready event.
+        """
         try:
+            logging.info("Initializing MySQL database connection")
             self.sql_conn_pool = await aiomysql.create_pool(
                 **CONFIG["sql_login"],
-                db = CONFIG["sql_schema"]
+                db = CONFIG["sql_schema"],
+                connect_timeout = 10
             )
             logging.info("MySQL database connection pool initialized")
         except:
-            logging.fatal(
-                "Couldn't connect to MySQL database! Make sure the server is running "
-                + "and login info is correct"
-            )
-            await self.close()
+            logging.error("Could not connect to MySQL database")
+            logging.error("Make sure server is running and login info is correct")
+            logging.error("Database dependent functions will not work properly")
         await self.load_cogs()
     
     async def on_ready(self) -> None:
@@ -55,11 +73,10 @@ class CARPIBot(commands.Bot):
 
     async def close(self) -> None:
         """
-        Overriden function to provide fine control over closing the bot.
+        Overriden function.
 
-        This is because commands.Bot.close() sometimes raises a noisy
-        "Unclosed Connector" error, a bug on aiohttp's part according
-        to discord.py's Discord server.
+        Terminates all connections in the MySQL database connection pool, and
+        closes the bot's connection to Discord.
         """
         logging.info("Closing bot...")
         if self.sql_conn_pool is not None:
@@ -73,30 +90,44 @@ class CARPIBot(commands.Bot):
     
     async def on_command_error(self, ctx: Context, error: CommandError) -> None:
         """
-        Overridden function to silence all command errors by default.
-        This behavior is ignored for any command that has a local
-        error handler or if cog_command_error() is implemented in the
-        command's parent cog.
+        Overridden function.
+
+        This is called every time any command raises an error, regardless of
+        whether the command has a local error handler.
+        
+        Overriding this function allows us to suppress frequent, noisy
+        "unknown command" errors.
         """
         pass
 
-    async def load_extension(self, name: str, *, package: str | None = None) -> None:
+    async def load_extension(self, name: str, *, package: Optional[str] = None) -> None:
+        """
+        Overriden function.
+
+        Simply adds a logging call on top of loading the specified extension.
+        """
         logging.info(f"Loading extension {name}")
         await super().load_extension(name, package=package)
 
-    async def unload_extension(self, name: str, *, package: str | None = None) -> None:
+    async def unload_extension(self, name: str, *, package: Optional[str] = None) -> None:
+        """
+        Overriden function.
+
+        Simply adds a logging call on top of unloading the specified extension.
+        """
         logging.info(f"Unloading extension {name}")
         await super().unload_extension(name, package=package)
 
-    async def load_cogs(self, rel_path: str = "./cogs") -> tuple[tuple[str]]:
+    async def load_cogs(self, rel_path: Optional[str] = "./cogs") -> tuple[tuple[str]]:
         """
         Unloads any extensions currently loaded into the bot, then
         loads any extensions recursively within rel_path into the bot.
+
         Keeps track of successfully loaded cogs, cogs that were removed
-        since before this function call, and cogs that raise errors.
+        since before this function call, and cogs that raised errors.
 
         Returns a tuple in the format:
-        (loaded_cogs, unloaded_cogs, bad_cogs)
+        ((loaded_cogs), (unloaded_cogs), (bad_cogs))
         """
         abs_path = Path(rel_path).resolve()
         if not abs_path.is_dir():
@@ -106,12 +137,6 @@ class CARPIBot(commands.Bot):
         bad_cogs = set()
         
         async def recursive_load(dir: Path) -> set[str]:
-            """
-            Does the actual loading of cogs.
-            
-            Returns a set containing the module names of all successfully
-            loaded cogs.
-            """
             for file_name in dir.iterdir():
                 new_path = dir / file_name
                 if new_path.is_dir():
@@ -126,7 +151,7 @@ class CARPIBot(commands.Bot):
                     )
                     try:
                         await self.load_extension(cog)
-                    except Exception as err:
+                    except commands.ExtensionError as err:
                         log_bad_cog = True
                         if isinstance(err, commands.ExtensionNotFound):
                             err_log = f"{cog} could not be found! Ignoring..."
@@ -155,7 +180,7 @@ class CARPIBot(commands.Bot):
     
     async def unload_cogs(self) -> tuple[str]:
         """
-        Unconditionally unloads all of the bot's loaded extensions.
+        Unloads all of the bot's loaded extensions.
 
         Returns a tuple containing the module names of all extensions that were
         unloaded.

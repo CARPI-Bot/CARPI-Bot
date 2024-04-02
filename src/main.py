@@ -13,9 +13,10 @@ from globals import CONFIG
 
 class ColoredFormatter(logging.Formatter):
     """
-    Simple wrapper class that adds colors to logging. Requires a
-    format, and otherwise accepts any kwargs that are accepted by
-    logging.Formatter().
+    Simple wrapper class that adds colors to logging.
+    
+    Requires a format, and otherwise accepts any keyword arguments that are
+    accepted by logging.Formatter().
     """
     def __init__(self, fmt: str, **kwargs):
         self._fmt = fmt
@@ -84,11 +85,10 @@ async def main():
     Make sure all privileged intents are enabled in the Discord
     developer portal!
     
-    You can access it using the link below:
     https://discord.com/developers/applications
     """
     bot = CARPIBot(
-        prefix = CONFIG["prefix"],
+        command_prefix = CONFIG["prefix"],
         intents = discord.Intents.all()
     )
     # Main program loop

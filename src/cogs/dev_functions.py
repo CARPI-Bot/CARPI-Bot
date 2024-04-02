@@ -31,7 +31,7 @@ class OwnerCommands(commands.Cog):
     ### SHUTDOWN ###
     @commands.command(
         name = "shutdown",
-        aliases = ["stop", "kill"],
+        aliases = ["stop", "close", "kill"],
         hidden = True
     )
     async def shutdown(self, ctx: Context):
