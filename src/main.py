@@ -15,8 +15,8 @@ class ColoredFormatter(logging.Formatter):
     """
     Simple wrapper class that adds colors to logging.
     
-    Requires a format, and otherwise accepts any keyword arguments that are
-    accepted by logging.Formatter().
+    Requires a format, and otherwise accepts any keyword arguments
+    that are accepted by logging.Formatter().
     """
     def __init__(self, fmt: str, **kwargs):
         self._fmt = fmt
@@ -62,10 +62,10 @@ def logging_init(log_level: int = logging.INFO) -> None:
     root_logger.addHandler(console_handler)
 
     # File logging
-    logs_dir = Path("../logs").resolve()
+    logs_dir = Path(__file__).parent.with_name("logs").resolve()
     if (not logs_dir.exists()):
         logs_dir.mkdir()
-        logging.info('No logs directory detected, creating one for you...')
+        logging.info("No logs directory detected, creating one for you")
     for log in logs_dir.iterdir():
         create_time = datetime.fromtimestamp(os.path.getctime(log))
         if create_time < datetime.now() - timedelta(days=5):
@@ -95,9 +95,10 @@ async def main():
     await bot.start(CONFIG["token"])
 
 if __name__ == "__main__":
+    # Import statements throughout project are relative to "src"
+    sys.path.append(str(Path(__file__).parent))
     logging_init()
-    discordpy_ver = discord.__version__
     python_ver = ".".join(str(ver) for ver in sys.version_info[:3])
-    logging.info(f"discord.py version {discordpy_ver}")
+    logging.info(f"discord.py version {discord.__version__}")
     logging.info(f"Python version {python_ver}")
     asyncio.run(main())

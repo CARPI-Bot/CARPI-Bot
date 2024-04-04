@@ -15,11 +15,11 @@ from globals import CONFIG, OWNER_IDS
 class CARPIBot(commands.Bot):
 
     """
-    This class is a subclass of discord.ext.commands.Bot that includes a few
-    new instance methods and overrides several others, tailored to the needs
-    of the CARPI Bot project.
+    This class is a subclass of discord.ext.commands.Bot that includes
+    a few new instance methods and overrides several others, tailored
+    to the needs of the CARPI Bot project.
     
-    CARPI Bot is a part of the Rensselaer Center for Open Source (RCOS).
+    CARPI Bot is a part of Rensselaer's Center for Open Source (RCOS).
     
     GitHub repository: https://github.com/SameriteRL/CARPI-Bot
     """
@@ -41,12 +41,12 @@ class CARPIBot(commands.Bot):
 
     async def setup_hook(self) -> None:
         """
-        Performs asynchronous setup after the bot is logged in but before it
-        has connected to the websocket.
+        Performs asynchronous setup after the bot is logged in but
+        before it has connected to the websocket.
 
-        This is only called once, in login, and will be called before any
-        events are dispatched, making it a better solution than doing such
-        setup in the on_ready event.
+        This is only called once, in login, and will be called before
+        any events are dispatched, making it a better solution than
+        doing such setup in the on_ready event.
         """
         try:
             logging.info("Initializing MySQL database connection")
@@ -75,10 +75,10 @@ class CARPIBot(commands.Bot):
         """
         Overriden function.
 
-        Terminates all connections in the MySQL database connection pool, and
-        closes the bot's connection to Discord.
+        Terminates all connections in the MySQL database connection
+        pool, and closes the bot's connection to Discord.
         """
-        logging.info("Closing bot...")
+        logging.info("Closing bot")
         if self.sql_conn_pool is not None:
             self.sql_conn_pool.close()
             self.sql_conn_pool.terminate()
@@ -92,8 +92,8 @@ class CARPIBot(commands.Bot):
         """
         Overridden function.
 
-        This is called every time any command raises an error, regardless of
-        whether the command has a local error handler.
+        This is called every time any command raises an error,
+        regardless of whether the command has a local error handler.
         
         Overriding this function allows us to suppress frequent, noisy
         "unknown command" errors.
@@ -104,7 +104,8 @@ class CARPIBot(commands.Bot):
         """
         Overriden function.
 
-        Simply adds a logging call on top of loading the specified extension.
+        Simply adds a logging call on top of loading the specified
+        extension.
         """
         logging.info(f"Loading extension {name}")
         await super().load_extension(name, package=package)
@@ -113,7 +114,8 @@ class CARPIBot(commands.Bot):
         """
         Overriden function.
 
-        Simply adds a logging call on top of unloading the specified extension.
+        Simply adds a logging call on top of unloading the specified
+        extension.
         """
         logging.info(f"Unloading extension {name}")
         await super().unload_extension(name, package=package)
@@ -121,7 +123,8 @@ class CARPIBot(commands.Bot):
     async def load_cogs(self, rel_path: Optional[str] = "./cogs") -> tuple[tuple[str]]:
         """
         Unloads any extensions currently loaded into the bot, then
-        loads any extensions recursively within rel_path into the bot.
+        loads any extensions recursively within the specified path
+        relative to this file into the bot.
 
         Keeps track of successfully loaded cogs, cogs that were removed
         since before this function call, and cogs that raised errors.
@@ -129,9 +132,10 @@ class CARPIBot(commands.Bot):
         Returns a tuple in the format:
         ((loaded_cogs), (unloaded_cogs), (bad_cogs))
         """
-        abs_path = Path(rel_path).resolve()
+        abs_path = Path(__file__).parent / rel_path
         if not abs_path.is_dir():
-            logging.error(f'Extensions directory "{rel_path}" is not valid!')
+            logging.error(f'Extensions directory "{abs_path}" is not valid')
+            logging.error("No extensions will be loaded")
             return
         unloaded_cogs = set(await self.unload_cogs())
         bad_cogs = set()
@@ -142,12 +146,15 @@ class CARPIBot(commands.Bot):
                 if new_path.is_dir():
                     await recursive_load(new_path)
                 elif new_path.suffix == ".py":
-                    # Formats absolute path to an importable name like "cogs.calculator"
+                    # Formats path to an relative module name like "cogs.calculator"
                     cog = re.sub(
-                        pattern = R"[\\/]",
+                        pattern = r"[\\/]",
                         repl = ".",
-                        string = str(new_path.relative_to(Path.cwd()).parent
-                                 / Path(new_path.stem))
+                        string = str(
+                            new_path.relative_to(
+                                Path(__file__).parent
+                            ).with_suffix("")
+                        )
                     )
                     try:
                         await self.load_extension(cog)
@@ -182,8 +189,8 @@ class CARPIBot(commands.Bot):
         """
         Unloads all of the bot's loaded extensions.
 
-        Returns a tuple containing the module names of all extensions that were
-        unloaded.
+        Returns a tuple containing the module names of all extensions
+        that were unloaded.
         """
         unloaded_cogs = []
         for cog in set(self.extensions.keys()):

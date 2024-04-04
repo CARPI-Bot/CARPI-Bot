@@ -1,6 +1,7 @@
 import json
 import logging
 import sys
+from pathlib import Path
 
 import discord
 from discord import Interaction
@@ -30,7 +31,7 @@ async def send_generic_error(
             await ctx.followup.send(embed=embed)
     if error is not None:
         logging.error(
-            msg = f'Error from command {ctx.command.name}',
+            msg = f"Error from command {ctx.command.name}",
             exc_info = True
         )
 
@@ -43,7 +44,7 @@ OWNER_IDS = {
 }
 
 try:
-    with open("config.json", "r") as infile:
+    with Path(__file__).with_name("config.json").open() as infile:
         CONFIG = json.load(infile)
 except:
     print("Bad or missing config.json!")
