@@ -1,3 +1,5 @@
+import logging
+
 import discord
 from discord.ext import commands
 from discord.ext.commands import CommandError, Context
@@ -6,15 +8,17 @@ from bot import CARPIBot
 from globals import ERROR_TITLE, NO_PERM_MSG, send_generic_error
 
 
-class OwnerCommands(commands.Cog):
+class DeveloperFunctions(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
+
+    def cog_check(self, ctx: Context) -> bool:
+        return ctx.author.id in self.bot.owner_ids
     
     async def cog_command_error(self, ctx: Context, error: CommandError) -> None:
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)
-            return
-        if isinstance(error, commands.CheckFailure):
+        elif isinstance(error, commands.CheckFailure):
             embed_var = discord.Embed(
                 title = ERROR_TITLE,
                 description = NO_PERM_MSG,
@@ -27,10 +31,9 @@ class OwnerCommands(commands.Cog):
     ### SHUTDOWN ###
     @commands.command(
         name = "shutdown",
-        aliases = ["stop", "kill"],
+        aliases = ["stop", "close", "kill"],
         hidden = True
     )
-    @commands.check(commands.is_owner())
     async def shutdown(self, ctx: Context):
         embed_var = discord.Embed(
             title = "Shutting down...",
@@ -45,8 +48,8 @@ class OwnerCommands(commands.Cog):
         aliases = ["refresh"],
         hidden = True
     )
-    @commands.check(commands.is_owner())
     async def reload(self, ctx: Context):
+        logging.info("Reloading extensions")
         cogs_status = await self.bot.load_cogs()
         embed_var = discord.Embed(
             title = "Extensions successfully reloaded!",
@@ -70,7 +73,6 @@ class OwnerCommands(commands.Cog):
     ### SYNC ###
     @commands.command(
         name = "sync",
-        description = "Sync application commands",
         aliases = ["globalsync", "synccommands", "synccmds"],
         hidden = True
     )
@@ -82,7 +84,9 @@ class OwnerCommands(commands.Cog):
             color = discord.Color.red()
         )
         message = await ctx.send(embed=embed_var)
+        logging.info("Syncing application commands")
         synced_cmds = await self.bot.tree.sync()
+        logging.info("Application commands synced")
         embed_var.title = "Successfully synced application commands!"
         embed_var.description = None
         embed_var.color = discord.Color.green()
@@ -106,5 +110,5 @@ class OwnerCommands(commands.Cog):
                 row_count += 1
         await message.edit(embed=embed_var)
 
-async def setup(bot: commands.Bot):
-    await bot.add_cog(OwnerCommands(bot))
+async def setup(bot: commands.Bot) -> None:
+    await bot.add_cog(DeveloperFunctions(bot))

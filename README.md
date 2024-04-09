@@ -1,6 +1,6 @@
 # CARPI Bot
 
-The Discord bot built for RPI students! Featuring easy searching of events from the academic calendar, courses from the course catalog, as well as access to other commonly used RPI resources all through the Discord client, we hope that our bot will be a friend to you in your everyday academic endeavors.
+The Discord bot built for RPI students! Featuring an in-app academic calendar menu, easy search of the course catalog, as well as access to other RPI resources from within the popular messaging app, we hope that our bot will be a friend to you in your everyday academic endeavors.
 
 ## User Quick Start
 
@@ -14,20 +14,23 @@ Once you're ready, use this [invite link](https://discord.com/oauth2/authorize?c
 Once CARPI Bot is in your server, all of its commands are at your disposal! Use the `/help` command to see a list of comands.
 
 ## Getting started with contributing
-### Project Dependencies:
+### Project Dependencies
 **Python (3.9+)**
 > [Download Python](https://www.python.org "Click to redirect!")
 
 **MySQL Server (8.2.0)**
 > [Download MySQL Server](https://dev.mysql.com/downloads/mysql "Click to redirect!")
 
-Python PIP packages:
-- discord.py
-- aiomysql
-- aiohttp
+**Python PIP packages:**
+> discord.py \
+> aiomysql \
+> aiohttp \
+> cryptography
+
+These can be installed using `pip install -r requirements.txt`
 
 ### Required configuration
-Because sensitive credentials like Discord bot tokens and database logins exist, this project depends on a `config.json` placed in `src`. The structure of the file is as follows:
+Because of sensitive credentials like Discord bot tokens and database logins, this project depends on a `config.json` placed in `src`. The structure of the file is as follows:
 ```
 {
     "token": "discord_bot_token",

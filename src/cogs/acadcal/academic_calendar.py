@@ -9,13 +9,14 @@ from discord.app_commands import AppCommandError
 from discord.ext import commands
 
 from bot import CARPIBot
+from globals import BASE_DIR
 
 
 class AcademicCalendar(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
         self.db_conn = None
-        query_path = Path("./cogs/acadcal/month_data.sql").resolve()
+        query_path = Path(__file__).with_name("month_data.sql")
         with query_path.open() as query:
             self.query = query.read()
 
@@ -30,10 +31,13 @@ class AcademicCalendar(commands.Cog):
         description = "Browse RPI's academic calendar within Discord!"
     )
     @app_commands.checks.cooldown(rate=1, per=30)
+    @app_commands.describe(
+        public = "Should other people be able to see and interact with the menu?"
+    )
     async def calendar(self, interaction: Interaction, public: bool = False):
         view = CalendarMenu(interaction, self.db_conn, self.query)
         thumbnail = discord.File(
-            fp = Path("./assets/rpi_small_seal_red.png").resolve(),
+            fp = BASE_DIR / "./assets/rpi_small_seal_red.png",
             filename = "rpi_small_seal_red.png"
         )
         await interaction.response.send_message(
@@ -80,18 +84,8 @@ class CalendarMenu(discord.ui.View):
         self.embed.set_thumbnail(url="attachment://rpi_small_seal_red.png")
         select_options = []
         self.month_names = (
-            "January",
-            "February",
-            "March",
-            "April",
-            "May",
-            "June",
-            "July",
-            "August",
-            "September",
-            "October",
-            "November",
-            "December"
+            "January", "February", "March", "April", "May", "June", "July", "August",
+            "September", "October", "November", "December"
         )
         for i, month in enumerate(self.month_names):
             select_options.append(

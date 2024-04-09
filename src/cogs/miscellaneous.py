@@ -1,4 +1,3 @@
-import datetime as dt
 import random
 
 import discord
@@ -16,20 +15,6 @@ class Miscellaneous(commands.Cog):
     async def cog_command_error(self, ctx: Context, error: CommandError) -> None:
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)
-
-    ### PING ###
-    @commands.hybrid_command(
-        description = "Pong!"
-    )
-    async def ping(self, ctx: Context):
-        # Gets the bot to server latency in milliseconds
-        embedVar = discord.Embed(
-            title = "Pong!",
-            description = "Your message was received in "
-                          + f"{int(self.bot.latency * 1000)}ms.",
-            color = discord.Color.green()
-        )
-        await ctx.send(embed=embedVar)
     
     ### AVATAR ###
     @commands.hybrid_command(
@@ -37,23 +22,26 @@ class Miscellaneous(commands.Cog):
     )
     async def avatar(self, ctx: Context, member: discord.Member = None):
         # Avatar and color information is only accessible using fetch_user()
-        target_user = (await self.bot.fetch_user(member.id if member is not None \
-                                                 else ctx.author.id))
-        avatar_url = target_user.avatar.url
-        target_color = target_user.accent_color
-        embed_var = discord.Embed(color=target_color)
-        embed_var.set_image(url=avatar_url)
-        await ctx.send(embed=embed_var)
+        target_user = await self.bot.fetch_user(member.id if member else ctx.author.id)
+        avatar_url = target_user.avatar.url if target_user.avatar else None
+        embed = discord.Embed()
+        if avatar_url:
+            embed.set_image(url=avatar_url)
+            embed.color = target_user.accent_color
+        else:
+            embed.title = "This user doesn't have an avatar set!"
+            embed.color = discord.Color.blurple()
+        await ctx.send(embed=embed)
     
     @avatar.error
     async def avatar_error(self, ctx: Context, error: CommandError):
         if isinstance(error, commands.MemberNotFound):
-            embed_var = discord.Embed(
+            embed = discord.Embed(
                 title = "Member not found",
                 description = BAD_MEMBER_MSG,
                 color = discord.Color.red()
             )
-            await ctx.send(embed=embed_var)
+            await ctx.send(embed=embed)
         else:
             await send_generic_error(ctx, error)
     
@@ -63,27 +51,26 @@ class Miscellaneous(commands.Cog):
     )
     async def banner(self, ctx: Context, member: discord.Member = None):
         # Banner and color information is only accessible using fetch_user()
-        target_user = (await self.bot.fetch_user(member.id if member is not None \
-                                                 else ctx.author.id))
-        banner_url = target_user.banner.url if target_user.banner is not None else None
-        target_color = target_user.accent_color
-        embed_var = discord.Embed()
-        if banner_url is not None:
-            embed_var.color = target_color
-            embed_var.set_image(url=banner_url)
+        target_user = await self.bot.fetch_user(member.id if member else ctx.author.id)
+        banner_url = target_user.banner.url if target_user.banner else None
+        embed = discord.Embed()
+        if banner_url:
+            embed.set_image(url=banner_url)
+            embed.color = target_user.accent_color
         else:
-            embed_var.title = "This user doesn't have a banner set!"
-        await ctx.send(embed=embed_var)
+            embed.title = "This user doesn't have a banner set!"
+            embed.color = discord.Color.blurple()
+        await ctx.send(embed=embed)
     
     @banner.error
     async def banner_error(self, ctx: Context, error: CommandError):
         if isinstance(error, commands.MemberNotFound):
-            embed_var = discord.Embed(
+            embed = discord.Embed(
                 title = ERROR_TITLE,
                 description = BAD_MEMBER_MSG,
                 color = discord.Color.red()
             )
-            await ctx.send(embed=embed_var)
+            await ctx.send(embed=embed)
         else:
             await send_generic_error(ctx, error)
 
@@ -96,23 +83,8 @@ class Miscellaneous(commands.Cog):
         result = "Heads!" if random.randint(0, 1) == 0 else "Tails!"
         embedVar = discord.Embed(
             title = result,
-            description = f"This had a 50% chance of happening.",
+            description = "This had a 50% chance of happening.",
             color = discord.Color.green()
-        )
-        await ctx.send(embed=embedVar)
-
-    ### REPO ###
-    @commands.hybrid_command(
-        description = "Check out our repository!",
-        aliases = ["repository"]
-    )
-    async def repo(self, ctx: Context):
-        embedVar = discord.Embed(
-            title = f"Click Here to Redirect to the {self.bot.user.name} Repository!",
-            url = "https://github.com/SameriteRL/CARPI-Bot",
-            description = "This is a project within the "
-                          + "Rensselaer Center for Open Source (RCOS)",
-            color = discord.Color.blurple()
         )
         await ctx.send(embed=embedVar)
 
@@ -121,15 +93,16 @@ class Miscellaneous(commands.Cog):
         description = "Shhh..."
     )
     async def textbooks(self, ctx: commands.Context):
-        drive_link = "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"
+        drive_link = \
+            "https://drive.google.com/drive/folders/1SaiXHIu8-ue2CwCw62ukl0U59KBc26dz"
         embed = discord.Embed(
             title = "Textbook Google Drive",
             description = f"Here is a repository of freely avaliable textbooks. "
                           + "Note that these may or may not be current.",
             url = drive_link,
-            color = ctx.author.accent_color
+            color = discord.Color.blurple()
         )
         await ctx.send(embed=embed)
     
-async def setup(bot: commands.Bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Miscellaneous(bot))

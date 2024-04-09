@@ -199,5 +199,5 @@ class Calculator(commands.Cog):
         else:
             await send_generic_error(ctx, error)
 
-async def setup(bot: commands.Bot):
+async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Calculator(bot))
