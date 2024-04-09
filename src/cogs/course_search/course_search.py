@@ -20,11 +20,23 @@ def sanitize_str(input: str) -> str:
         pattern = " +",
         repl = " ",
         string = re.sub(
-            pattern = "[^a-zA-Z0-9 ]",
+            pattern = r"[^a-zA-Z0-9-_&' ]",
             repl = "",
             string = input
         )
     )
+
+def get_prereq_codes(input: str) -> list:
+    """
+    Returns a list of course codes for the given prerequisite string.
+    """
+    codes = re.sub(
+        pattern = r"(or|and|\(|\))",
+        repl = "",
+        string = input
+    )
+    codes = codes.split("  ")
+    # print(codes)
 
 def get_random_tip() -> str:
     """
@@ -76,6 +88,30 @@ def get_match_type(row) -> str:
     if row['title_abbrev']:
         return "Abbreviation Match"
 
+def get_restriction_info(row: dict) -> str:
+    """
+    Given a row returned from the course search, returns a string that represents the restrictions
+    that correspond to the row's course.
+
+    If there are no restrictions, returns an empty string.
+    """
+    return_string = ""
+    # The dictionary keys, and the corresponding names to be used in the string
+    field_names = (
+        ['restr_major', "Major"],
+        ['restr_clsfctn', "Classification"],
+        ['restr_degree', "Degree"],
+        ['restr_field', "Field"],
+        ['restr_campus', "Campus"],
+        ['restr_college', "College"]
+    )
+    for element in field_names:
+        if row[element[0]] is not None:
+            return_string += f"{element[1]}: {row[element[0]].replace(',', ', ')}\n"
+    if len(return_string) > 0:
+        return return_string[:-1]
+    return return_string
+
 async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
     -> tuple[discord.Embed, list[discord.SelectOption]]:
     """
@@ -84,15 +120,14 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
 
     If `search_term` is left blank, that indicates that  the search term should NOT be shown at the
     top of the embed. For example, in a search started by selecting from a dropdown, the search term
-    should not be shown, as it will directly match a course code, and was not the user's typed
-    input.
+    should not be shown, as it was not the user's typed input.
     """
     # The dictionary keys, and the corresponding field names for the embed
     field_names = (
+        ['instructors', "Instructors"],
         ['prereqs', "Prerequisites"],
         ['coreqs', "Corequisites"],
-        ['cross_list', "Crosslisted"],
-        ['restrictions', "Restrictions"]
+        ['cross_list', "Crosslisted"]
     )
     related_courses = []
     rel_courses_field = ""
@@ -104,7 +139,7 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
         if row_num == 0:
             new_embed = discord.Embed(
                 title = f"{row['dept']} {row['code_num']}: {row['title']}",
-                color = 0xff00ff
+                color = 0xd6001c
             )
             if row['desc_text'] is not None:
                 new_embed.description = row['desc_text']
@@ -117,9 +152,16 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
                 if row[element[0]] is not None:
                     new_embed.add_field(
                         name = element[1],
-                        value = row[element[0]],
+                        value = row[element[0]].replace(',', ', '),
                         inline = False
                     )
+            restr_str = get_restriction_info(row)
+            if restr_str != "":
+                new_embed.add_field(
+                    name = "Restrictions",
+                    value = restr_str,
+                    inline = False
+                )
             match_type = get_match_type(row)
         # Anything not the first result is just "related"
         else:
@@ -137,7 +179,11 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
             inline = False
         )
     if (match_type != "" and search_term != ""):
-        new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
+        if len(search_term) > 32:
+            new_embed.set_author(name = f"\"{search_term[:32]}...\" → {match_type}!")
+        else:
+            new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
+        new_embed.set_thumbnail(url = "attachment://rpi_small_seal_red.png")
     return new_embed, related_courses
     
 
@@ -148,15 +194,17 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
 # TODO: ask users what they were looking for if there are no matches
 # TODO: account for course codes with dashes or underscores (or anything in between)
 # TODO: add default embed that "welcomes" users if no argument is given
-# TODO: make it so each dropdown option can only be selected once
 
 class CourseSearch(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.db_conn = None
-        query_path = Path("./cogs/course_search/course_data.sql").resolve()
-        with query_path.open() as query:
+        course_query_path = Path(__file__).with_name("course_data.sql")
+        with course_query_path.open() as query:
             self.course_query = query.read()
+        code_match_query_path = Path(__file__).with_name("code_match.sql")
+        with code_match_query_path.open() as query:
+            self.code_match_query = query.read()
     
     async def cog_load(self) -> None:
         self.db_conn = await self.bot.sql_conn_pool.acquire()
@@ -172,31 +220,51 @@ class CourseSearch(commands.Cog):
     async def course(self, interaction: Interaction, *, course: str):
         course = sanitize_str(course)
         if len(course) == 0:
-            raise "Bad argument"
+            raise InvalidArgument
+        elif len(course) > 128:
+            raise LongArgument
         view = CourseMenu(interaction, self.db_conn, self.course_query)
-        await view.course_query(course)
-        await interaction.response.send_message(
-            view = view,
-            embed = view.embed,
-            ephemeral = False
-        )
+        if (await view.course_query(course)): # if the query returned a result
+            thumbnail = discord.File(
+                fp = Path(__file__).parent.parent.with_name("assets") / "rpi_small_seal_red.png",
+                filename = "rpi_small_seal_red.png"
+            )
+            await interaction.response.send_message(
+                file = thumbnail,
+                view = view,
+                embed = view.embed,
+                ephemeral = False
+            )
+        else:
+            await interaction.response.send_message(
+                view = view,
+                embed = view.embed,
+                ephemeral = False
+            )
 
     @app_commands.command(
         name = "course_terms",
         description = "Learn how to understand course search info."
     )
-    async def course_terms(self, interaction: Interaction):
+    @app_commands.describe(public = "Whether to send this message to everyone, or just you.")
+    async def course_terms(self, interaction: Interaction, public: bool = False):
         view = CourseMenu(interaction, self.db_conn, self.course_query)
         help_embed = discord.Embed(
             title = "CRPI 2024: Course Search",
             description = "This is a course! Every course has a department (CRPI), code (2024), " +
                 "and title (Course Search), as shown in the header above.",
-            color = 0xFF00FF
+            color = 0xd6001c
         )
         help_embed.add_field(
             name = "Credits",
             value = "This is the number of credit hours you can earn for this course. For some " +
                 "courses, it can vary between sections.",
+            inline = False
+        )
+        help_embed.add_field(
+            name = "Instructors",
+            value = "This is a list of all the professors that teach this course. It often " +
+                "varies between sections.",
             inline = False
         )
         help_embed.add_field(
@@ -232,21 +300,28 @@ class CourseSearch(commands.Cog):
         await interaction.response.send_message(
             view = view,
             embed = view.embed,
-            ephemeral = False
+            ephemeral = not public
         )
 
     @course.error
     async def course_error(self, interaction: Interaction, error: AppCommandError):
         embed_desc = None
-        if error == "Bad argument":
-            embed_desc = f"Your input is invalid! Try something else."
+        if isinstance(error, InvalidArgument):
+            embed_desc = "Your input is invalid! Try something else."
+        elif isinstance(error, LongArgument):
+            embed_desc = "Your input is too long! Try something shorter."
         else:
             error = error.original
         if embed_desc is not None:
             embed_var = discord.Embed(
                 title = ERROR_TITLE,
                 description = embed_desc,
-                color = 0xC80000
+                color = discord.Color.red()
+            )
+            embed_var.add_field(
+                name = "Tip:",
+                value = get_random_tip(),
+                inline = False
             )
             await interaction.response.send_message(embed=embed_var)
         else:
@@ -268,13 +343,15 @@ class CourseMenu(discord.ui.View):
         self.embed = discord.Embed(
             title = "Course Search Error",
             description = "If you're seeing this, someting went wrong.",
-            color = 0xC80000
+            color = discord.Color.red()
         )
 
-    async def course_query(self, search_term):
+    async def course_query(self, search_term) -> bool:
         """
         This function searches for a course using the query defined when constructing this object,
         and changes the embed to show the resulting course.
+
+        Returns true if the query found one or more matches.
         """
         reg_start_or_space = "(^|.* )"
         # Full code match
@@ -311,13 +388,16 @@ class CourseMenu(discord.ui.View):
         self.embed = discord.Embed(
             title = "No Matches",
             description = "Try searching for something else.",
-            color = 0xC80000
+            color = discord.Color.red()
         )
         self.embed.add_field(
             name = "Tip:",
             value = get_random_tip()
         )
-        self.embed.set_author(name = f"\"{search_term}\" → Nothing...")
+        if len(search_term) > 32:
+            self.embed.set_author(name = f"\"{search_term[:32]}...\" → Nothing...")
+        else:
+            self.embed.set_author(name = f"\"{search_term}\" → Nothing...")
 
         # Execute the query
         async with self.db_conn.cursor(aiomysql.DictCursor) as cursor:
@@ -338,6 +418,8 @@ class CourseMenu(discord.ui.View):
                 options = self.related_courses
             )
             self.add_item(dropdown)
+        
+        return new_embed is not None
 
     def set_embed(self, embed):
         """
@@ -365,10 +447,20 @@ class RelatedCourseDropdown(discord.ui.Select):
                 self.view.query, # Use the same query
                 (f"^{self.values[0]}$", "a^", "a^", "a^", "a^", "a^") # Only match course code
             )
+            # Reset the dropdown to show the placeholder
+            self.view.remove_item(self).add_item(self)
             # Make sure to unpack the tuple, and we don't need related courses (should be none)
             new_embed, _ = await course_search_embed(cursor, "")
-            # Send a new message
-            await interaction.response.send_message(embed = new_embed)
+            # Edit the message to update the dropdown
+            await interaction.response.edit_message()
+            # Send a new message, but only to the user who chose the option
+            await interaction.followup.send(embed = new_embed, ephemeral = True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CourseSearch(bot))
+
+class InvalidArgument(app_commands.AppCommandError):
+    pass
+
+class LongArgument(app_commands.AppCommandError):
+    pass
