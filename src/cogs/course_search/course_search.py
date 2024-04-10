@@ -489,6 +489,8 @@ class RelatedCourseDropdown(discord.ui.Select):
             self.view.remove_item(self).add_item(self)
             # Make sure to unpack the tuple
             new_embed, rel_courses = await course_search_embed(self.view.db_conn, cursor, "")
+            # Create a new view so another dropdown can be added if need be
+            new_view = None
             if len(rel_courses) > 0:
                 dropdown = RelatedCourseDropdown(
                     placeholder = "Choose a course to learn more!",
@@ -499,7 +501,11 @@ class RelatedCourseDropdown(discord.ui.Select):
             # Edit the message to update the dropdown
             await interaction.response.edit_message()
             # Send a new message, but only to the user who chose the option
-            await interaction.followup.send(view = new_view, embed = new_embed, ephemeral = True)
+            if new_view is not None:
+                await interaction.followup.send(view = new_view, embed = new_embed,
+                    ephemeral = True)
+            else:
+                await interaction.followup.send(embed = new_embed, ephemeral = True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CourseSearch(bot))
