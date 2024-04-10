@@ -10,6 +10,9 @@ from discord.ext import commands
 
 from globals import ERROR_TITLE, send_generic_error
 
+# Global variables to hold SQL queries
+course_query = ""
+code_match_query = ""
 
 def sanitize_str(input: str) -> str:
     """
@@ -26,7 +29,7 @@ def sanitize_str(input: str) -> str:
         )
     )
 
-def get_prereq_codes(input: str) -> list:
+def get_codes(input: str) -> list:
     """
     Returns a list of course codes for the given prerequisite string.
     """
@@ -36,7 +39,7 @@ def get_prereq_codes(input: str) -> list:
         string = input
     )
     codes = codes.split("  ")
-    # print(codes)
+    return codes
 
 def get_random_tip() -> str:
     """
@@ -112,8 +115,34 @@ def get_restriction_info(row: dict) -> str:
         return return_string[:-1]
     return return_string
 
-async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
-    -> tuple[discord.Embed, list[discord.SelectOption]]:
+async def get_course_options(conn: aiomysql.Connection, codes: list[str], label: str) \
+    -> list[discord.SelectOption]:
+    """
+    This function returns a list of dropdown options that correspond to the given list of 
+    prerequisite codes.
+
+    The argument `label` is a string that will be displayed alongside the course code and name in 
+    the dropdown. For example if `label` is "Prereq", then a dropdown option would have the name 
+    "(Prereq) CSCI 1010: Calculus I".
+    """
+    cursor = await conn.cursor(aiomysql.DictCursor)
+    regex_str = "("
+    for code in codes:
+        regex_str += code + "|"
+    regex_str = regex_str[:-1] + ")"
+    await cursor.execute(code_match_query, regex_str)
+    prereq_options = []
+    for row in await cursor.fetchall():
+        prereq_options.append(
+            discord.SelectOption(
+                label = f"({label}) {row['dept']} {row['code_num']}: {row['title']}",
+                value = f"{row['dept']} {row['code_num']}"
+            )
+        )
+    return prereq_options
+
+async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCursor,
+    search_term: str) -> tuple[discord.Embed, list[discord.SelectOption]]:
     """
     This function, given a cursor, returns an embed that displays the results of the course search
     query.
@@ -122,13 +151,14 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
     top of the embed. For example, in a search started by selecting from a dropdown, the search term
     should not be shown, as it was not the user's typed input.
     """
-    # The dictionary keys, and the corresponding field names for the embed
+    # The dictionary keys, the field names for the embed, and labels for the dropdown, if applicable
     field_names = (
-        ['instructors', "Instructors"],
-        ['prereqs', "Prerequisites"],
-        ['coreqs', "Corequisites"],
-        ['cross_list', "Crosslisted"]
+        ['instructors', "Instructors", None],
+        ['prereqs', "Prerequisites", "Prereq"],
+        ['coreqs', "Corequisites", "Coreq"],
+        ['cross_list', "Crosslisted", "Cross"]
     )
+    # Courses that will be in the dropdown
     related_courses = []
     rel_courses_field = ""
     match_type = ""
@@ -150,6 +180,9 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
             )
             for element in field_names:
                 if row[element[0]] is not None:
+                    if element[2] and row[element[0]]: # If they are both not null
+                        codes = get_codes(row[element[0]])
+                        related_courses += await get_course_options(conn, codes, element[2])
                     new_embed.add_field(
                         name = element[1],
                         value = row[element[0]].replace(',', ', '),
@@ -185,9 +218,58 @@ async def course_search_embed(cursor: aiomysql.DictCursor, search_term: str) \
             new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
         new_embed.set_thumbnail(url = "attachment://rpi_small_seal_red.png")
     return new_embed, related_courses
-    
 
-# TODO: convert numbers to roman numerals or back
+def get_terms_embed():
+    new_embed = discord.Embed(
+        title = "CRPI 2024: Course Search",
+        description = "This is a course! Every course has a department (CRPI), code (2024), " +
+            "and title (Course Search), as shown in the header above.",
+        color = 0xd6001c
+    )
+    new_embed.add_field(
+        name = "Credits",
+        value = "This is the number of credit hours you can earn for this course. For some " +
+            "courses, it can vary between sections.",
+        inline = False
+    )
+    new_embed.add_field(
+        name = "Instructors",
+        value = "This is a list of all the professors that teach this course. It often " +
+            "varies between sections.",
+        inline = False
+    )
+    new_embed.add_field(
+        name = "Prerequisites",
+        value = "These are courses that you must take before (or in some cases, during) this " +
+            "course.",
+        inline = False
+    )
+    new_embed.add_field(
+        name = "Corequisites",
+        value = "These are courses that you must take alongside this course.",
+        inline = False
+    )
+    new_embed.add_field(
+        name = "Crosslisted",
+        value = "These are courses where you cannot earn credit if you've already completed " +
+            "this course, and vice versa.",
+        inline = False
+    )
+    new_embed.add_field(
+        name = "Restrictions",
+        value = "These are conditions you must fulfill in order to take this course. Some " +
+            "examples are major and year restrictions.",
+        inline = False
+    )
+    new_embed.add_field(
+        name = "Other Matches",
+        value = "These are other course results from your search. You can choose any of them " +
+            "from the dropdown menu to learn more.",
+        inline = False
+    )
+    return new_embed   
+
+# TODO: convert numbers to roman numerals or back (also do this with & and AND)
 # TODO: add prerequisite courses to related courses with (prereq) next to it
 # TODO: if you want to make the search algorithm crazy, do research about subprocesses so you don't
 # hold up the bot
@@ -201,10 +283,12 @@ class CourseSearch(commands.Cog):
         self.db_conn = None
         course_query_path = Path(__file__).with_name("course_data.sql")
         with course_query_path.open() as query:
-            self.course_query = query.read()
+            global course_query
+            course_query = query.read()
         code_match_query_path = Path(__file__).with_name("code_match.sql")
         with code_match_query_path.open() as query:
-            self.code_match_query = query.read()
+            global code_match_query
+            code_match_query = query.read()
     
     async def cog_load(self) -> None:
         self.db_conn = await self.bot.sql_conn_pool.acquire()
@@ -223,7 +307,7 @@ class CourseSearch(commands.Cog):
             raise InvalidArgument
         elif len(course) > 128:
             raise LongArgument
-        view = CourseMenu(interaction, self.db_conn, self.course_query)
+        view = CourseMenu(interaction, self.db_conn)
         if (await view.course_query(course)): # if the query returned a result
             thumbnail = discord.File(
                 fp = Path(__file__).parent.parent.with_name("assets") / "rpi_small_seal_red.png",
@@ -248,54 +332,8 @@ class CourseSearch(commands.Cog):
     )
     @app_commands.describe(public = "Whether to send this message to everyone, or just you.")
     async def course_terms(self, interaction: Interaction, public: bool = False):
-        view = CourseMenu(interaction, self.db_conn, self.course_query)
-        help_embed = discord.Embed(
-            title = "CRPI 2024: Course Search",
-            description = "This is a course! Every course has a department (CRPI), code (2024), " +
-                "and title (Course Search), as shown in the header above.",
-            color = 0xd6001c
-        )
-        help_embed.add_field(
-            name = "Credits",
-            value = "This is the number of credit hours you can earn for this course. For some " +
-                "courses, it can vary between sections.",
-            inline = False
-        )
-        help_embed.add_field(
-            name = "Instructors",
-            value = "This is a list of all the professors that teach this course. It often " +
-                "varies between sections.",
-            inline = False
-        )
-        help_embed.add_field(
-            name = "Prerequisites",
-            value = "These are courses that you must take before (or in some cases, during) this " +
-                "course.",
-            inline = False
-        )
-        help_embed.add_field(
-            name = "Corequisites",
-            value = "These are courses that you must take alongside this course.",
-            inline = False
-        )
-        help_embed.add_field(
-            name = "Crosslisted",
-            value = "These are courses where you cannot earn credit if you've already completed " +
-                "this course, and vice versa.",
-            inline = False
-        )
-        help_embed.add_field(
-            name = "Restrictions",
-            value = "These are conditions you must fulfill in order to take this course. Some " +
-                "examples are major and year restrictions.",
-            inline = False
-        )
-        help_embed.add_field(
-            name = "Other Matches",
-            value = "These are other course results from your search. You can choose any of them " +
-                "from the dropdown menu to learn more.",
-            inline = False
-        )
+        view = CourseMenu(interaction, self.db_conn)
+        help_embed = get_terms_embed()
         view.set_embed(help_embed)
         await interaction.response.send_message(
             view = view,
@@ -327,18 +365,17 @@ class CourseSearch(commands.Cog):
         else:
             # Interaction errors not supported yet by the bot
             print(error)
+            raise error
     
 class CourseMenu(discord.ui.View):
     def __init__(
         self,
         interaction: Interaction,
         db_conn: aiomysql.Connection,
-        query: str
     ):
         super().__init__()
         self.interaction = interaction
         self.db_conn = db_conn
-        self.query = query
         self.related_courses = []
         self.embed = discord.Embed(
             title = "Course Search Error",
@@ -402,13 +439,14 @@ class CourseMenu(discord.ui.View):
         # Execute the query
         async with self.db_conn.cursor(aiomysql.DictCursor) as cursor:
             await cursor.execute(
-                self.query,
+                course_query,
                 (regex_code, regex_full, regex_start, regex_any, regex_acronym, regex_abbrev)
             )
 
             # Get rid of UI elements, in case they are not needed for the next result
             self.clear_items()
-            new_embed, self.related_courses = await course_search_embed(cursor, search_term)
+            new_embed, self.related_courses = await course_search_embed(self.db_conn, cursor,
+                search_term)
             if new_embed is not None:
                 self.embed = new_embed
             
@@ -444,17 +482,24 @@ class RelatedCourseDropdown(discord.ui.Select):
         # Steal the connection from the view, then create a cursor
         async with self.view.db_conn.cursor(aiomysql.DictCursor) as cursor:
             await cursor.execute(
-                self.view.query, # Use the same query
+                course_query, # Use the same query
                 (f"^{self.values[0]}$", "a^", "a^", "a^", "a^", "a^") # Only match course code
             )
             # Reset the dropdown to show the placeholder
             self.view.remove_item(self).add_item(self)
-            # Make sure to unpack the tuple, and we don't need related courses (should be none)
-            new_embed, _ = await course_search_embed(cursor, "")
+            # Make sure to unpack the tuple
+            new_embed, rel_courses = await course_search_embed(self.view.db_conn, cursor, "")
+            if len(rel_courses) > 0:
+                dropdown = RelatedCourseDropdown(
+                    placeholder = "Choose a course to learn more!",
+                    options = rel_courses
+                )
+                new_view = CourseMenu(interaction, self.view.db_conn)
+                new_view.add_item(dropdown)
             # Edit the message to update the dropdown
             await interaction.response.edit_message()
             # Send a new message, but only to the user who chose the option
-            await interaction.followup.send(embed = new_embed, ephemeral = True)
+            await interaction.followup.send(view = new_view, embed = new_embed, ephemeral = True)
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CourseSearch(bot))
