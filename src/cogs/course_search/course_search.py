@@ -39,7 +39,10 @@ def get_codes(input: str) -> list:
         string = input
     )
     codes = codes.split("  ")
-    return codes
+    new_codes = []
+    for code in codes:
+        new_codes += code.split(", ")
+    return new_codes
 
 def get_random_tip() -> str:
     """
@@ -140,6 +143,19 @@ async def get_course_options(conn: aiomysql.Connection, codes: list[str], label:
             )
         )
     return prereq_options
+
+def make_unique_options(options: list[discord.SelectOption]) -> list[discord.SelectOption]:
+    """
+    Returns a set of options, made unique by their course code. This function will only keep the
+    first instance of a course in the list.
+    """
+    code_list = []
+    new_options = []
+    for option in options:
+        if option.value not in code_list:
+            code_list.append(option.value)
+            new_options.append(option)
+    return new_options
 
 async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCursor,
     search_term: str) -> tuple[discord.Embed, list[discord.SelectOption]]:
@@ -307,6 +323,8 @@ class CourseSearch(commands.Cog):
             raise InvalidArgument
         elif len(course) > 128:
             raise LongArgument
+        elif len(course) <= 1:
+            raise ShortArgument
         view = CourseMenu(interaction, self.db_conn)
         if (await view.course_query(course)): # if the query returned a result
             thumbnail = discord.File(
@@ -344,10 +362,20 @@ class CourseSearch(commands.Cog):
     @course.error
     async def course_error(self, interaction: Interaction, error: AppCommandError):
         embed_desc = None
+        desc_extra = ""
+        lottery = random.randint(1, 3) == 2
         if isinstance(error, InvalidArgument):
             embed_desc = "Your input is invalid! Try something else."
         elif isinstance(error, LongArgument):
             embed_desc = "Your input is too long! Try something shorter."
+            if (lottery):
+                desc_extra = "If you like typing so much, do it [here]" + \
+                    "(https://play.typeracer.com/) instead!"
+        elif isinstance(error, ShortArgument):
+            embed_desc = "Your input is too short! Try something longer."
+            if (lottery):
+                desc_extra = "If you hate typing THAT much, go [find the course yourself]" + \
+                    "(https://catalog.rpi.edu/). We can't type for you."
         else:
             error = error.original
         if embed_desc is not None:
@@ -356,11 +384,14 @@ class CourseSearch(commands.Cog):
                 description = embed_desc,
                 color = discord.Color.red()
             )
-            embed_var.add_field(
-                name = "Tip:",
-                value = get_random_tip(),
-                inline = False
-            )
+            if len(desc_extra) > 0:
+                embed_var.description += "\n\n" + desc_extra
+            else:
+                embed_var.add_field(
+                    name = "Tip",
+                    value = get_random_tip(),
+                    inline = False
+                )
             await interaction.response.send_message(embed=embed_var)
         else:
             # Interaction errors not supported yet by the bot
@@ -428,7 +459,7 @@ class CourseMenu(discord.ui.View):
             color = discord.Color.red()
         )
         self.embed.add_field(
-            name = "Tip:",
+            name = "Tip",
             value = get_random_tip()
         )
         if len(search_term) > 32:
@@ -451,6 +482,7 @@ class CourseMenu(discord.ui.View):
                 self.embed = new_embed
             
         if len(self.related_courses) > 0:
+            self.related_courses = make_unique_options(self.related_courses)
             dropdown = RelatedCourseDropdown(
                 placeholder = "Choose a course to learn more!",
                 options = self.related_courses
@@ -514,4 +546,7 @@ class InvalidArgument(app_commands.AppCommandError):
     pass
 
 class LongArgument(app_commands.AppCommandError):
+    pass
+
+class ShortArgument(app_commands.AppCommandError):
     pass
