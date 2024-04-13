@@ -54,9 +54,10 @@ def get_random_tip() -> str:
         ("You can search by acronyms! Try `FOCS` or `MAU`.", 100),
         ("You can search by abbreviations! Try `Comp Org` or `P Soft`.", 100),
         ("This bot was made in RCOS! Consider joining the class next semester.", 100),
-        ("You can die from radiation poisioning by eating 10 million bananas. Try not to.", 10),
-        ("We made this [video guide](https://www.youtube.com/watch?v=QX43QTYyV-8) to help new " + 
-            "users with this bot!", 10)
+        ("You can die from radiation poisioning by eating 10 million bananas. Try not " +
+            "to.", 10),
+        ("We made this [video guide](https://www.youtube.com/watch?v=QX43QTYyV-8) to " +
+            "help new users with this bot!", 10)
     )
     total_prob = 1
     for tip in tips:
@@ -80,8 +81,8 @@ def get_credits_desc(min, max) -> str:
 
 def get_match_type(row) -> str:
     """
-    A helper function that, given a row returned from an SQL query, identifies and returns the type
-    of match made between the search term and the given result.
+    A helper function that, given a row returned from an SQL query, identifies and returns
+    the type of match made between the search term and the given result.
     """
     if row['code_match']:
         return "Code Match"
@@ -96,8 +97,8 @@ def get_match_type(row) -> str:
 
 def get_restriction_info(row: dict) -> str:
     """
-    Given a row returned from the course search, returns a string that represents the restrictions
-    that correspond to the row's course.
+    Given a row returned from the course search, returns a string that represents the
+    restrictions that correspond to the row's course.
 
     If there are no restrictions, returns an empty string.
     """
@@ -124,9 +125,9 @@ async def get_course_options(conn: aiomysql.Connection, codes: list[str], label:
     This function returns a list of dropdown options that correspond to the given list of 
     prerequisite codes.
 
-    The argument `label` is a string that will be displayed alongside the course code and name in 
-    the dropdown. For example if `label` is "Prereq", then a dropdown option would have the name 
-    "(Prereq) CSCI 1010: Calculus I".
+    The argument `label` is a string that will be displayed alongside the course code an
+    name in the dropdown. For example if `label` is "Prereq", then a dropdown option would
+    have the name "(Prereq) CSCI 1010: Calculus I".
     """
     cursor = await conn.cursor(aiomysql.DictCursor)
     regex_str = "("
@@ -144,14 +145,14 @@ async def get_course_options(conn: aiomysql.Connection, codes: list[str], label:
         )
     return prereq_options
 
-def make_unique_options(options: list[discord.SelectOption]) -> list[discord.SelectOption]:
+def make_unique_options(optns: list[discord.SelectOption]) -> list[discord.SelectOption]:
     """
-    Returns a set of options, made unique by their course code. This function will only keep the
-    first instance of a course in the list.
+    Returns a set of options, made unique by their course code. This function will only
+    keep the first instance of a course in the list.
     """
     code_list = []
     new_options = []
-    for option in options:
+    for option in optns:
         if option.value not in code_list:
             code_list.append(option.value)
             new_options.append(option)
@@ -160,14 +161,14 @@ def make_unique_options(options: list[discord.SelectOption]) -> list[discord.Sel
 async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCursor,
     search_term: str) -> tuple[discord.Embed, list[discord.SelectOption]]:
     """
-    This function, given a cursor, returns an embed that displays the results of the course search
-    query.
+    This function, given a cursor, returns an embed that displays the results of the
+    course search query.
 
-    If `search_term` is left blank, that indicates that  the search term should NOT be shown at the
-    top of the embed. For example, in a search started by selecting from a dropdown, the search term
-    should not be shown, as it was not the user's typed input.
+    If `search_term` is left blank, that indicates that  the search term should NOT be
+    shown at the top of the embed. For example, in a search started by selecting from a
+    dropdown, the search term should not be shown, as it was not the user's typed input.
     """
-    # The dictionary keys, the field names for the embed, and labels for the dropdown, if applicable
+    # The dictionary keys, the field names for the embed, and labels for the dropdown
     field_names = (
         ['instructors', "Instructors", None],
         ['prereqs', "Prerequisites", "Prereq"],
@@ -198,7 +199,11 @@ async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCu
                 if row[element[0]] is not None:
                     if element[2] and row[element[0]]: # If they are both not null
                         codes = get_codes(row[element[0]])
-                        related_courses += await get_course_options(conn, codes, element[2])
+                        related_courses += await get_course_options(
+                            conn,
+                            codes,
+                            element[2]
+                        )
                     new_embed.add_field(
                         name = element[1],
                         value = row[element[0]].replace(',', ', '),
@@ -233,19 +238,20 @@ async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCu
         else:
             new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
         new_embed.set_thumbnail(url = "attachment://rpi_small_seal_red.png")
+    new_embed.set_footer(text = "Spring 2024") # To be dynamically changed later
     return new_embed, related_courses
 
 def get_terms_embed():
     new_embed = discord.Embed(
         title = "CRPI 2024: Course Search",
-        description = "This is a course! Every course has a department (CRPI), code (2024), " +
-            "and title (Course Search), as shown in the header above.",
+        description = "This is a course! Every course has a department (CRPI), code " +
+            "(2024), and title (Course Search), as shown in the header above.",
         color = 0xd6001c
     )
     new_embed.add_field(
         name = "Credits",
-        value = "This is the number of credit hours you can earn for this course. For some " +
-            "courses, it can vary between sections.",
+        value = "This is the number of credit hours you can earn for this course. For " +
+            "some courses, it can vary between sections.",
         inline = False
     )
     new_embed.add_field(
@@ -256,8 +262,8 @@ def get_terms_embed():
     )
     new_embed.add_field(
         name = "Prerequisites",
-        value = "These are courses that you must take before (or in some cases, during) this " +
-            "course.",
+        value = "These are courses that you must take before (or in some cases, during)" +
+            " this course.",
         inline = False
     )
     new_embed.add_field(
@@ -267,28 +273,28 @@ def get_terms_embed():
     )
     new_embed.add_field(
         name = "Crosslisted",
-        value = "These are courses where you cannot earn credit if you've already completed " +
-            "this course, and vice versa.",
+        value = "These are courses where you cannot earn credit if you've already " +
+            "completed this course, and vice versa.",
         inline = False
     )
     new_embed.add_field(
         name = "Restrictions",
-        value = "These are conditions you must fulfill in order to take this course. Some " +
-            "examples are major and year restrictions.",
+        value = "These are conditions you must fulfill in order to take this course. " +
+            "Some examples are major and year restrictions.",
         inline = False
     )
     new_embed.add_field(
         name = "Other Matches",
-        value = "These are other course results from your search. You can choose any of them " +
-            "from the dropdown menu to learn more.",
+        value = "These are other course results from your search. You can choose any of" +
+            " them from the dropdown menu to learn more.",
         inline = False
     )
     return new_embed   
 
 # TODO: convert numbers to roman numerals or back (also do this with & and AND)
 # TODO: add prerequisite courses to related courses with (prereq) next to it
-# TODO: if you want to make the search algorithm crazy, do research about subprocesses so you don't
-# hold up the bot
+# TODO: if you want to make the search algorithm crazy, do research about subprocesses so
+# you don't hold up the bot
 # TODO: ask users what they were looking for if there are no matches
 # TODO: account for course codes with dashes or underscores (or anything in between)
 # TODO: add default embed that "welcomes" users if no argument is given
@@ -316,7 +322,7 @@ class CourseSearch(commands.Cog):
         name = "course",
         description = "Search for a course in the RPI catalog!"
     )
-    @app_commands.describe(course = "The course you want to search for, as a code or name.")
+    @app_commands.describe(course = "The course you want to search for.")
     async def course(self, interaction: Interaction, *, course: str):
         course = sanitize_str(course)
         if len(course) == 0:
@@ -327,8 +333,9 @@ class CourseSearch(commands.Cog):
             raise ShortArgument
         view = CourseMenu(interaction, self.db_conn)
         if (await view.course_query(course)): # if the query returned a result
+            assets_path = Path(__file__).parent.parent.with_name("assets")
             thumbnail = discord.File(
-                fp = Path(__file__).parent.parent.with_name("assets") / "rpi_small_seal_red.png",
+                fp =  assets_path / "rpi_small_seal_red.png",
                 filename = "rpi_small_seal_red.png"
             )
             await interaction.response.send_message(
@@ -348,7 +355,7 @@ class CourseSearch(commands.Cog):
         name = "course_terms",
         description = "Learn how to understand course search info."
     )
-    @app_commands.describe(public = "Whether to send this message to everyone, or just you.")
+    @app_commands.describe(public = "Whether to show this to everyone, or just you.")
     async def course_terms(self, interaction: Interaction, public: bool = False):
         view = CourseMenu(interaction, self.db_conn)
         help_embed = get_terms_embed()
@@ -374,8 +381,8 @@ class CourseSearch(commands.Cog):
         elif isinstance(error, ShortArgument):
             embed_desc = "Your input is too short! Try something longer."
             if (lottery):
-                desc_extra = "If you hate typing THAT much, go [find the course yourself]" + \
-                    "(https://catalog.rpi.edu/). We can't type for you."
+                desc_extra = "If you hate typing THAT much, go [find the course " + \
+                    "yourself](https://catalog.rpi.edu/). We can't type for you."
         else:
             error = error.original
         if embed_desc is not None:
@@ -416,8 +423,8 @@ class CourseMenu(discord.ui.View):
 
     async def course_query(self, search_term) -> bool:
         """
-        This function searches for a course using the query defined when constructing this object,
-        and changes the embed to show the resulting course.
+        This function searches for a course using the query defined when constructing this
+        object, and changes the embed to show the resulting course.
 
         Returns true if the query found one or more matches.
         """
@@ -431,16 +438,12 @@ class CourseMenu(discord.ui.View):
         # Title matched anywhere
         regex_any = search_term
         # For acronyms
-        regex_acronym = ""
-        if len(search_term) > 1:
-            regex_acronym += reg_start_or_space
-            for char in search_term:
-                # Don't use spaces in acronyms
-                if char != " ":
-                    regex_acronym += f"{char}.* "
-            regex_acronym = regex_acronym[:-3]
-        else:
-            regex_acronym = "a^" # Automatically make no matches if there's only one character
+        regex_acronym = reg_start_or_space
+        for char in search_term:
+            # Don't use spaces in acronyms
+            if char != " ":
+                regex_acronym += f"{char}.* "
+        regex_acronym = regex_acronym[:-3]
         # For abbreviations
         regex_abbrev = ""
         tokens = search_term.split()
@@ -471,13 +474,23 @@ class CourseMenu(discord.ui.View):
         async with self.db_conn.cursor(aiomysql.DictCursor) as cursor:
             await cursor.execute(
                 course_query,
-                (regex_code, regex_full, regex_start, regex_any, regex_acronym, regex_abbrev)
+                (
+                    regex_code,
+                    regex_full,
+                    regex_start,
+                    regex_any,
+                    regex_acronym,
+                    regex_abbrev
+                )
             )
 
             # Get rid of UI elements, in case they are not needed for the next result
             self.clear_items()
-            new_embed, self.related_courses = await course_search_embed(self.db_conn, cursor,
-                search_term)
+            new_embed, self.related_courses = await course_search_embed(
+                self.db_conn,
+                cursor,
+                search_term
+            )
             if new_embed is not None:
                 self.embed = new_embed
             
@@ -493,7 +506,8 @@ class CourseMenu(discord.ui.View):
 
     def set_embed(self, embed):
         """
-        Directly set the embed of this menu. Useful for an override, like in `course_terms`.
+        Directly set the embed of this menu. Useful for an override, like in
+        `course_terms`.
         """
         self.embed = embed
 
@@ -515,12 +529,16 @@ class RelatedCourseDropdown(discord.ui.Select):
         async with self.view.db_conn.cursor(aiomysql.DictCursor) as cursor:
             await cursor.execute(
                 course_query, # Use the same query
-                (f"^{self.values[0]}$", "a^", "a^", "a^", "a^", "a^") # Only match course code
+                (f"^{self.values[0]}$", "a^", "a^", "a^", "a^", "a^") # Only match code
             )
             # Reset the dropdown to show the placeholder
             self.view.remove_item(self).add_item(self)
             # Make sure to unpack the tuple
-            new_embed, rel_courses = await course_search_embed(self.view.db_conn, cursor, "")
+            new_embed, rel_courses = await course_search_embed(
+                self.view.db_conn,
+                cursor,
+                ""
+            )
             # Create a new view so another dropdown can be added if need be
             new_view = None
             if len(rel_courses) > 0:
