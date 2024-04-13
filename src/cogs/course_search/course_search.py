@@ -10,9 +10,13 @@ from discord.ext import commands
 
 from globals import ERROR_TITLE, send_generic_error
 
-# Global variables to hold SQL queries
+# Global variables
+# SQL queries
 course_query = ""
 code_match_query = ""
+# File info
+assets_path = Path(__file__).parent.parent.with_name("assets")
+rpi_seal = "rpi_small_seal_red.png"
 
 def sanitize_str(input: str) -> str:
     """
@@ -232,13 +236,14 @@ async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCu
             value = rel_courses_field.strip("\n"),
             inline = False
         )
-    if (match_type != "" and search_term != ""):
-        if len(search_term) > 32:
-            new_embed.set_author(name = f"\"{search_term[:32]}...\" → {match_type}!")
-        else:
-            new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
+    if match_type != "":
+        new_embed.set_footer(text = "Spring 2024") # To be dynamically changed later
         new_embed.set_thumbnail(url = "attachment://rpi_small_seal_red.png")
-    new_embed.set_footer(text = "Spring 2024") # To be dynamically changed later
+        if search_term != "":
+            if len(search_term) > 32:
+                new_embed.set_author(name = f"\"{search_term[:32]}...\" → {match_type}!")
+            else:
+                new_embed.set_author(name = f"\"{search_term}\" → {match_type}!")
     return new_embed, related_courses
 
 def get_terms_embed():
@@ -333,10 +338,9 @@ class CourseSearch(commands.Cog):
             raise ShortArgument
         view = CourseMenu(interaction, self.db_conn)
         if (await view.course_query(course)): # if the query returned a result
-            assets_path = Path(__file__).parent.parent.with_name("assets")
             thumbnail = discord.File(
-                fp =  assets_path / "rpi_small_seal_red.png",
-                filename = "rpi_small_seal_red.png"
+                fp =  assets_path / rpi_seal,
+                filename = rpi_seal
             )
             await interaction.response.send_message(
                 file = thumbnail,
@@ -370,7 +374,7 @@ class CourseSearch(commands.Cog):
     async def course_error(self, interaction: Interaction, error: AppCommandError):
         embed_desc = None
         desc_extra = ""
-        lottery = random.randint(1, 3) == 2
+        lottery = random.randint(1, 3) == 3
         if isinstance(error, InvalidArgument):
             embed_desc = "Your input is invalid! Try something else."
         elif isinstance(error, LongArgument):
@@ -381,8 +385,9 @@ class CourseSearch(commands.Cog):
         elif isinstance(error, ShortArgument):
             embed_desc = "Your input is too short! Try something longer."
             if (lottery):
-                desc_extra = "If you hate typing THAT much, go [find the course " + \
-                    "yourself](https://catalog.rpi.edu/). We can't type for you."
+                desc_extra = "If you hate typing THAT much... we can't exactly type " + \
+                    " for you. You can find the course yourself [here]" + \
+                    "(https://catalog.rpi.edu/)!"
         else:
             error = error.original
         if embed_desc is not None:
@@ -550,12 +555,25 @@ class RelatedCourseDropdown(discord.ui.Select):
                 new_view.add_item(dropdown)
             # Edit the message to update the dropdown
             await interaction.response.edit_message()
+            # Create a new file for the seal
+            thumbnail = discord.File(
+                fp =  assets_path / rpi_seal,
+                filename = rpi_seal
+            )
             # Send a new message, but only to the user who chose the option
             if new_view is not None:
-                await interaction.followup.send(view = new_view, embed = new_embed,
-                    ephemeral = True)
+                await interaction.followup.send(
+                    file = thumbnail,
+                    view = new_view,
+                    embed = new_embed,
+                    ephemeral = True
+                )
             else:
-                await interaction.followup.send(embed = new_embed, ephemeral = True)
+                await interaction.followup.send(
+                    file = thumbnail,
+                    embed = new_embed,
+                    ephemeral = True
+                )
 
 async def setup(bot: commands.Bot):
     await bot.add_cog(CourseSearch(bot))
