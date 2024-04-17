@@ -36,7 +36,7 @@ async def require_two_args_error(ctx: Context, error: CommandError) -> None:
 class Calculator(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
-    
+        
     async def cog_command_error(self, ctx: Context, error: CommandError) -> None:
         if not ctx.command.has_error_handler():
             await send_generic_error(ctx, error)

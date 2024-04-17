@@ -7,7 +7,6 @@ from discord.ext.commands import CommandError, Context
 from bot import CARPIBot
 from globals import BAD_MEMBER_MSG, ERROR_TITLE, send_generic_error
 
-
 class Miscellaneous(commands.Cog):
     def __init__(self, bot: CARPIBot):
         self.bot = bot
@@ -104,5 +103,6 @@ class Miscellaneous(commands.Cog):
         )
         await ctx.send(embed=embed)
     
+
 async def setup(bot: commands.Bot) -> None:
     await bot.add_cog(Miscellaneous(bot))

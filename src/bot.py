@@ -70,6 +70,14 @@ class CARPIBot(commands.Bot):
             logging.info(f"Deployed in {len(self.guilds)} guild(s):")
             for guild in self.guilds:
                 logging.info(f"\t{guild.name}")
+    
+    async def on_command_error(self, ctx: Context, error: CommandError) -> None:
+        """
+        Overridden function to silence all command errors by default.
+        This behavior is ignored for any command that has a local error handler
+        or if cog_command_error() is implemented in the command's parent cog.
+        """
+        pass
 
     async def close(self) -> None:
         """

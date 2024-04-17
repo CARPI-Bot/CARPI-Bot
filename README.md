@@ -14,7 +14,7 @@ Once you're ready, use this [invite link](https://discord.com/oauth2/authorize?c
 Once CARPI Bot is in your server, all of its commands are at your disposal! Use the `/help` command to see a list of comands.
 
 ## Getting started with contributing
-### Project Dependencies
+
 **Python (3.9+)**
 > [Download Python](https://www.python.org "Click to redirect!")
 
