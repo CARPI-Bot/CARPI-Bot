@@ -1,20 +1,22 @@
 import asyncio
 import logging
 import sys
-from datetime import datetime
+import os
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import discord
 
 from bot import CARPIBot
-from globals import CMD_PREFIX, TOKEN
+from globals import CONFIG
 
 
 class ColoredFormatter(logging.Formatter):
     """
-    Simple wrapper class that adds colors to logging. Requires a
-    format, and otherwise accepts any kwargs that are accepted by
-    logging.Formatter().
+    Simple wrapper class that adds colors to logging.
+    
+    Requires a format, and otherwise accepts any keyword arguments
+    that are accepted by logging.Formatter().
     """
     def __init__(self, fmt: str, **kwargs):
         self._fmt = fmt
@@ -60,21 +62,18 @@ def logging_init(log_level: int = logging.INFO) -> None:
     root_logger.addHandler(console_handler)
 
     # File logging
+    logs_dir = Path(__file__).parent.with_name("logs").resolve()
+    if (not logs_dir.exists()):
+        logs_dir.mkdir()
+        logging.info("No logs directory detected, creating one for you")
+    for log in logs_dir.iterdir():
+        create_time = datetime.fromtimestamp(os.path.getctime(log))
+        if create_time < datetime.now() - timedelta(days=5):
+            log.unlink()
     curr_time = datetime.now().strftime("%Y.%m.%d %H.%M.%S")
-    # Path.mkdir(exist_ok=True) for whatever reason throws an error if
-    # a "./logs" directory exists, band-aid solution was to just stick
-    # it inside a try/except block.
-    try:
-        Path.mkdir("./logs", exist_ok=True)
-        logging.info('No "./logs" directory detected, creating one for you...')
-    except:
-        pass
-    logfile_path = Path(f"./logs/{curr_time}.log").resolve()
+    logfile_path = logs_dir / f"{curr_time}.log"
     logfile_path.touch()
-    file_handler = logging.FileHandler(
-        filename = logfile_path,
-        encoding = "utf-8"
-    )
+    file_handler = logging.FileHandler(filename=logfile_path, encoding="utf-8")
     file_handler.setLevel(log_level)
     # Normal Formatter is used instead of ColoredFormatter for file
     # logging because colors would just render as text.
@@ -86,20 +85,20 @@ async def main():
     Make sure all privileged intents are enabled in the Discord
     developer portal!
     
-    You can access it using the link below:
     https://discord.com/developers/applications
     """
     bot = CARPIBot(
-        prefix = CMD_PREFIX,
+        command_prefix = CONFIG["prefix"],
         intents = discord.Intents.all()
     )
     # Main program loop
-    await bot.start(TOKEN)
+    await bot.start(CONFIG["token"])
 
 if __name__ == "__main__":
+    # Import statements throughout project are relative to "src"
+    sys.path.append(str(Path(__file__).parent))
     logging_init()
-    discordpy_ver = discord.__version__
     python_ver = ".".join(str(ver) for ver in sys.version_info[:3])
-    logging.info(f"discord.py version {discordpy_ver}")
+    logging.info(f"discord.py version {discord.__version__}")
     logging.info(f"Python version {python_ver}")
     asyncio.run(main())
