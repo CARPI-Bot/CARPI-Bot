@@ -1,12 +1,12 @@
 import logging
-from datetime import datetime as dt
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import aiomysql
 import discord
 from discord import app_commands, Interaction
 from discord.app_commands import AppCommandError
-from discord.ext import commands
+from discord.ext import commands, tasks
 
 from bot import CARPIBot
 from globals import BASE_DIR
@@ -36,6 +36,7 @@ class AcademicCalendar(commands.Cog):
     )
     async def calendar(self, interaction: Interaction, public: bool = False):
         view = CalendarMenu(interaction, self.db_conn, self.query)
+        self.bot.loop.create_task(view.timeout_timer())
         thumbnail = discord.File(
             fp = BASE_DIR / "./assets/rpi_small_seal_red.png",
             filename = "rpi_small_seal_red.png"
@@ -99,8 +100,13 @@ class CalendarMenu(discord.ui.View):
             options = select_options
         )
         self.add_item(dropdown)
+    
+    async def timeout_timer(self) -> None:
+        await discord.utils.sleep_until(datetime.now() + timedelta(minutes=15))
+        await self.on_timeout()
 
     async def on_timeout(self) -> None:
+        await self.interaction.followup.send("penis")
         for item in self.children:
             item.disabled = True
         self.embed.set_footer(text="This menu has expired due to inactivity.")
@@ -121,7 +127,7 @@ class CalendarDropdown(discord.ui.Select):
     
     async def callback(self, interaction: Interaction) -> None:
         month_name = self.view.month_names[int(self.values[0]) - 1]
-        selected_year = str(dt.now().year)
+        selected_year = str(datetime.now().year)
         self.view.embed.title = f"Events for {month_name}"
         self.view.embed.description = None
         self.view.embed.clear_fields()
