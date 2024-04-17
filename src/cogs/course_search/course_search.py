@@ -1,3 +1,5 @@
+from datetime import datetime
+from datetime import timedelta
 import random
 import re
 from pathlib import Path
@@ -45,7 +47,8 @@ def get_codes(input: str) -> list:
     codes = codes.split("  ")
     new_codes = []
     for code in codes:
-        new_codes += code.split(", ")
+        # Account for concatenation where courses are joined by a comma
+        new_codes += [s.strip() for s in code.split(",")]
     return new_codes
 
 def get_random_tip() -> str:
@@ -118,7 +121,10 @@ def get_restriction_info(row: dict) -> str:
     )
     for element in field_names:
         if row[element[0]] is not None:
-            return_string += f"{element[1]}: {row[element[0]].replace(',', ', ')}\n"
+            # TODO: This is a temporary solution for restrictions being too long
+            # The real problem is that it should be stored differently in the database
+            max_str = max(row[element[0]].split(','), key = len)
+            return_string += f"{element[1]}: {max_str}\n"
     if len(return_string) > 0:
         return return_string[:-1]
     return return_string
@@ -192,17 +198,26 @@ async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCu
                 title = f"{row['dept']} {row['code_num']}: {row['title']}",
                 color = 0xd6001c
             )
-            if row['desc_text'] is not None:
-                new_embed.description = row['desc_text']
-            new_embed.add_field(
-                name = "Credits",
-                value = get_credits_desc(row['credit_min'], row['credit_max']),
-                inline = False
-            )
+            credits = get_credits_desc(row['credit_min'], row['credit_max'])
+            # Credits, or add that the course is not offered
+            if credits is not None:
+                new_embed.add_field(
+                    name = "Credits",
+                    value = credits,
+                    inline = False
+                )
+            else:
+                if row['desc_text'] is not None:
+                    new_embed.description = row['desc_text'] + "\n*This course was " + \
+                        "not offered during the chosen semester.*"
+                else: # TODO: change both of these to say the semester dynamically
+                    new_embed.description = "*This course was not offered during the " + \
+                        "chosen semester.*"
             for element in field_names:
                 if row[element[0]] is not None:
                     if element[2] and row[element[0]]: # If they are both not null
                         codes = get_codes(row[element[0]])
+                        # Add prereqs, coreqs, crosslists to the dropdown
                         related_courses += await get_course_options(
                             conn,
                             codes,
@@ -237,7 +252,7 @@ async def course_search_embed(conn: aiomysql.Connection, cursor: aiomysql.DictCu
             inline = False
         )
     if match_type != "":
-        new_embed.set_footer(text = "Spring 2024") # To be dynamically changed later
+        new_embed.set_footer(text = "Data from Spring 2024") # TODO: dynamically change
         new_embed.set_thumbnail(url = "attachment://rpi_small_seal_red.png")
         if search_term != "":
             if len(search_term) > 32:
@@ -336,7 +351,8 @@ class CourseSearch(commands.Cog):
             raise LongArgument
         elif len(course) <= 1:
             raise ShortArgument
-        view = CourseMenu(interaction, self.db_conn)
+        view = CourseMenu(interaction, self.db_conn, 120, self.bot)
+        self.bot.loop.create_task(view.timeout_timer(300))
         if (await view.course_query(course)): # if the query returned a result
             thumbnail = discord.File(
                 fp =  assets_path / rpi_seal,
@@ -361,7 +377,8 @@ class CourseSearch(commands.Cog):
     )
     @app_commands.describe(public = "Whether to show this to everyone, or just you.")
     async def course_terms(self, interaction: Interaction, public: bool = False):
-        view = CourseMenu(interaction, self.db_conn)
+        # Create a view that times out instantly, there's nothing interactable
+        view = CourseMenu(interaction, self.db_conn, 0, self.bot)
         help_embed = get_terms_embed()
         view.set_embed(help_embed)
         await interaction.response.send_message(
@@ -415,8 +432,12 @@ class CourseMenu(discord.ui.View):
         self,
         interaction: Interaction,
         db_conn: aiomysql.Connection,
+        def_timeout: float,
+        bot: commands.Bot
     ):
-        super().__init__()
+        super().__init__(
+            timeout = def_timeout
+        )
         self.interaction = interaction
         self.db_conn = db_conn
         self.related_courses = []
@@ -425,6 +446,9 @@ class CourseMenu(discord.ui.View):
             description = "If you're seeing this, someting went wrong.",
             color = discord.Color.red()
         )
+        self.timed_out = False
+        self.bot = bot
+        self.followup_msg = None
 
     async def course_query(self, search_term) -> bool:
         """
@@ -515,6 +539,38 @@ class CourseMenu(discord.ui.View):
         `course_terms`.
         """
         self.embed = embed
+    
+    def set_followup_msg(self, msg: discord.WebhookMessage) -> None:
+        """
+        Set the followup message to be edited during `on_timeout()`. Necessary for embeds
+        created from dropdown menu interactions that have dropdowns themselves.
+        """
+        self.followup_msg = msg
+    
+    async def on_timeout(self) -> None:
+        if self.timed_out: return
+        self.timed_out = True
+        # If there are interactable items, make them inactive and show a message
+        if len(self.children) > 0:
+            for item in self.children:
+                item.disabled = True
+            # If a footer already exists, show the message next to it
+            if self.embed.footer.text is not None:
+                self.embed.set_footer(text = self.embed.footer.text + \
+                    "  •  This menu has expired due to inactivity.")
+            else:
+                self.embed.set_footer(text = "This menu has expired due to inactivity.")
+            if self.followup_msg is None:
+                await self.interaction.edit_original_response(
+                    view = self,
+                    embed = self.embed
+                )
+            else:
+                await self.followup_msg.edit(view = self, embed = self.embed)
+    
+    async def timeout_timer(self, sec: int) -> None:
+        await discord.utils.sleep_until(datetime.now() + timedelta(seconds = sec))
+        await self.on_timeout()
 
 class RelatedCourseDropdown(discord.ui.Select):
     def __init__(
@@ -551,7 +607,13 @@ class RelatedCourseDropdown(discord.ui.Select):
                     placeholder = "Choose a course to learn more!",
                     options = rel_courses
                 )
-                new_view = CourseMenu(interaction, self.view.db_conn)
+                new_view = CourseMenu(
+                    interaction,
+                    self.view.db_conn,
+                    120,
+                    self.view.bot
+                )
+                self.view.bot.loop.create_task(new_view.timeout_timer(300))
                 new_view.add_item(dropdown)
             # Edit the message to update the dropdown
             await interaction.response.edit_message()
@@ -562,12 +624,18 @@ class RelatedCourseDropdown(discord.ui.Select):
             )
             # Send a new message, but only to the user who chose the option
             if new_view is not None:
-                await interaction.followup.send(
+                # Store the message to be edited later for timeout
+                msg = await interaction.followup.send(
                     file = thumbnail,
                     view = new_view,
                     embed = new_embed,
-                    ephemeral = True
+                    ephemeral = True,
+                    wait = True
                 )
+                # Send the message object to the view to be handled in on_timeout()
+                new_view.set_followup_msg(msg)
+                # And give it the embed too so it edits it properly
+                new_view.set_embed(new_embed)
             else:
                 await interaction.followup.send(
                     file = thumbnail,
