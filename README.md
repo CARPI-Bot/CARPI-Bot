@@ -60,4 +60,5 @@ Anthony Smith   '27 \
 Julian Rosario  '26 \
 Ryan So         '26 \
 Florence Wang   '26 \
-Edwin Zhao      '26
+Edwin Zhao      '26 \
+Jack Zgombic    '26
