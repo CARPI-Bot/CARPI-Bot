@@ -70,12 +70,31 @@ class CARPIBot(commands.Bot):
             logging.info(f"Deployed in {len(self.guilds)} guild(s):")
             for guild in self.guilds:
                 logging.info(f"\t{guild.name}")
+
+    async def close(self) -> None:
+        """
+        Overriden function to provide fine control over closing the bot.
+
+        This is because commands.Bot.close() sometimes raises a noisy
+        "Unclosed Connector" error, a bug on aiohttp's part according
+        to discord.py's Discord server.
+        """
+        logging.info("Closing bot...")
+        if self.sql_conn_pool is not None:
+            self.sql_conn_pool.close()
+            self.sql_conn_pool.terminate()
+            await self.sql_conn_pool.wait_closed()
+        try:
+            await super().close()
+        except asyncio.CancelledError:
+            await self.http.close()
     
     async def on_command_error(self, ctx: Context, error: CommandError) -> None:
         """
         Overridden function to silence all command errors by default.
-        This behavior is ignored for any command that has a local error handler
-        or if cog_command_error() is implemented in the command's parent cog.
+        This behavior is ignored for any command that has a local
+        error handler or if cog_command_error() is implemented in the
+        command's parent cog.
         """
         pass
 
