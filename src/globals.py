@@ -1,25 +1,37 @@
 import json
 import logging
 import sys
+from pathlib import Path
 
 import discord
+from discord import Interaction
+from discord.app_commands import AppCommandError
 from discord.ext.commands import CommandError, Context
 
 
-async def send_generic_error(ctx: Context, error: CommandError = None) -> None:
+async def send_generic_error(
+    ctx: Context | Interaction,
+    error: CommandError | AppCommandError = None
+) -> None:
     """
     Standard error message for any unhandled or unexpected command errors.
+    Works with both discord.ext.commands and discord.app_commands frameworks.
     """
-    embed_var = discord.Embed(
+    embed = discord.Embed(
         title = ERROR_TITLE,
-        description = "Unknown error. Contact an admin for more details.",
-        color = 0xC80000
+        description = "Unknown error. This is probably the devs' fault, sorry!",
+        color = discord.Color.red()
     )
-    await ctx.send(embed=embed_var)
+    if isinstance(ctx, Context):
+        await ctx.send(embed=embed)
+    else:
+        try:
+            await ctx.response.send_message(embed=embed)
+        except:
+            await ctx.followup.send(embed=embed)
     if error is not None:
         logging.error(
-            msg = f'Error from command "{ctx.command}" in extension'
-                  + f'"{ctx.cog.qualified_name}"',
+            msg = f"Error from command {ctx.command.name}",
             exc_info = True
         )
 
@@ -31,8 +43,11 @@ OWNER_IDS = {
     455125448884748308, # Jack
 }
 
+# Base directory to search for relative paths from
+BASE_DIR = Path(__file__).parent
+
 try:
-    with open("config.json", "r") as infile:
+    with Path(__file__).with_name("config.json").open() as infile:
         CONFIG = json.load(infile)
 except:
     print("Bad or missing config.json!")
@@ -40,6 +55,6 @@ except:
 
 # For use in error handlers
 ERROR_TITLE = "Something went wrong"
-NO_PERM_MSG = "You don't have permissions to do that."
+NO_PERM_MSG = "You don't have permission to do that."
 BAD_MEMBER_MSG = "Member not found. Nicknames and usernames are case sensitive, or" \
                  + "maybe you spelled it wrong?"
