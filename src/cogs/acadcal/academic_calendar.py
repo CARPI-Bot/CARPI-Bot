@@ -106,7 +106,6 @@ class CalendarMenu(discord.ui.View):
         await self.on_timeout()
 
     async def on_timeout(self) -> None:
-        await self.interaction.followup.send("penis")
         for item in self.children:
             item.disabled = True
         self.embed.set_footer(text="This menu has expired due to inactivity.")
