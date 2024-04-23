@@ -61,13 +61,13 @@ class Compiler(commands.Cog):
         )
         self.help_embed.add_field(
             name = "Source Formatting",
-            value = f"Second, include the code you want the bot to run.\n\n \
-                   For single lines, you want to surround your code with either \` or \`\` characters.\n \
-                   ***{self.bot.command_prefix}compile python*** `print('Hello, world!')`\n\n \
-                   For multi line code, you want to surround your code in \`\`\` characters.\n \
-                   ***{self.bot.command_prefix}compile c++*** \
-                   ```#include <iostream>\n\n"
-                   + "int main() {\n    std::cout << \"Hello, world!\\n\";\n    return 0;\n}```",
+            value = "Second, include the code you want the bot to run.\n\n" +
+                   "For single lines, you want to surround your code with either \` or \`\` characters.\n" +
+                   f"***{self.bot.command_prefix}compile python*** `print('Hello, world!')`\n\n" +
+                   "For multi line code, you want to surround your code in \`\`\` characters.\n" +
+                   f"***{self.bot.command_prefix}compile c++*** " +
+                   "```#include <iostream>\n\n" +
+                   "int main() {\n    std::cout << \"Hello, world!\\n\";\n    return 0;\n}```",
             inline=False
         )
 
